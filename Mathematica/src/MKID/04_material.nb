@@ -1,0 +1,216 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 14.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[         0,          0]
+NotebookDataLength[         0,          0]
+NotebookOptionsPosition[         0,          0]
+NotebookOutlinePosition[         0,          0]
+CellTagsIndexPosition[         0,          0]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[CellGroupData[{
+
+Cell["MKID - Material (TiN)", "Title",
+ ExpressionUUID->"e9b6d9b7-ef16-411d-96a8-4881f3ca8df0"],
+
+Cell[CellGroupData[{
+
+Cell["Setup", "Section",
+ ExpressionUUID->"39749964-0504-49a2-9b3d-72662b27f470"],
+
+Cell[TextData[{
+"Loads upstream notebooks and points ",
+StyleBox["Direc", "Code"],
+" to ",
+StyleBox["../../input/MKID", "Code"],
+"."
+}], "Text",
+ ExpressionUUID->"4743f350-2b42-4eee-a9fb-8c50594b7b73"],
+
+Cell[
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"03_functions_response.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "Input",
+ InitializationCell->True,
+ ExpressionUUID->"22e88f17-83b8-4837-8618-40e5d587ba8f"],
+
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Material Input", "Section",
+ CellChangeTimes->{{3.9627877227920523`*^9, 
+  3.9627877339948807`*^9}},ExpressionUUID->"8286e8a3-5e82-7e4d-bcf5-\
+81fcbef2bec1"],
+
+Cell[CellGroupData[{
+
+Cell["MKID", "Subsection",
+ CellChangeTimes->{{3.971815393187149*^9, 
+  3.971815393821785*^9}},ExpressionUUID->"1dbcf6e6-c153-7f45-9161-\
+122641a2ac9c"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"(*", " ", "TiN", " ", "*)"}], "\[IndentingNewLine]", 
+  RowBox[{"(*", " ", 
+   RowBox[{"Lindhard", " ", "Model"}], " ", "*)"}]}]], "Input",
+ CellChangeTimes->{{3.971815397671747*^9, 
+  3.971815412962995*^9}},ExpressionUUID->"4e823029-0210-9643-b637-\
+14e437506ab3"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"rhoTiN", "=", 
+   RowBox[{"5.4", " ", 
+    RowBox[{"grams", "/", 
+     SuperscriptBox["cm", "3"]}]}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"kFTiN", "=", 
+   SuperscriptBox[
+    RowBox[{"(", 
+     RowBox[{"2", " ", "me", " ", 
+      RowBox[{"(", 
+       RowBox[{"3.94", "eV"}], ")"}]}], ")"}], 
+    RowBox[{"1", "/", "2"}]]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"vFTiN", "=", 
+   RowBox[{"kFTiN", "/", "me"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"wpTiN", "=", 
+   SuperscriptBox[
+    RowBox[{"(", 
+     RowBox[{
+      FractionBox[
+       RowBox[{"4", "Pi", " ", "alpha"}], "me"], 
+      RowBox[{"(", 
+       FractionBox[
+        SuperscriptBox[
+         RowBox[{"(", 
+          RowBox[{"2", "me", 
+           RowBox[{"(", 
+            RowBox[{"3.94", "eV"}], ")"}]}], ")"}], 
+         RowBox[{"3", "/", "2"}]], 
+        RowBox[{"3", 
+         SuperscriptBox["Pi", "2"]}]], ")"}]}], ")"}], 
+    RowBox[{"1", "/", "2"}]]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"GammaTiN", "=", 
+   RowBox[{"0.1", "*", 
+    RowBox[{"(", 
+     RowBox[{"3.94", "eV"}], ")"}]}]}], ";"}]}], "Code",
+ CellChangeTimes->{{3.963377010517725*^9, 3.963377071669491*^9}, {
+  3.9644494358443947`*^9, 3.964449476819767*^9}},
+ CellLabel->"In[77]:=",ExpressionUUID->"c60f9b10-7394-f341-b335-a1819c11886b"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"ImepsLTiN", "[", 
+   RowBox[{"w_", ",", "q_"}], "]"}], ":=", 
+  RowBox[{"Im", "[", 
+   RowBox[{"-", 
+    SuperscriptBox[
+     RowBox[{"(", 
+      RowBox[{"1", "+", 
+       RowBox[{
+        FractionBox[
+         RowBox[{"3", 
+          SuperscriptBox[
+           RowBox[{"(", "wpTiN", ")"}], "2"]}], 
+         RowBox[{
+          SuperscriptBox["q", "2"], 
+          SuperscriptBox["vFTiN", "2"]}]], 
+        RowBox[{"(", 
+         RowBox[{
+          FractionBox["1", "2"], "+", 
+          RowBox[{
+           FractionBox["kFTiN", 
+            RowBox[{"4", "q"}]], 
+           RowBox[{"(", 
+            RowBox[{"1", "-", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{
+                FractionBox["q", 
+                 RowBox[{"2", "kFTiN"}]], "-", 
+                FractionBox[
+                 RowBox[{"w", "+", 
+                  RowBox[{"I", "*", "GammaTiN"}]}], 
+                 RowBox[{"q", " ", "vFTiN"}]]}], ")"}], "2"]}], ")"}], 
+           RowBox[{"Log", "[", 
+            FractionBox[
+             RowBox[{"(", 
+              RowBox[{
+               FractionBox["q", 
+                RowBox[{"2", "kFTiN"}]], "-", 
+               FractionBox[
+                RowBox[{"w", "+", 
+                 RowBox[{"I", "*", "GammaTiN"}]}], 
+                RowBox[{"q", " ", "vFTiN"}]], "+", "1"}], ")"}], 
+             RowBox[{"(", 
+              RowBox[{
+               FractionBox["q", 
+                RowBox[{"2", "kFTiN"}]], "-", 
+               FractionBox[
+                RowBox[{"w", "+", 
+                 RowBox[{"I", "*", "GammaTiN"}]}], 
+                RowBox[{"q", " ", "vFTiN"}]], "-", "1"}], ")"}]], "]"}]}], "+", 
+          RowBox[{
+           FractionBox["kFTiN", 
+            RowBox[{"4", "q"}]], 
+           RowBox[{"(", 
+            RowBox[{"1", "-", 
+             SuperscriptBox[
+              RowBox[{"(", 
+               RowBox[{
+                FractionBox["q", 
+                 RowBox[{"2", "kFTiN"}]], "+", 
+                FractionBox[
+                 RowBox[{"w", "+", 
+                  RowBox[{"I", "*", "GammaTiN"}]}], 
+                 RowBox[{"q", " ", "vFTiN"}]]}], ")"}], "2"]}], ")"}], 
+           RowBox[{"Log", "[", 
+            FractionBox[
+             RowBox[{"(", 
+              RowBox[{
+               FractionBox["q", 
+                RowBox[{"2", "kFTiN"}]], "+", 
+               FractionBox[
+                RowBox[{"w", "+", 
+                 RowBox[{"I", "*", "GammaTiN"}]}], 
+                RowBox[{"q", " ", "vFTiN"}]], "+", "1"}], ")"}], 
+             RowBox[{"(", 
+              RowBox[{
+               FractionBox["q", 
+                RowBox[{"2", "kFTiN"}]], "+", 
+               FractionBox[
+                RowBox[{"w", "+", 
+                 RowBox[{"I", "*", "GammaTiN"}]}], 
+                RowBox[{"q", " ", "vFTiN"}]], "-", "1"}], ")"}]], "]"}]}]}], 
+         ")"}]}]}], ")"}], 
+     RowBox[{"-", "1"}]]}], "]"}], " "}]], "Code",
+ CellChangeTimes->{{3.962855844446371*^9, 3.962856087832417*^9}, {
+   3.962856144626367*^9, 3.96285615920998*^9}, {3.9628562075417976`*^9, 
+   3.962856254404812*^9}, 3.962858977615165*^9, {3.963307176696734*^9, 
+   3.963307204749674*^9}, {3.963377102428686*^9, 3.963377186550968*^9}},
+ CellLabel->"In[82]:=",ExpressionUUID->"7caa8bb8-3e9f-e649-800d-53588abc030f"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1920, 954},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"9b239747-71e6-4754-8bd4-ad78a3dd14a8"
+]
+(* End of Notebook Content *)

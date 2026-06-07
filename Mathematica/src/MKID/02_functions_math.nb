@@ -1,0 +1,184 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 14.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[         0,          0]
+NotebookDataLength[         0,          0]
+NotebookOptionsPosition[         0,          0]
+NotebookOutlinePosition[         0,          0]
+CellTagsIndexPosition[         0,          0]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[CellGroupData[{
+
+Cell["MKID - Math/Utility Functions", "Title",
+ ExpressionUUID->"8bc390bc-53d3-4fdd-b5c8-1ef82a85a337"],
+
+Cell[CellGroupData[{
+
+Cell["Setup", "Section",
+ ExpressionUUID->"fc001d74-1e0e-4b62-b34d-7367dd625a07"],
+
+Cell[TextData[{
+"Loads upstream notebooks and points ",
+StyleBox["Direc", "Code"],
+" to ",
+StyleBox["../../input/MKID", "Code"],
+"."
+}], "Text",
+ ExpressionUUID->"77e77b12-8dfa-4f19-872c-fef0825494a6"],
+
+Cell[
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"01_setup.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "Input",
+ InitializationCell->True,
+ ExpressionUUID->"74922d27-1568-4089-a22e-3239c2743e9e"],
+
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Functions", "Section",
+ CellChangeTimes->{{3.971815521116932*^9, 
+  3.971815523949556*^9}},ExpressionUUID->"a7d7f6eb-75b7-764a-bab6-\
+bd8feea762f7"],
+
+Cell[CellGroupData[{
+
+Cell["Math", "Subsection",
+ CellChangeTimes->{{3.971815531050041*^9, 
+  3.9718155333238683`*^9}},ExpressionUUID->"36168b42-7ae6-664c-9c50-\
+c418c8ce1ffa"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"LIntpl1D", "[", 
+   RowBox[{"x1_", ",", "y1_"}], "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"l1", ",", "Leng", ",", "loopvar"}], "}"}], ",", 
+    "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"Leng", "=", 
+      RowBox[{"Length", "[", "x1", "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"l1", "=", 
+      RowBox[{"ConstantArray", "[", 
+       RowBox[{"0", ",", "Leng"}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"For", "[", 
+      RowBox[{
+       RowBox[{"loopvar", "=", "1"}], ",", 
+       RowBox[{"loopvar", "<=", "Leng"}], ",", 
+       RowBox[{"loopvar", "++"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"l1", "[", 
+          RowBox[{"[", "loopvar", "]"}], "]"}], "=", 
+         RowBox[{"{", 
+          RowBox[{
+           RowBox[{"{", 
+            RowBox[{"x1", "[", 
+             RowBox[{"[", "loopvar", "]"}], "]"}], "}"}], ",", 
+           RowBox[{"y1", "[", 
+            RowBox[{"[", "loopvar", "]"}], "]"}]}], "}"}]}], ";"}]}], 
+      "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", 
+     RowBox[{"ListInterpolation", "[", 
+      RowBox[{"l1", ",", 
+       RowBox[{"InterpolationOrder", "->", "1"}]}], "]"}]}]}], 
+   "\[IndentingNewLine]", "]"}]}]], "Code",
+ CellChangeTimes->{{3.886803241878684*^9, 3.886803332203937*^9}, {
+  3.886803375390052*^9, 3.886803477230287*^9}, {3.8868035545360613`*^9, 
+  3.886803569780565*^9}, {3.886803606059684*^9, 3.8868036932897835`*^9}, {
+  3.886803767449729*^9, 3.886803786210848*^9}, {3.8868040898877993`*^9, 
+  3.886804091183118*^9}, {3.906658100346494*^9, 3.906658103641298*^9}, {
+  3.9314314753263874`*^9, 3.93143147907687*^9}, {3.938846486258894*^9, 
+  3.938846497468408*^9}, {3.941077497551245*^9, 3.9410775170322742`*^9}, {
+  3.9518775440721035`*^9, 3.9518775459467525`*^9}, {3.962790691859173*^9, 
+  3.96279069343326*^9}},
+ CellLabel->"In[83]:=",ExpressionUUID->"6ac20ec3-a5db-5f4d-8d9b-2e593ae0bfd3"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{"IntplArray", "[", "m_", "]"}], ":=", 
+  RowBox[{"Module", "[", 
+   RowBox[{
+    RowBox[{"{", 
+     RowBox[{"len", ",", "intpl", ",", "lv"}], "}"}], ",", 
+    "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"len", "=", 
+      RowBox[{"Length", "[", "m", "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"intpl", "=", 
+      RowBox[{"ConstantArray", "[", 
+       RowBox[{"0", ",", 
+        RowBox[{"len", "-", "1"}]}], "]"}]}], ";", "\[IndentingNewLine]", 
+     RowBox[{"For", "[", 
+      RowBox[{
+       RowBox[{"lv", "=", "1"}], ",", 
+       RowBox[{"lv", "<=", 
+        RowBox[{"len", "-", "1"}]}], ",", 
+       RowBox[{"lv", "++"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{"intpl", "[", 
+          RowBox[{"[", "lv", "]"}], "]"}], "=", 
+         RowBox[{"LIntpl1D", "[", 
+          RowBox[{
+           RowBox[{"m", "[", 
+            RowBox[{"[", "1", "]"}], "]"}], ",", 
+           RowBox[{"m", "[", 
+            RowBox[{"[", 
+             RowBox[{"lv", "+", "1"}], "]"}], "]"}]}], "]"}]}], ";"}]}], 
+      "\[IndentingNewLine]", "]"}], ";", "\[IndentingNewLine]", "intpl"}]}], 
+   "\[IndentingNewLine]", "]"}]}]], "Code",
+ CellChangeTimes->{{3.95187728451882*^9, 3.951877514778082*^9}, {
+  3.951877563632204*^9, 3.951877615532787*^9}},
+ CellLabel->"In[84]:=",ExpressionUUID->"489364da-c40c-7449-b96f-656ff7144b0d"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Utility", "Subsection",
+ CellChangeTimes->{{3.9718155711566677`*^9, 
+  3.971815574602035*^9}},ExpressionUUID->"fd6d0cb5-9e35-d74c-9a04-\
+a36a6ffa3565"],
+
+Cell[BoxData[
+ RowBox[{
+  RowBox[{
+   RowBox[{
+    RowBox[{
+     RowBox[{
+      RowBox[{"Inword", "[", "word_", "]"}], "[", "a_", "]"}], "[", 
+     RowBox[{"x_", ",", "y_"}], "]"}], "[", "color_", "]"}], ":=", 
+   RowBox[{"Inset", "[", 
+    RowBox[{
+     RowBox[{"Style", "[", 
+      RowBox[{"word", ",", "a", ",", "color", ",", 
+       RowBox[{"FontFamily", "\[Rule]", "\"\<Times\>\""}]}], "]"}], ",", 
+     RowBox[{"ImageScaled", "[", 
+      RowBox[{"{", 
+       RowBox[{"x", ",", "y"}], "}"}], "]"}], ",", 
+     RowBox[{"{", 
+      RowBox[{"Center", ",", "Center"}], "}"}]}], "]"}]}], ";"}]], "Code",
+ CellLabel->"In[85]:=",ExpressionUUID->"680b428c-bd8b-734a-9338-8c16385c2a60"]
+}, Open  ]]
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1920, 954},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"8b5e76cb-ecfa-45c4-a7ef-7c937f53d053"
+]
+(* End of Notebook Content *)
