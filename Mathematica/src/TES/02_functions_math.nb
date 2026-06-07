@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["TES - Math/Utility Functions", "Title",
- ExpressionUUID->"d452c511-f490-4fb3-af54-1c3722b08c2e"],
+ ExpressionUUID->"8fdbc8b6-a74b-4084-b3e4-c8f2c423955a"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"7884c806-36ec-439c-991e-9b252c69528c"],
+ ExpressionUUID->"c7a00d13-e72a-4ff6-8d90-4c23b9866915"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/TES", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"6d64f2db-666b-4345-a939-78284045c1dd"],
+ ExpressionUUID->"da5eca56-1c38-4227-b128-9c0604a91f45"],
 
 Cell[
  "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"01_setup.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"ec6f5579-250a-4475-b9fb-20c9c3b7abb4"],
+ ExpressionUUID->"0333d104-2669-4ccd-a9eb-1b0e70e52df8"],
 
 }, Open  ]],
 
@@ -179,6 +179,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"0e858e51-ea78-4493-a05b-40cc385b675a"
+ExpressionUUID->"4b2d2dd2-a9b1-4672-af44-5b87ddc62310"
 ]
 (* End of Notebook Content *)
