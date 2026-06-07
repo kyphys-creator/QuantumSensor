@@ -15,10 +15,12 @@ SECTIONS_TEMPLATE = [
         {"only": "defined functions", "append_subsubs": ["defined"]}),
     ("07_dcurlyRdEprime_plot", "{D} - d(curly R)/dE' kernel plots",   "Response function",    0,
         {"only": "plot"}),
-    ("08_response_matrix",    "{D} - Response (Matrix data)",        "Response function",    0,
-        {"only": "Matrix data", "remove_subsubs": ["defined"]}),
-    ("09_data",               "{D} - Data for minimization",         "Data for minimization"),
-    ("10_minimization",       "{D} - Minimization",                  "Minimization"),
+    ("08_response_matrix",      "{D} - Response Matrix",             "Response function",    0,
+        {"only": "Matrix data", "remove_subsubs": ["defined", "Plotting"]}),
+    ("09_response_matrix_plot", "{D} - Response Matrix plots",       "Response function",    0,
+        {"only": "Matrix data", "remove_subsubs": ["defined", "matrices"]}),
+    ("10_data",                 "{D} - Data for minimization",       "Data for minimization"),
+    ("11_minimization",         "{D} - Minimization",                "Minimization"),
 ]
 
 OPEN_RE    = re.compile(r'^Cell\[CellGroupData\[\{\s*$')

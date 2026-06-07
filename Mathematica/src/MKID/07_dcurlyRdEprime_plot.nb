@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["MKID - d(curly R)/dE' kernel plots", "Title",
- ExpressionUUID->"a961a555-e252-4f84-a304-9631c4cc961b"],
+ ExpressionUUID->"31b20b9d-7132-4bb3-9950-3ef6be59c6f3"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"fd30180f-246e-4ccb-b15b-87f801e9721e"],
+ ExpressionUUID->"db8d49c9-2477-4152-b691-c27ba631874b"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"b8e65cbe-c366-4aa8-8838-c41d69f64ba9"],
+ ExpressionUUID->"758114da-a573-41c0-803c-38f506852d44"],
 
 Cell[
  "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"06_response_defs.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"c4460666-f14e-4bda-9269-bc848991c72f"],
+ ExpressionUUID->"692812a0-eda1-4f6c-88d9-4cb5b8f4c0b1"],
 
 }, Open  ]],
 
@@ -1158,6 +1158,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"aa819368-7f41-4b26-8d01-c7cbe66ff39a"
+ExpressionUUID->"a52db386-05fb-4dbb-9cfc-3a1e7b4080c1"
 ]
 (* End of Notebook Content *)
