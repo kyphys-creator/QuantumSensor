@@ -12,7 +12,7 @@ split_notebook(
         "04_material": ["MKID"],
         # 06_response_defs: drop TiN Subsubsection inside "defined functions"
         "06_response_defs": ["TiN"],
-        # 07_response: drop TiN Subsubsection inside "plot"
-        "07_response": ["TiN"],
+        # 07_response_plot: drop TiN Subsubsection inside "plot"
+        "07_response_plot": ["TiN"],
     },
 )

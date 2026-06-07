@@ -12,7 +12,7 @@ split_notebook(
         "04_material": ["TES"],
         # 06_response_defs: drop Al Subsubsection inside "defined functions"
         "06_response_defs": ["Al"],
-        # 07_response: drop Al Subsubsection inside "plot"
-        "07_response": ["Al"],
+        # 07_response_plot: drop Al Subsubsection inside "plot"
+        "07_response_plot": ["Al"],
     },
 )

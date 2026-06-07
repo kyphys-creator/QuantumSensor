@@ -1,0 +1,1163 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 14.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[         0,          0]
+NotebookDataLength[         0,          0]
+NotebookOptionsPosition[         0,          0]
+NotebookOutlinePosition[         0,          0]
+CellTagsIndexPosition[         0,          0]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[CellGroupData[{
+
+Cell["MKID - Response (plot)", "Title",
+ ExpressionUUID->"4a4c09fe-6e62-4dbe-a2f8-b467008a3d76"],
+
+Cell[CellGroupData[{
+
+Cell["Setup", "Section",
+ ExpressionUUID->"8925654c-fbe8-4732-a548-f981807ef108"],
+
+Cell[TextData[{
+"Loads upstream notebooks and points ",
+StyleBox["Direc", "Code"],
+" to ",
+StyleBox["../../input/MKID", "Code"],
+"."
+}], "Text",
+ ExpressionUUID->"ac422cdb-7098-40f2-98c6-0cda1585d1c8"],
+
+Cell[
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"06_response_defs.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "Input",
+ InitializationCell->True,
+ ExpressionUUID->"42c03e77-f593-4bdb-b599-564b13c08730"],
+
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Response function", "Section",
+ CellChangeTimes->{{3.971816029044182*^9, 
+  3.971816034624622*^9}},ExpressionUUID->"52666b28-c092-5c4a-ba80-\
+d3ee061a3252"],
+
+Cell[CellGroupData[{
+
+Cell["plot", "Subsection",
+ CellChangeTimes->{{3.971816722230541*^9, 
+  3.9718167268236237`*^9}},ExpressionUUID->"c31274b2-c80e-a645-861a-\
+b575d8cd8594"],
+
+Cell[BoxData[
+ RowBox[{"(*", " ", 
+  RowBox[{"function", " ", "format"}], " ", "*)"}]], "Input",
+ CellChangeTimes->{{3.9718168101827564`*^9, 
+  3.9718168211815224`*^9}},ExpressionUUID->"a2a61dc7-4b58-5d4d-85ed-\
+ecf5015b9a4f"],
+
+Cell["\<\
+KerR(material) (left/right branch)[DM mass][heavy/light][threshold, \
+uncertainty][vmin]\
+\>", "Text",
+ CellChangeTimes->{{3.971816825651008*^9, 3.971816886247829*^9}, {
+  3.971816931106697*^9, 3.971816935397112*^9}, {3.971817122488008*^9, 
+  3.971817126324663*^9}},ExpressionUUID->"cbe185a2-f7c8-f246-9f4d-\
+d3afa9927868"],
+
+Cell[CellGroupData[{
+
+Cell["TiN", "Subsubsection",
+ CellChangeTimes->{{3.9718170464186134`*^9, 
+  3.971817049082571*^9}},ExpressionUUID->"4faa5cd3-e3de-0a44-a84d-\
+456fa7e5cfa2"],
+
+Cell[BoxData[
+ RowBox[{"AbsoluteTiming", "[", 
+  RowBox[{"K0TiNM10", "=", 
+   RowBox[{"Plot", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"10", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"10", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{
+           RowBox[{"kg", "/", 
+            SuperscriptBox["10", "22"]}], "/", ".095"}], "/", "1.02"}], "/", 
+         ".997"}]}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"10", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"10", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"kg", "/", 
+              SuperscriptBox["10", "22"]}], "/", ".92"}], "/", ".43"}], "/", 
+           ".99"}], "/", ".98"}], "/", ".997"}]}]}], "}"}], 
+     "\[IndentingNewLine]", ",", 
+     RowBox[{"{", 
+      RowBox[{"vmin", ",", "0", ",", "800"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"MaxRecursion", "->", "0"}], ",", 
+     RowBox[{"PlotPoints", "->", "800"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"Thick", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "1"}], "]"}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"Dashed", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "1"}], "]"}]}], "}"}]}], "}"}]}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+     RowBox[{"LabelStyle", "\[Rule]", 
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{"FontFamily", "->", "\"\<Times\>\""}], ",", "Black", ",", 
+        "20", ",", "Bold"}], "]"}]}], ",", 
+     RowBox[{"FrameStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"FrameLabel", "\[Rule]", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\<\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]\>\"", ",", "20", 
+          ",", 
+          RowBox[{"SingleLetterItalics", "\[Rule]", "False"}]}], "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\< d\[ScriptCapitalR]/d\[Omega]' ( Scaled )\>\"", ",", "20"}], 
+         "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{"\"\<MKID, heavy mediator\>\"", ",", "20"}], "]"}]}], 
+       "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"PlotRange", "\[Rule]", "All"}], ",", 
+     RowBox[{"ImageSize", "->", "Large"}]}], "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.971960976898735*^9, 3.971960981184256*^9}},
+ CellLabel->
+  "In[141]:=",ExpressionUUID->"fcdc438c-541a-174b-88a8-c882c8cb4dcc"],
+
+Cell[BoxData[
+ RowBox[{"AbsoluteTiming", "[", 
+  RowBox[{"K0TiNM100", "=", 
+   RowBox[{"Plot", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"100", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"100", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".185"}], "/", "1.04"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"100", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"100", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{
+           RowBox[{"kg", "/", 
+            SuperscriptBox["10", "22"]}], "/", ".247"}], "/", ".99"}], "/", 
+         "1.04"}]}]}], "}"}], "\[IndentingNewLine]", ",", 
+     RowBox[{"{", 
+      RowBox[{"vmin", ",", "0", ",", "800"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"MaxRecursion", "->", "0"}], ",", 
+     RowBox[{"PlotPoints", "->", "800"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"Thick", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "2"}], "]"}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"Dashed", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "2"}], "]"}]}], "}"}]}], "}"}]}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+     RowBox[{"LabelStyle", "\[Rule]", 
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{"FontFamily", "->", "\"\<Times\>\""}], ",", "Black", ",", 
+        "20", ",", "Bold"}], "]"}]}], ",", 
+     RowBox[{"FrameStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"FrameLabel", "\[Rule]", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\<\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]\>\"", ",", "20", 
+          ",", 
+          RowBox[{"SingleLetterItalics", "\[Rule]", "False"}]}], "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\< d\[ScriptCapitalR]/d\[Omega]' ( Scaled )\>\"", ",", "20"}], 
+         "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{"\"\<MKID, heavy mediator\>\"", ",", "20"}], "]"}]}], 
+       "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"PlotRange", "\[Rule]", "All"}], ",", 
+     RowBox[{"ImageSize", "->", "Large"}]}], "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.971961040644676*^9, 3.971961045227683*^9}},
+ CellLabel->
+  "In[142]:=",ExpressionUUID->"115814ca-6cd3-f543-ba79-5bfd254fb17f"],
+
+Cell[BoxData[
+ RowBox[{"AbsoluteTiming", "[", 
+  RowBox[{"K0TiNM1000", "=", 
+   RowBox[{"Plot", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"1000", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"1000", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".145"}], "/", "1.06"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"1000", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"1000", " ", "MeV"}], "]"}], "[", "0", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".234"}], "/", "1.04"}]}]}], 
+      "}"}], "\[IndentingNewLine]", ",", 
+     RowBox[{"{", 
+      RowBox[{"vmin", ",", "0", ",", "800"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"MaxRecursion", "->", "0"}], ",", 
+     RowBox[{"PlotPoints", "->", "800"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"Thick", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "3"}], "]"}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"Dashed", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "3"}], "]"}]}], "}"}]}], "}"}]}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+     RowBox[{"LabelStyle", "\[Rule]", 
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{"FontFamily", "->", "\"\<Times\>\""}], ",", "Black", ",", 
+        "20", ",", "Bold"}], "]"}]}], ",", 
+     RowBox[{"FrameStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"FrameLabel", "\[Rule]", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\<\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]\>\"", ",", "20", 
+          ",", 
+          RowBox[{"SingleLetterItalics", "\[Rule]", "False"}]}], "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\< d\[ScriptCapitalR]/d\[Omega]' ( Scaled )\>\"", ",", "20"}], 
+         "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{"\"\<MKID, heavy mediator\>\"", ",", "20"}], "]"}]}], 
+       "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"PlotRange", "\[Rule]", "All"}], ",", 
+     RowBox[{"ImageSize", "->", "Large"}]}], "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.971961111608913*^9, 3.971961119183779*^9}},
+ CellLabel->
+  "In[143]:=",ExpressionUUID->"d56bcf7d-f204-f94d-912f-3c753ebdd53e"],
+
+Cell[BoxData[
+ RowBox[{"AbsoluteTiming", "[", 
+  RowBox[{"K2TiNM10", "=", 
+   RowBox[{"Plot", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"10", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"10", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".663"}], "/", ".98"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"10", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"10", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".637"}], "/", "1.02"}]}]}], 
+      "}"}], "\[IndentingNewLine]", ",", 
+     RowBox[{"{", 
+      RowBox[{"vmin", ",", "0", ",", "800"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"MaxRecursion", "->", "0"}], ",", 
+     RowBox[{"PlotPoints", "->", "800"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"Thick", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "1"}], "]"}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"Dashed", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "1"}], "]"}]}], "}"}]}], "}"}]}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+     RowBox[{"LabelStyle", "\[Rule]", 
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{"FontFamily", "->", "\"\<Times\>\""}], ",", "Black", ",", 
+        "20", ",", "Bold"}], "]"}]}], ",", 
+     RowBox[{"FrameStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"FrameLabel", "\[Rule]", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\<\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]\>\"", ",", "20", 
+          ",", 
+          RowBox[{"SingleLetterItalics", "\[Rule]", "False"}]}], "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\< d\[ScriptCapitalR]/d\[Omega]' ( Scaled )\>\"", ",", "20"}], 
+         "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{"\"\<MKID, light mediator\>\"", ",", "20"}], "]"}]}], 
+       "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"PlotRange", "\[Rule]", "All"}], ",", 
+     RowBox[{"ImageSize", "->", "Large"}]}], "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.971961212744304*^9, 3.9719612181036*^9}},
+ CellLabel->
+  "In[144]:=",ExpressionUUID->"156cb13b-e2e1-cd4a-9fe4-748f7d462d9d"],
+
+Cell[BoxData[
+ RowBox[{"AbsoluteTiming", "[", 
+  RowBox[{"K2TiNM100", "=", 
+   RowBox[{"Plot", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"100", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"100", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".241"}], "/", "1.03"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"100", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"100", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".382"}], "/", "1.02"}]}]}], 
+      "}"}], "\[IndentingNewLine]", ",", 
+     RowBox[{"{", 
+      RowBox[{"vmin", ",", "0", ",", "800"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"MaxRecursion", "->", "0"}], ",", 
+     RowBox[{"PlotPoints", "->", "800"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"Thick", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "2"}], "]"}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"Dashed", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "2"}], "]"}]}], "}"}]}], "}"}]}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+     RowBox[{"LabelStyle", "\[Rule]", 
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{"FontFamily", "->", "\"\<Times\>\""}], ",", "Black", ",", 
+        "20", ",", "Bold"}], "]"}]}], ",", 
+     RowBox[{"FrameStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"FrameLabel", "\[Rule]", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\<\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]\>\"", ",", "20", 
+          ",", 
+          RowBox[{"SingleLetterItalics", "\[Rule]", "False"}]}], "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\< d\[ScriptCapitalR]/d\[Omega]' ( Scaled )\>\"", ",", "20"}], 
+         "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{"\"\<MKID, light mediator\>\"", ",", "20"}], "]"}]}], 
+       "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"PlotRange", "\[Rule]", "All"}], ",", 
+     RowBox[{"ImageSize", "->", "Large"}]}], "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.971961287807492*^9, 3.971961291966935*^9}},
+ CellLabel->
+  "In[145]:=",ExpressionUUID->"1ef41ca6-1f24-db42-b8e7-e5243e74fddf"],
+
+Cell[BoxData[
+ RowBox[{"AbsoluteTiming", "[", 
+  RowBox[{"K2TiNM1000", "=", 
+   RowBox[{"Plot", "[", "\[IndentingNewLine]", 
+    RowBox[{
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"1000", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"1000", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"0.2", ",", 
+             RowBox[{"0.2", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".192"}], "/", "1.03"}]}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{"(", 
+         RowBox[{
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNl", "[", 
+              RowBox[{"1000", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}], "+", 
+          RowBox[{
+           RowBox[{
+            RowBox[{
+             RowBox[{"KerRTiNr", "[", 
+              RowBox[{"1000", " ", "MeV"}], "]"}], "[", "2", "]"}], "[", 
+            RowBox[{"1", ",", 
+             RowBox[{"1", "*", "MKIDsig"}]}], "]"}], "[", 
+           RowBox[{"vmin", " ", "kps"}], "]"}]}], ")"}], "*", 
+        RowBox[{
+         RowBox[{
+          RowBox[{"kg", "/", 
+           SuperscriptBox["10", "22"]}], "/", ".365"}], "/", "1.02"}]}]}], 
+      "}"}], "\[IndentingNewLine]", ",", 
+     RowBox[{"{", 
+      RowBox[{"vmin", ",", "0", ",", "800"}], "}"}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"MaxRecursion", "->", "0"}], ",", 
+     RowBox[{"PlotPoints", "->", "800"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"{", 
+         RowBox[{"Thick", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "3"}], "]"}]}], "}"}], ",", 
+        RowBox[{"{", 
+         RowBox[{"Dashed", ",", 
+          RowBox[{"ColorData", "[", 
+           RowBox[{"116", ",", "3"}], "]"}]}], "}"}]}], "}"}]}], ",", 
+     "\[IndentingNewLine]", 
+     RowBox[{"Frame", "\[Rule]", "True"}], ",", 
+     RowBox[{"LabelStyle", "\[Rule]", 
+      RowBox[{"Directive", "[", 
+       RowBox[{
+        RowBox[{"FontFamily", "->", "\"\<Times\>\""}], ",", "Black", ",", 
+        "20", ",", "Bold"}], "]"}]}], ",", 
+     RowBox[{"FrameStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"FrameLabel", "\[Rule]", " ", 
+      RowBox[{"{", 
+       RowBox[{
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\<\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]\>\"", ",", "20", 
+          ",", 
+          RowBox[{"SingleLetterItalics", "\[Rule]", "False"}]}], "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{
+         "\"\< d\[ScriptCapitalR]/d\[Omega]' ( Scaled )\>\"", ",", "20"}], 
+         "]"}], ",", 
+        RowBox[{"Style", "[", 
+         RowBox[{"\"\<MKID, light mediator\>\"", ",", "20"}], "]"}]}], 
+       "}"}]}], ",", "\[IndentingNewLine]", 
+     RowBox[{"PlotRange", "\[Rule]", "All"}], ",", 
+     RowBox[{"ImageSize", "->", "Large"}]}], "]"}]}], "]"}]], "Input",
+ CellChangeTimes->{{3.971961364601375*^9, 3.97196136891626*^9}},
+ CellLabel->
+  "In[146]:=",ExpressionUUID->"df70a8c4-e976-e44d-937e-57cf5eb0d22f"]
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Result", "Subsubsection",
+ CellChangeTimes->{{3.97181724212969*^9, 
+  3.971817269849079*^9}},ExpressionUUID->"e232942a-0974-3346-a92e-\
+d476cd48a8ed"],
+
+Cell[BoxData[
+ RowBox[{"(*", " ", 
+  RowBox[{
+  "Depends", " ", "on", " ", "how", " ", "we", " ", "want", " ", "to", " ", 
+   "combine", " ", "the", " ", "plots"}], " ", "*)"}]], "Input",
+ CellChangeTimes->{{3.971817272587588*^9, 
+  3.971817289607204*^9}},ExpressionUUID->"202772c2-04c3-d846-865b-\
+aba462168275"],
+
+Cell[BoxData[
+ RowBox[{"(*", " ", 
+  RowBox[{"Al", ",", "Heavy"}], " ", "*)"}]], "Input",
+ CellChangeTimes->{{3.9718173867072067`*^9, 
+  3.971817397758211*^9}},ExpressionUUID->"a52fd426-9f2f-da49-9c6c-\
+60589a659111"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"line1", "=", 
+   RowBox[{"Plot", "[", 
+    RowBox[{".175", ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", ".8", ",", "1.2"}], "}"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"line2", "=", 
+   RowBox[{"Plot", "[", 
+    RowBox[{".095", ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", ".8", ",", "1.2"}], "}"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{"Black", ",", "Dashed"}], "}"}]}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"K0Al", "=", 
+  RowBox[{"Show", "[", 
+   RowBox[{
+   "K0AlM10", ",", "K0AlM100", ",", "K0AlM1000", ",", "line1", ",", "line2", 
+    ",", 
+    RowBox[{"Epilog", "->", 
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<\[Omega]'\>\"", "]"}], "[", "20", "]"}],
+          "[", 
+         RowBox[{".16", ",", ".36"}], "]"}], "[", 
+        RowBox[{"{", 
+         RowBox[{"Black", ",", "Bold"}], "}"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<0.1 eV\>\"", "]"}], "[", "18", "]"}], 
+         "[", 
+         RowBox[{".24", ",", ".3"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<1 eV\>\"", "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".228", ",", ".24"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SubscriptBox[\(m\), \(\[Chi]\)]\)\>\"", 
+           "]"}], "[", "20", "]"}], "[", 
+         RowBox[{".89", ",", ".85"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(1\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".78"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "1"}], "]"}], "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(2\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".72"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "2"}], "]"}], "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(3\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".66"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "3"}], "]"}], "]"}]}], "\[IndentingNewLine]", 
+      "}"}]}]}], "]"}]}]}], "Input",
+ CellLabel->
+  "In[139]:=",ExpressionUUID->"1332553c-d149-664b-b5b9-08e0f0d004e9"],
+
+Cell[BoxData[
+ RowBox[{"(*", " ", 
+  RowBox[{"Al", ",", "Light"}], " ", "*)"}]], "Input",
+ CellChangeTimes->{{3.971817412142521*^9, 
+  3.9718174129001827`*^9}},ExpressionUUID->"cf280f3f-e3d4-f741-b663-\
+fe8b674e4292"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"line1", "=", 
+   RowBox[{"Plot", "[", 
+    RowBox[{".175", ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", ".8", ",", "1.2"}], "}"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"line2", "=", 
+   RowBox[{"Plot", "[", 
+    RowBox[{".095", ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", ".8", ",", "1.2"}], "}"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{"Black", ",", "Dashed"}], "}"}]}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"K2Al", "=", 
+  RowBox[{"Show", "[", 
+   RowBox[{
+   "K2AlM10", ",", "K2AlM100", ",", "K2AlM1000", ",", "line1", ",", "line2", 
+    ",", 
+    RowBox[{"Epilog", "->", 
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<\[Omega]'\>\"", "]"}], "[", "20", "]"}],
+          "[", 
+         RowBox[{".16", ",", ".36"}], "]"}], "[", 
+        RowBox[{"{", 
+         RowBox[{"Black", ",", "Bold"}], "}"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<0.1 eV\>\"", "]"}], "[", "18", "]"}], 
+         "[", 
+         RowBox[{".24", ",", ".3"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<1 eV\>\"", "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".228", ",", ".24"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SubscriptBox[\(m\), \(\[Chi]\)]\)\>\"", 
+           "]"}], "[", "20", "]"}], "[", 
+         RowBox[{".89", ",", ".85"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(1\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".78"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "1"}], "]"}], "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(2\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".72"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "2"}], "]"}], "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(3\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".66"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "3"}], "]"}], "]"}]}], "\[IndentingNewLine]", 
+      "}"}]}]}], "]"}]}]}], "Input",
+ CellLabel->
+  "In[150]:=",ExpressionUUID->"bf7f16e1-a54c-4a48-a021-9a86a8f2a3bc"],
+
+Cell[BoxData[
+ RowBox[{"(*", " ", 
+  RowBox[{"TiN", ",", "Heavy"}], " ", "*)"}]], "Input",
+ CellChangeTimes->{{3.971817420266409*^9, 
+  3.971817420892475*^9}},ExpressionUUID->"63d5a5c7-6e14-2040-9d10-\
+6b20c272c460"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"line1", "=", 
+   RowBox[{"Plot", "[", 
+    RowBox[{".175", ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", ".8", ",", "1.2"}], "}"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"line2", "=", 
+   RowBox[{"Plot", "[", 
+    RowBox[{".095", ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", ".8", ",", "1.2"}], "}"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{"Black", ",", "Dashed"}], "}"}]}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"K0TiN", "=", 
+  RowBox[{"Show", "[", 
+   RowBox[{
+   "K0TiNM10", ",", "K0TiNM100", ",", "K0TiNM1000", ",", "line1", ",", 
+    "line2", ",", 
+    RowBox[{"Epilog", "->", 
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<\[Omega]'\>\"", "]"}], "[", "20", "]"}],
+          "[", 
+         RowBox[{".16", ",", ".36"}], "]"}], "[", 
+        RowBox[{"{", 
+         RowBox[{"Black", ",", "Bold"}], "}"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<0.1 eV\>\"", "]"}], "[", "18", "]"}], 
+         "[", 
+         RowBox[{".24", ",", ".3"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<1 eV\>\"", "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".228", ",", ".24"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SubscriptBox[\(m\), \(\[Chi]\)]\)\>\"", 
+           "]"}], "[", "20", "]"}], "[", 
+         RowBox[{".89", ",", ".85"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(1\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".78"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "1"}], "]"}], "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(2\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".72"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "2"}], "]"}], "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(3\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".66"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "3"}], "]"}], "]"}]}], "\[IndentingNewLine]", 
+      "}"}]}]}], "]"}]}]}], "Input",
+ CellLabel->
+  "In[153]:=",ExpressionUUID->"a105c98a-89c3-854f-b51c-14e2e54f7867"],
+
+Cell[BoxData[
+ RowBox[{"(*", " ", 
+  RowBox[{"TiN", ",", "Light"}], " ", "*)"}]], "Input",
+ CellChangeTimes->{{3.971817425993414*^9, 3.971817430341547*^9}},
+ CellLabel->
+  "In[158]:=",ExpressionUUID->"834bdb46-f99e-6948-8fbf-3c7af21d7bb6"],
+
+Cell[BoxData[{
+ RowBox[{
+  RowBox[{"line1", "=", 
+   RowBox[{"Plot", "[", 
+    RowBox[{".175", ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", ".8", ",", "1.2"}], "}"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", "Black", "}"}]}]}], "]"}]}], ";"}], "\[IndentingNewLine]", 
+ RowBox[{
+  RowBox[{"line2", "=", 
+   RowBox[{"Plot", "[", 
+    RowBox[{".095", ",", 
+     RowBox[{"{", 
+      RowBox[{"x", ",", ".8", ",", "1.2"}], "}"}], ",", 
+     RowBox[{"ScalingFunctions", "->", 
+      RowBox[{"{", "\"\<Log\>\"", "}"}]}], ",", 
+     RowBox[{"PlotStyle", "->", 
+      RowBox[{"{", 
+       RowBox[{"Black", ",", "Dashed"}], "}"}]}]}], "]"}]}], 
+  ";"}], "\[IndentingNewLine]", 
+ RowBox[{"K2TiN", "=", 
+  RowBox[{"Show", "[", 
+   RowBox[{
+   "K2TiNM10", ",", "K2TiNM100", ",", "K2TiNM1000", ",", "line1", ",", 
+    "line2", ",", 
+    RowBox[{"Epilog", "->", 
+     RowBox[{"{", "\[IndentingNewLine]", 
+      RowBox[{
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<\[Omega]'\>\"", "]"}], "[", "20", "]"}],
+          "[", 
+         RowBox[{".16", ",", ".36"}], "]"}], "[", 
+        RowBox[{"{", 
+         RowBox[{"Black", ",", "Bold"}], "}"}], "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<0.1 eV\>\"", "]"}], "[", "18", "]"}], 
+         "[", 
+         RowBox[{".24", ",", ".3"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{"Inword", "[", "\"\<1 eV\>\"", "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".228", ",", ".24"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SubscriptBox[\(m\), \(\[Chi]\)]\)\>\"", 
+           "]"}], "[", "20", "]"}], "[", 
+         RowBox[{".89", ",", ".85"}], "]"}], "[", "Black", "]"}], ",", 
+       "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(1\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".78"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "1"}], "]"}], "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(2\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".72"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "2"}], "]"}], "]"}], ",", "\[IndentingNewLine]", 
+       RowBox[{
+        RowBox[{
+         RowBox[{
+          RowBox[{
+          "Inword", "[", "\"\<\!\(\*SuperscriptBox[\(10\), \(3\)]\) MeV\>\"", 
+           "]"}], "[", "18", "]"}], "[", 
+         RowBox[{".89", ",", ".66"}], "]"}], "[", 
+        RowBox[{"ColorData", "[", 
+         RowBox[{"116", ",", "3"}], "]"}], "]"}]}], "\[IndentingNewLine]", 
+      "}"}]}]}], "]"}]}]}], "Input",
+ CellLabel->
+  "In[156]:=",ExpressionUUID->"3b06ebc9-f315-a54f-b66d-ee987ecdd097"],
+
+Cell[BoxData[{
+ RowBox[{"Export", "[", 
+  RowBox[{
+   RowBox[{"FileNameJoin", "[", 
+    RowBox[{"Direc", ",", "\"\<Alq0.pdf\>\""}], "]"}], ",", "K0Al"}], 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Export", "[", 
+  RowBox[{
+   RowBox[{"FileNameJoin", "[", 
+    RowBox[{"Direc", ",", "\"\<Alq2.pdf\>\""}], "]"}], ",", "K2Al"}], 
+  "]"}]}], "Input",
+ CellChangeTimes->{{3.971951384038501*^9, 3.971951389561256*^9}},
+ CellLabel->
+  "In[159]:=",ExpressionUUID->"a5843618-0384-b346-9d2b-5487466f5585"],
+
+Cell[BoxData[{
+ RowBox[{"Export", "[", 
+  RowBox[{
+   RowBox[{"FileNameJoin", "[", 
+    RowBox[{"Direc", ",", "\"\<TiNq0.pdf\>\""}], "]"}], ",", "K0TiN"}], 
+  "]"}], "\[IndentingNewLine]", 
+ RowBox[{"Export", "[", 
+  RowBox[{
+   RowBox[{"FileNameJoin", "[", 
+    RowBox[{"Direc", ",", "\"\<TiNq2.pdf\>\""}], "]"}], ",", "K2TiN"}], 
+  "]"}]}], "Input",
+ CellChangeTimes->{{3.971951394307158*^9, 3.971951401545192*^9}},
+ CellLabel->
+  "In[161]:=",ExpressionUUID->"b4622200-f00f-1846-a466-cfbd7e526457"]
+}, Open  ]]
+}, Open  ]]
+
+}, Open  ]]
+}, Open  ]]
+},
+WindowSize->{1920, 954},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"f4234ca4-72e6-442d-87af-7e88eb330fe6"
+]
+(* End of Notebook Content *)

@@ -20,28 +20,28 @@ WindowFrame->Normal*)
 Notebook[{
 Cell[CellGroupData[{
 
-Cell["TES - Minimization", "Title",
- ExpressionUUID->"41b97080-6dc4-469f-bedf-0629adf85d8a"],
+Cell["MKID - Minimization", "Title",
+ ExpressionUUID->"6f2c7d2d-4f6a-4402-ace9-f51a2507c2d8"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"613d65d9-8329-491d-bc9e-ce06b63d02c9"],
+ ExpressionUUID->"05c02d2e-6cae-482a-bd2f-08dbaabc533f"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
 StyleBox["Direc", "Code"],
 " to ",
-StyleBox["../../input/TES", "Code"],
+StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"0a5dee53-a379-4d25-9ad6-9b7956ccb020"],
+ ExpressionUUID->"5ba5f012-7505-4267-a778-d9faad83c4ab"],
 
 Cell[
- "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"08_data.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"09_data.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"7c0dde81-7f69-4cb1-9d7c-e00d536549ce"],
+ ExpressionUUID->"10e695f0-e7d5-4e51-b324-9faf2d9339ec"],
 
 }, Open  ]],
 
@@ -528,6 +528,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"db704988-262f-40b3-b439-7f720b29032f"
+ExpressionUUID->"1542f5fb-166c-4e7c-8f92-36abc6f41de2"
 ]
 (* End of Notebook Content *)

@@ -10,11 +10,15 @@ SECTIONS_TEMPLATE = [
     ("03_functions_response", "{D} - Domain/FDM/eta/Resolution",     "Functions",            1),
     ("04_material",           "{D} - Material ({M})",                "Material Input"),
     ("05_parameters",         "{D} - Calculation Parameters",        "Parameters"),
-    # Response function is split into kernel definitions (06) + plot/matrix (07)
-    ("06_response_defs",      "{D} - Response Function Defs",        "Response function",    0, {"only": "defined functions"}),
-    ("07_response",           "{D} - Response (plot + matrices)",    "Response function",    0, {"skip": "defined functions"}),
-    ("08_data",               "{D} - Data for minimization",         "Data for minimization"),
-    ("09_minimization",       "{D} - Minimization",                  "Minimization"),
+    # Response function is split into 3 notebooks: defs (incl. Matrix data > defined), plots, matrices
+    ("06_response_defs",      "{D} - Response Function Defs",        "Response function",    0,
+        {"only": "defined functions", "append_subsubs": ["defined"]}),
+    ("07_response_plot",      "{D} - Response (plot)",               "Response function",    0,
+        {"only": "plot"}),
+    ("08_response_matrix",    "{D} - Response (Matrix data)",        "Response function",    0,
+        {"only": "Matrix data", "remove_subsubs": ["defined"]}),
+    ("09_data",               "{D} - Data for minimization",         "Data for minimization"),
+    ("10_minimization",       "{D} - Minimization",                  "Minimization"),
 ]
 
 OPEN_RE    = re.compile(r'^Cell\[CellGroupData\[\{\s*$')
@@ -50,6 +54,18 @@ def _find_close_from(lines, open_idx):
             if depth == 0:
                 return k
     return None
+
+
+def _extract_subblock(lines, name, level):
+    """Find Cell["<name>", "<level>"... and return its enclosing CellGroupData lines."""
+    pat = re.compile(rf'^Cell\["{re.escape(name)}", "{level}",')
+    for i, line in enumerate(lines):
+        if pat.match(line):
+            op = _find_open_before(lines, i)
+            cl = _find_close_from(lines, op) if op is not None else None
+            if op is not None and cl is not None:
+                return lines[op:cl+1]
+    raise ValueError(f'{level} {name!r} not found')
 
 
 def _list_subsections(lines, level="Subsection"):
@@ -255,6 +271,7 @@ def split_notebook(detector, src_name, material_label, remove_labels=None):
     for idx, (stem, title, op, cl, opts) in enumerate(plans):
         prev = plans[idx-1][0] + ".nb" if idx > 0 else None
         section_lines = lines[op:cl+1]
+        original_section = section_lines[:]  # snapshot before filtering, for append lookups
 
         # Apply only/skip filtering on Subsection level
         if "only" in opts:
@@ -268,6 +285,21 @@ def split_notebook(detector, src_name, material_label, remove_labels=None):
             before = len(section_lines)
             section_lines = _remove_subsections(section_lines, [opts["skip"]], levels=("Subsection",))
             print(f"  {stem}: skipped {opts['skip']!r} ({before}→{len(section_lines)} lines)")
+
+        # Remove specified Subsubsections (anywhere in current section_lines)
+        if "remove_subsubs" in opts:
+            before = len(section_lines)
+            section_lines = _remove_subsections(section_lines, opts["remove_subsubs"], levels=("Subsubsection",))
+            print(f"  {stem}: removed Subsubsections {opts['remove_subsubs']} ({before}→{len(section_lines)} lines)")
+
+        # Append Subsubsections from elsewhere in the original Section
+        if "append_subsubs" in opts:
+            insert_idx = _find_close_from(section_lines, 0)
+            blocks = []
+            for name in opts["append_subsubs"]:
+                blocks.extend(_extract_subblock(original_section, name, "Subsubsection"))
+            section_lines = section_lines[:insert_idx] + blocks + section_lines[insert_idx:]
+            print(f"  {stem}: appended Subsubsections {opts['append_subsubs']} (+{len(blocks)} lines)")
 
         if stem in remove_labels:
             before = len(section_lines)
