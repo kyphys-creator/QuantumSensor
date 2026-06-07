@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["MKID - Response (Matrix data)", "Title",
- ExpressionUUID->"ffb0ad05-47c9-4aae-9b36-3feedd6a7e07"],
+ ExpressionUUID->"7e8fcdb4-5c6b-490b-92f3-750ecacdbd08"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"23b481d4-09cf-4b4c-9b94-b7e2ca49f69a"],
+ ExpressionUUID->"b6125e0e-b98f-43ce-beba-53187cc1ab5d"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"e01d3689-8da9-4442-a7f7-58e723869488"],
+ ExpressionUUID->"d417ec1e-c07e-4a5f-83aa-7742b5393ced"],
 
 Cell[
- "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"07_response_plot.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"07_dRdE_plot.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"bce6ca53-5844-4cf7-816d-b6d674c208c3"],
+ ExpressionUUID->"7295ef59-0620-4e8c-b917-6af8dc503972"],
 
 }, Open  ]],
 
@@ -139879,6 +139879,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"45663edf-31c8-481a-a130-f95002c194d0"
+ExpressionUUID->"40af7fa4-8f62-4364-b93d-2d0f9afb9b60"
 ]
 (* End of Notebook Content *)

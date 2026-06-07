@@ -13,7 +13,7 @@ SECTIONS_TEMPLATE = [
     # Response function is split into 3 notebooks: defs (incl. Matrix data > defined), plots, matrices
     ("06_response_defs",      "{D} - Response Function Defs",        "Response function",    0,
         {"only": "defined functions", "append_subsubs": ["defined"]}),
-    ("07_response_plot",      "{D} - Response (plot)",               "Response function",    0,
+    ("07_dRdE_plot",          "{D} - dR/dE kernel plots",            "Response function",    0,
         {"only": "plot"}),
     ("08_response_matrix",    "{D} - Response (Matrix data)",        "Response function",    0,
         {"only": "Matrix data", "remove_subsubs": ["defined"]}),

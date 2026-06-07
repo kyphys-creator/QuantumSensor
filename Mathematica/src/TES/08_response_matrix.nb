@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["TES - Response (Matrix data)", "Title",
- ExpressionUUID->"9d0bf52d-f545-4535-911a-2a31d142d815"],
+ ExpressionUUID->"eb7b6929-18f4-4571-b68e-9aa91f84809c"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"aeaea66c-5409-4331-b2fe-b4463ace1947"],
+ ExpressionUUID->"e56ab06a-75df-4f42-9b53-09c4f6cbe33d"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/TES", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"29357b8c-573a-4168-af1c-36ef760d19ec"],
+ ExpressionUUID->"d25fcd46-c26b-4982-8024-f6c04c59f3cf"],
 
 Cell[
- "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"07_response_plot.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"07_dRdE_plot.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"dd0a4e8c-0fd3-4739-a948-303b2786b80d"],
+ ExpressionUUID->"7db50226-cf37-4875-88a1-73b082ae1f04"],
 
 }, Open  ]],
 
@@ -139879,6 +139879,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"8f575e22-5918-4825-abd7-a2873e636267"
+ExpressionUUID->"8f766188-5053-413b-acf0-75bff1c81ca3"
 ]
 (* End of Notebook Content *)
