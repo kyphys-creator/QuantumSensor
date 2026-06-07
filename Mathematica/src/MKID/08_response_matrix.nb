@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["MKID - Response Matrix", "Title",
- ExpressionUUID->"f4f05317-2399-4411-a543-1bc94ab829e4"],
+ ExpressionUUID->"affb60f0-d72b-44c6-a117-5282bc263dbb"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"5c1e96d3-a4c5-4069-be0d-bef9f471df1a"],
+ ExpressionUUID->"344e2ea0-7b75-4f41-b226-64d59640356e"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"01004997-adac-4ce7-980b-b5fad829bee8"],
+ ExpressionUUID->"a4d9e64a-7d64-4acd-b14a-f71a8c48b134"],
 
 Cell[
  "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"07_dcurlyRdEprime_plot.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"e5d1c736-594b-42d7-a55f-4fdc29301cdb"],
+ ExpressionUUID->"5e00293e-50da-4c0c-96a1-03426c29c687"],
 
 }, Open  ]],
 
@@ -11229,6 +11229,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"3b3c4dc1-9f04-4ac4-84ca-4d1b7738886c"
+ExpressionUUID->"722b0228-0380-4908-898d-6a5e9c01739a"
 ]
 (* End of Notebook Content *)

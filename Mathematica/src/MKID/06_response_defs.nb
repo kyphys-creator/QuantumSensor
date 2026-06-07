@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["MKID - Response Function Defs", "Title",
- ExpressionUUID->"d72654ac-f5c9-4912-bcc0-e41150fa3c54"],
+ ExpressionUUID->"6a91d572-6203-442a-9069-a16bb77e1ea2"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"ae657dd6-8db2-4574-81be-ff1336f184f5"],
+ ExpressionUUID->"5690e108-ae95-4e81-804a-e039420f2584"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"76983865-f273-4606-8c5b-6a7252cbbc6e"],
+ ExpressionUUID->"ccceeb70-19b0-420c-9809-8d87433a776f"],
 
 Cell[
  "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"05_parameters.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"368f8d0d-631b-4f61-b020-489cac6fd482"],
+ ExpressionUUID->"6de55958-e98f-47bd-a8fe-d8060bc74a87"],
 
 }, Open  ]],
 
@@ -59,6 +59,11 @@ Cell["defined functions", "Subsection",
   3.9718160989389305`*^9, 
   3.971816100438314*^9}},ExpressionUUID->"f235ea4a-8ced-314f-8419-\
 95a4c42bf4cf"],
+
+Cell[TextData[{StyleBox["\:25a0 BoxPDF[Ep, sig][ER]   \:2014 \:77e9\:5f62 (box) \:578b\:30a8\:30cd\:30eb\:30ae\:30fc\:5206\:89e3\:80fd\:95a2\:6570\n\n", "Text"], "\:4e2d\:5fc3 ", StyleBox["Ep", "Code"], " \:534a\:5e45 ", StyleBox["sig", "Code"], " \:306e uniform PDF\:3002\:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc Ep \:306b\:5bfe\:3057\:3001\:771f\:306e\:53cd\:8df3\:30a8\:30cd\:30eb\:30ae\:30fc ER \:304c ", "|ER\:2212Ep| \:2264 sig \:306e\:7bc4\:56f2\:306a\:3089 1/(2\:00b7sig)\:3001\:5916\:5074\:306f 0\:3002\n\n", "Gaussian \:306e\:4ee3\:308f\:308a\:306b\:9ad8\:901f\:8a08\:7b97\:3057\:305f\:3044\:6642\:306e\:305f\:3081\:306e\:5358\:7d14\:5316\:7248\:3002", "\:5b9f\:969b\:306e\:7573\:307f\:8fbc\:307f\:3067\:306f IntkerRAl* \:5074\:3067 NormalDistribution[Ep, sig] \:3092\:4f7f\:3063\:3066\:3044\:308b\:306e\:3067\:3001", "\:3053\:306e BoxPDF \:306f IntkerRAl* \:306e\:30b3\:30e1\:30f3\:30c8\:30a2\:30a6\:30c8\:3055\:308c\:305f\:4ee3\:66ff\:7248\:3068\:3057\:3066\:6e29\:5b58\:3055\:308c\:3066\:3044\:308b\:3002"}], "Text",
+ CellTags->"doc",
+ Background->RGBColor[0.95, 0.97, 1.0],
+ ExpressionUUID->"5781536d-3be8-43b9-802e-b9854369cd96"], (* QSENS-DOC-MARKER-v1 *)
 
 Cell[BoxData[
  RowBox[{
@@ -87,6 +92,11 @@ Cell["TiN", "Subsubsection",
   3.971816134472736*^9, 
   3.9718161385896006`*^9}},ExpressionUUID->"6fffe37c-78f1-7a4a-8d54-\
 6b382ee33208"],
+
+Cell[TextData[{StyleBox["\:25a0 kerRTiNl[E][m\:03c7][n][vmin], kerRTiNr[E][m\:03c7][n][vmin]   \:2014 TiN \:7528\:5fae\:5206\:6563\:4e71\:7387\:30ab\:30fc\:30cd\:30eb (Left/Right)\n\n", "Text"], "kerRAl* \:306e TiN \:7248\:3002\:8a98\:96fb\:95a2\:6570\:306f Lindhard \:89e3\:6790\:30e2\:30c7\:30eb (", StyleBox["ImepsLTiN", "Code"], ") \:3092\:4f7f\:3046\:3002\n", "\:5f0f\:306f kerRAl* \:3068\:540c\:5f62\:3001\:03c1_Al \:2192 \:03c1_TiN\:3001ImepsAlf \:2192 ImepsLTiN \:306b\:7f6e\:63db\:3002"}], "Text",
+ CellTags->"doc",
+ Background->RGBColor[0.95, 0.97, 1.0],
+ ExpressionUUID->"c54cd71e-4024-4e71-a682-cffb3de0ad7c"],
 
 Cell[BoxData[{
  RowBox[{
@@ -198,6 +208,11 @@ Cell[BoxData[{
  CellLabel->
   "In[121]:=",ExpressionUUID->"29de3ab0-5f24-c145-8c3e-46ac5a5a867a"],
 
+Cell[TextData[{StyleBox["\:25a0 RangeTiNGen[vmin][md][Ep][Sig]   \:2014 TiN \:7528\:7a4d\:5206\:57df\:751f\:6210\n\n", "Text"], "RangeAlGen \:3068\:540c\:69cb\:9020\:306e TiN \:7248\:3002"}], "Text",
+ CellTags->"doc",
+ Background->RGBColor[0.95, 0.97, 1.0],
+ ExpressionUUID->"3b192227-205a-46f6-811a-add8d643cb91"],
+
 Cell[BoxData[
  RowBox[{
   RowBox[{
@@ -238,6 +253,11 @@ Cell[BoxData[
    3.96285014550161*^9, {3.9633139710483646`*^9, 3.963314002020262*^9}},
  CellLabel->
   "In[123]:=",ExpressionUUID->"7949375e-bc47-6648-9bc4-00f90ea78db3"],
+
+Cell[TextData[{StyleBox["\:25a0 IntkerRTiNl[...], IntkerRTiNr[...]   \:2014 TiN \:7528\:5206\:89e3\:80fd\:7573\:307f\:8fbc\:307f\n\n", "Text"], "IntkerRAl* \:306e TiN \:7248\:3002"}], "Text",
+ CellTags->"doc",
+ Background->RGBColor[0.95, 0.97, 1.0],
+ ExpressionUUID->"ade71a40-7e62-4724-8433-bfe20074750c"],
 
 Cell[BoxData[{
  RowBox[{
@@ -317,6 +337,11 @@ Cell[BoxData[{
   3.971960436672515*^9}, {3.971960547192142*^9, 3.971960553841362*^9}},
  CellLabel->
   "In[124]:=",ExpressionUUID->"99347947-ad89-9d42-9a72-7eca1146daba"],
+
+Cell[TextData[{StyleBox["\:25a0 KerRTiNl[md][n][Ep, sig][vmin], KerRTiNr[...]   \:2014 TiN \:7528\:30e6\:30fc\:30b6\:5411\:3051\:89b3\:6e2c\:30ab\:30fc\:30cd\:30eb\n\n", "Text"], "KerRAl* \:306e TiN \:7248\:3002"}], "Text",
+ CellTags->"doc",
+ Background->RGBColor[0.95, 0.97, 1.0],
+ ExpressionUUID->"2e42499c-2ea4-4990-be85-2b71d5a58d3a"],
 
 Cell[BoxData[{
  RowBox[{
@@ -435,6 +460,11 @@ Cell[BoxData[
  CellChangeTimes->{{3.971818243508896*^9, 
   3.9718182647860737`*^9}},ExpressionUUID->"9e668b13-98b1-9a49-8f36-\
 ce9bd1744df9"],
+
+Cell[TextData[{StyleBox["\:25a0 CRvmTES[md, n][E1, E2], CRvmTESLeft[md, n][E1, E2], CRvmTESRight[md, n][E1, E2]   \:2014 vm \:3092\:30d1\:30e9\:30e1\:30fc\:30bf\:3068\:3059\:308b\:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc\:7a4d\:5206\:306e\:30eb\:30c3\:30af\:30a2\:30c3\:30d7\:30c6\:30fc\:30d6\:30eb\n\n", "Text"], "\:91cd\:8981: \:3053\:306e\:95a2\:6570\:306f ", StyleBox["w", "Code"], " (= \:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc = \:53cd\:8df3\:30a8\:30cd\:30eb\:30ae\:30fc ER) \:65b9\:5411\:306e\:7a4d\:5206\:3057\:304b\:884c\:308f\:306a\:3044\:3002", StyleBox["vm", "Code"], " (DM \:6700\:5c0f\:901f\:5ea6) \:306f While \:30eb\:30fc\:30d7\:3067\:30b5\:30f3\:30d7\:30ea\:30f3\:30b0\:3059\:308b\:3060\:3051\:3067\:3001", "vm \:7a4d\:5206\:306f\:884c\:308f\:306a\:3044\:3002vm \:7a4d\:5206\:306f\:5f8c\:6bb5 (10_data.nb) \:3067 halo speed distribution ", StyleBox["\:03b7(vm)", "Code"], " \:3092\:639b\:3051\:3066\:884c\:3046\:3002\n\n", "\:6570\:5b66\:7684\:306b\:3084\:3063\:3066\:3044\:308b\:3053\:3068:\n", "    Rlist[i] = \:222b_{E1}^{E2} (KerRAll[md][n][w, TESsig\:00b7w][vm[i]\:00b7kps] + KerRAlr[...]) dw\n", "    \:2248 \:03a3_{w=E1, E1+0.01, ..., E2}  KerR(w, vm[i]) \:00d7 0.01 eV   (Riemann \:548c\:3001\:0394w = 0.01 eV)\n\n", "vm \:30b0\:30ea\:30c3\:30c9: i = 1..200 (or 800)\:3001\:5404 vm[i] \:304c\:6c7a\:307e\:3063\:305f\:5024\:306e Rlist[i] \:3092\:8fd4\:3059\:3002\n\n", "3 \:3064\:306e\:5909\:7a2e:\n", "  \:2022 ", StyleBox["CRvmTES", "Code"], "       \:4e21\:30d6\:30e9\:30f3\:30c1\:548c (KerRAll + KerRAlr)\:3002vm: 5 \:2192 108 km/s\:3001\:523b\:307f 0.51758\:3001200 \:70b9\n", "  \:2022 ", StyleBox["CRvmTESLeft", "Code"], "   \:5de6\:30d6\:30e9\:30f3\:30c1\:306e\:307f (KerRAll)\:3002vm: 5 \:2192 200 km/s\:3001\:523b\:307f 196/800 \:2248 0.245\:3001800 \:70b9\n", "  \:2022 ", StyleBox["CRvmTESRight", "Code"], "  \:53f3\:30d6\:30e9\:30f3\:30c1\:306e\:307f (KerRAlr)\:3002\:540c\:3058 vm \:30b0\:30ea\:30c3\:30c9 (5 \:2192 200 km/s, 800 \:70b9)\n\n", "\:5f15\:6570:\n", "  \:2022 ", StyleBox["md", "Code"], "  DM \:8cea\:91cf\n", "  \:2022 ", StyleBox["n", "Code"], "   \:5a92\:4ecb\:5b50\:30e2\:30c7\:30eb (1/2/3)\n", "  \:2022 ", StyleBox["E1, E2", "Code"], "  \:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc bin \:306e\:4e0b\:7aef\:30fb\:4e0a\:7aef (eV)\n\n", "\:623b\:308a\:5024: \:9577\:3055 200 (or 800) \:306e\:30ea\:30b9\:30c8\:3001\:5404\:8981\:7d20\:306f vm[i] \:306b\:304a\:3051\:308b w \:7a4d\:5206\:5024\:3002\n", "TESsig \:306f\:5206\:89e3\:80fd\:30d1\:30e9\:30e1\:30fc\:30bf (\:2248 0.036)\:3001KerR \:306e Gauss \:5e45\:306f TESsig\:00b7w (= \:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc\:306b\:6bd4\:4f8b)\:3002"}], "Text",
+ CellTags->"doc",
+ Background->RGBColor[0.95, 0.97, 1.0],
+ ExpressionUUID->"132c9c7d-0942-4c8d-a102-a250d9eda579"],
 
 Cell[BoxData[{
  RowBox[{
@@ -640,6 +670,11 @@ Cell[BoxData[{
  CellLabel->
   "In[128]:=",ExpressionUUID->"e30287af-b94f-d840-b6b6-769fce05e7d5"],
 
+Cell[TextData[{StyleBox["\:25a0 CRvmTiN[md, n][E1, E2], CRvmTiNLeft[md, n][E1, E2], CRvmTiNRight[md, n][E1, E2]   \:2014 TiN/MKID \:5fdc\:7b54\:30eb\:30c3\:30af\:30a2\:30c3\:30d7\:30c6\:30fc\:30d6\:30eb\:7fa4\n\n", "Text"], "CRvmTES* \:306e TiN \:7248\:3002w (\:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc) \:65b9\:5411\:306e\:7a4d\:5206\:306e\:307f\:884c\:3044\:3001vm \:306f\:30b5\:30f3\:30d7\:30ea\:30f3\:30b0\:3059\:308b\:3060\:3051\:3002", "vm \:7a4d\:5206\:306f\:5f8c\:6bb5\:3067 \:03b7(vm) \:3068\:7573\:307f\:8fbc\:3093\:3067\:884c\:3046\:3002MKIDsig (\:2248 0.127) \:3092\:5206\:89e3\:80fd\:3068\:3057\:3066\:4f7f\:3046\:3002\n\n", "  \:2022 ", StyleBox["CRvmTiN", "Code"], "       \:4e21\:30d6\:30e9\:30f3\:30c1\:548c\:3002vm: 6 \:2192 108 km/s\:3001\:523b\:307f 0.51256\:3001200 \:70b9\n", "  \:2022 ", StyleBox["CRvmTiNLeft", "Code"], "   \:5de6\:30d6\:30e9\:30f3\:30c1\:306e\:307f\:3002vm: 6 \:2192 200 km/s\:3001\:523b\:307f 195/800\:3001800 \:70b9\n", "  \:2022 ", StyleBox["CRvmTiNRight", "Code"], "  \:53f3\:30d6\:30e9\:30f3\:30c1\:306e\:307f\:3002\:540c\:3058 vm \:30b0\:30ea\:30c3\:30c9"}], "Text",
+ CellTags->"doc",
+ Background->RGBColor[0.95, 0.97, 1.0],
+ ExpressionUUID->"d6583975-46bf-4df8-94ca-c898caa04f72"],
+
 Cell[BoxData[{
  RowBox[{
   RowBox[{
@@ -843,6 +878,73 @@ Cell[BoxData[{
    3.979700912790994*^9}},
  CellLabel->
   "In[131]:=",ExpressionUUID->"615d0205-bd9b-cb46-8cbd-2612aa81be52"]
+Cell[TextData[{"\:25a0 CRTiN, CRTiNLeft, CRTiNRight   \:2014 vm \:306e\:9023\:7d9a\:95a2\:6570\:7248\:5fdc\:7b54\:30ab\:30fc\:30cd\:30eb\n\nCRvmTiN* \:3068\:540c\:3058 w \:7a4d\:5206\:3092\:884c\:3046\:304c\:3001vm \:3092 ?NumericQ \:30d1\:30bf\:30fc\:30f3\:3067\:53d7\:3051\:53d6\:308a\:3001\:30b5\:30f3\:30d7\:30ea\:30f3\:30b0\:305b\:305a\:306b\:9023\:7d9a\:5024\:3092\:8fd4\:3059\:3002\n\n\:7528\:9014: vm \:7a4d\:5206\:3092 NIntegrate \:3067\:884c\:3044\:305f\:3044\:3068\:304d\:3001\:307e\:305f\:306f \:03b7(vm) \:3092 \:7573\:307f\:8fbc\:3080\:3068\:304d\:306b\:9023\:7d9a\:5024\:304c\:5fc5\:8981\:306a\:30b1\:30fc\:30b9\:3002\n\n\:5b9a\:7fa9:\n  CRTiN[md, n][E1, E2][vm] = \:222b_E1^E2 (KerRTiNl[md][n][w, MKIDsig\:00b7w][vm\:00b7kps] + KerRTiNr[\:2026]) dw\n  CRTiNLeft  = KerRTiNl \:306e\:307f\n  CRTiNRight = KerRTiNr \:306e\:307f\n\n\:5f15\:6570\:306e vm \:306f km/s \:5358\:4f4d\:306e\:6570\:5024 (\:5185\:90e8\:3067 vm\:00b7kps \:306b\:5909\:63db)\:3002"}], "Text",
+ Background->RGBColor[0.95, 0.97, 1.],
+ CellTags->"doc",
+ ExpressionUUID->"79eb65e4-dbea-4407-a1d5-683c54cec66d"],
+
+Cell["(* Continuous-vm versions of CRvmTiN* *)
+(* vm \:3092\:30b5\:30f3\:30d7\:30ea\:30f3\:30b0\:305b\:305a\:3001numeric \:306a vm \:5024\:3067\:306e w \:7a4d\:5206\:3092\:8fd4\:3059\:3002 *)
+CRTiN[md_, n_][E1_, E2_][vm_?NumericQ] := Total[Table[
+  0.01 eV * (
+    KerRTiNl[md][n][w, MKIDsig*w][vm*kps] +
+    KerRTiNr[md][n][w, MKIDsig*w][vm*kps]
+  ),
+  {w, E1, E2, 0.01}
+]];
+
+CRTiNLeft[md_, n_][E1_, E2_][vm_?NumericQ] := Total[Table[
+  0.01 eV * KerRTiNl[md][n][w, MKIDsig*w][vm*kps],
+  {w, E1, E2, 0.01}
+]];
+
+CRTiNRight[md_, n_][E1_, E2_][vm_?NumericQ] := Total[Table[
+  0.01 eV * KerRTiNr[md][n][w, MKIDsig*w][vm*kps],
+  {w, E1, E2, 0.01}
+]];", "Input",
+ InitializationCell->True,
+ Background->RGBColor[0.98, 0.95, 0.95],
+ ExpressionUUID->"b537690d-1996-4394-84a0-2d50e278596d"], (* QSENS-CONT-KERNELS-v1 *)
+
+Cell[TextData[{"\:25a0 CRintTiN, CRintTiNLeft, CRintTiNRight, CRintTiNWeighted   \:2014 vm \:65b9\:5411\:7a4d\:5206 (midpoint rule)\n\n\:5b9a\:7fa9:\n  CRintTiN[md, n][E1, E2][vmin, vmax, nsamples]\n    = \:222b_vmin^vmax CRTiN[md, n][E1, E2][vm] dvm\n    \:2248 dvm \:00d7 \:03a3_{i=1..nsamples} CRTiN[md, n][E1, E2][vm_i]\n    \:3053\:3053\:3067 vm_i = vmin + (i - 0.5) \:00b7 dvm,  dvm = (vmax - vmin) / nsamples\n\n\:5f15\:6570:\n  \:2022 md           DM \:8cea\:91cf\n  \:2022 n            \:5a92\:4ecb\:5b50\:30e2\:30c7\:30eb (1/2/3)\n  \:2022 E1, E2       \:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc bin (eV)\n  \:2022 vmin, vmax   vm \:7a4d\:5206\:7bc4\:56f2 (km/s, \:6570\:5024)\n  \:2022 nsamples     \:30b5\:30f3\:30d7\:30ea\:30f3\:30b0\:70b9\:6570 (\:6574\:6570)\n\n\:7a2e\:985e:\n  \:2022 CRintTiN        \:4e21\:30d6\:30e9\:30f3\:30c1\:548c\:306e vm \:7a4d\:5206\n  \:2022 CRintTiNLeft    \:5de6\:30d6\:30e9\:30f3\:30c1\:306e\:307f\n  \:2022 CRintTiNRight   \:53f3\:30d6\:30e9\:30f3\:30c1\:306e\:307f\n  \:2022 CRintTiNWeighted   etaFunc[vm] \:3092\:639b\:3051\:3066\:7a4d\:5206 (\:30cf\:30ed\:901f\:5ea6\:5206\:5e03 \:03b7(vm) \:7528)\n\n\:4f8b:\n  result = CRintTiN[100 MeV, 1][1.0, 1.5][5, 200, 100]\n  result = CRintTiNWeighted[100 MeV, 1][1.0, 1.5][5, 200, 100, etaSHM]"}], "Text",
+ Background->RGBColor[0.95, 0.98, 0.95],
+ CellTags->"doc",
+ ExpressionUUID->"b015d182-8fba-4054-9f6b-74ed3688ce3d"],
+
+Cell["(* Velocity-integrated versions of CRTiN* *)
+(* Midpoint rule: nsamples \:306e\:70b9\:3092 [vmin, vmax] \:306e\:4e2d\:70b9\:3067\:30b5\:30f3\:30d7\:30ea\:30f3\:30b0\:3001dvm = (vmax-vmin)/nsamples \:3092\:639b\:3051\:3066\:548c\:3092\:53d6\:308b\:3002 *)
+CRintTiN[md_, n_][E1_, E2_][vmin_?NumericQ, vmax_?NumericQ, nsamples_Integer] := Module[
+  {dvm, vmList},
+  dvm = (vmax - vmin) / nsamples;
+  vmList = Table[vmin + (i - 0.5) dvm, {i, 1, nsamples}];
+  Total[CRTiN[md, n][E1, E2][#] & /@ vmList] * dvm
+];
+
+CRintTiNLeft[md_, n_][E1_, E2_][vmin_?NumericQ, vmax_?NumericQ, nsamples_Integer] := Module[
+  {dvm, vmList},
+  dvm = (vmax - vmin) / nsamples;
+  vmList = Table[vmin + (i - 0.5) dvm, {i, 1, nsamples}];
+  Total[CRTiNLeft[md, n][E1, E2][#] & /@ vmList] * dvm
+];
+
+CRintTiNRight[md_, n_][E1_, E2_][vmin_?NumericQ, vmax_?NumericQ, nsamples_Integer] := Module[
+  {dvm, vmList},
+  dvm = (vmax - vmin) / nsamples;
+  vmList = Table[vmin + (i - 0.5) dvm, {i, 1, nsamples}];
+  Total[CRTiNRight[md, n][E1, E2][#] & /@ vmList] * dvm
+];
+
+(* Halo-weighted version *)
+CRintTiNWeighted[md_, n_][E1_, E2_][vmin_?NumericQ, vmax_?NumericQ, nsamples_Integer, etaFunc_] := Module[
+  {dvm, vmList},
+  dvm = (vmax - vmin) / nsamples;
+  vmList = Table[vmin + (i - 0.5) dvm, {i, 1, nsamples}];
+  Total[(CRTiN[md, n][E1, E2][#] * etaFunc[#]) & /@ vmList] * dvm
+];", "Input",
+ InitializationCell->True,
+ Background->RGBColor[0.95, 0.98, 0.95],
+ ExpressionUUID->"43d0d3e2-9c3c-4052-879f-309af7ad1640"], (* QSENS-VEL-INT-v1 *)
+
 }, Open  ]],
 }, Open  ]]
 }, Open  ]]
@@ -851,6 +953,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"fca8b1a3-508d-4b6f-9d46-a64088e953e6"
+ExpressionUUID->"fb720f87-a464-4386-a157-2344f8a77635"
 ]
 (* End of Notebook Content *)

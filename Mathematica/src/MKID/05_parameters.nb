@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["MKID - Calculation Parameters", "Title",
- ExpressionUUID->"42a4001d-6d17-4207-8343-fcf234bfd8f8"],
+ ExpressionUUID->"10a80b59-9517-4fd5-a193-ade2502c7eae"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"b46d2d76-dda5-4871-bdbb-e9a34df9b2fa"],
+ ExpressionUUID->"066cbd50-4627-494c-9d3f-08ca567feb11"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"4b2bead2-e20f-40f7-8a5e-1a2eb39c9589"],
+ ExpressionUUID->"4366ad73-ba01-471d-833b-f0fb7ee1a88b"],
 
 Cell[
  "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"04_material.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"189bcc70-3956-4df0-97e3-a23848819e36"],
+ ExpressionUUID->"7fd957fb-13b6-4edb-a9f4-3e2a0dd6ccbc"],
 
 }, Open  ]],
 
@@ -178,6 +178,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"5416ce4f-d05b-4719-9750-aa8377860cbd"
+ExpressionUUID->"c92a7858-9fe7-4e6d-b6df-dcf19ded7262"
 ]
 (* End of Notebook Content *)

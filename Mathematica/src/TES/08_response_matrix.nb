@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["TES - Response Matrix", "Title",
- ExpressionUUID->"c696fafb-d243-40ca-b41d-69bdb5d9bba5"],
+ ExpressionUUID->"35d0b09a-7447-42e4-a4b0-d9f18357970b"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"87124183-b3c1-4f38-99c0-45529b55e716"],
+ ExpressionUUID->"c464a391-bf96-48ce-95a0-8359dc88c976"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/TES", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"ebb267bc-9c3d-4313-b779-bdd0483903a5"],
+ ExpressionUUID->"80f91ac4-f163-47dd-90ba-407b1dc45bd4"],
 
 Cell[
  "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"07_dcurlyRdEprime_plot.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"87f62723-f398-4735-a184-6c275ad8e2e9"],
+ ExpressionUUID->"3f402c75-5bad-4942-a486-156da4864367"],
 
 }, Open  ]],
 
@@ -11229,6 +11229,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"25f58b33-9139-4304-b3d5-37c921148dae"
+ExpressionUUID->"bbfc334c-f1ff-43a9-aaf4-005907889bf9"
 ]
 (* End of Notebook Content *)

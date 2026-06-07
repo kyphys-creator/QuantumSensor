@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["MKID - Data for minimization", "Title",
- ExpressionUUID->"66b06a3f-4fc9-4db4-b027-6dc8f0b1c42d"],
+ ExpressionUUID->"30f4bba7-d05d-4cad-8fb2-2f84603d54e1"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"f183212b-7838-4699-a2fb-1c1577917b98"],
+ ExpressionUUID->"93a174c6-fe7f-4f11-9a02-0c0ed73bddd8"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"3e8d3e38-c212-4f3c-820f-1171647e20a1"],
+ ExpressionUUID->"740c9761-6c03-48d7-9dcc-5611ea0ffeae"],
 
 Cell[
  "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"09_response_matrix_plot.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"448eaca3-4178-48a6-a771-228bcb26afe1"],
+ ExpressionUUID->"c4ab9aeb-3a5b-44ff-b950-aa607793a402"],
 
 }, Open  ]],
 
@@ -638,6 +638,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"7d0bb80e-8657-46c5-a555-ea71e52019c7"
+ExpressionUUID->"ac7d9c47-3516-460d-92f7-a4ce13a7581c"
 ]
 (* End of Notebook Content *)
