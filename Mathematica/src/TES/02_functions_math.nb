@@ -3,47 +3,46 @@
 (*** Wolfram Notebook File ***)
 (* http://www.wolfram.com/nb *)
 
-(* CreatedBy='Wolfram 14.3' *)
+(* CreatedBy='Mathematica 14.3' *)
 
 (*CacheID: 234*)
 (* Internal cache information:
 NotebookFileLineBreakTest
 NotebookFileLineBreakTest
-NotebookDataPosition[       154,          7]
-NotebookDataLength[      7375,        212]
-NotebookOptionsPosition[      5993,        178]
-NotebookOutlinePosition[      6384,        194]
-CellTagsIndexPosition[      6341,        191]
+NotebookDataPosition[         0,          0]
+NotebookDataLength[         0,          0]
+NotebookOptionsPosition[         0,          0]
+NotebookOutlinePosition[         0,          0]
+CellTagsIndexPosition[         0,          0]
 WindowFrame->Normal*)
 
 (* Beginning of Notebook Content *)
 Notebook[{
-
-Cell[CellGroupData[{
-Cell["TES - Math/Utility Functions", "Title",ExpressionUUID->"c34f1d36-0195-4334-a3f8-16df3fb8cae2"],
-
 Cell[CellGroupData[{
 
-Cell["Setup", "Section",ExpressionUUID->"cfa4fc17-6ad1-4e45-aa26-0cc22fb82deb"],
+Cell["TES - Math/Utility Functions", "Title",
+ ExpressionUUID->"8a7615b6-2585-467c-b637-6b670e7d9b10"],
+
+Cell[CellGroupData[{
+
+Cell["Setup", "Section",
+ ExpressionUUID->"4368e77b-2958-4783-ac40-68d8d14f84e7"],
 
 Cell[TextData[{
- "Loads upstream notebooks and points ",
- StyleBox["Direc", "Code"],
- " to ",
- StyleBox["../../input/TES", "Code"],
- "."
-}], "Text",ExpressionUUID->"2f4ee8df-2f64-4d94-a83d-6b9235ed92f5"],
+"Loads upstream notebooks and points ",
+StyleBox["Direc", "Code"],
+" to ",
+StyleBox["../../input/TES", "Code"],
+"."
+}], "Text",
+ ExpressionUUID->"ba0804bd-4275-4eea-9b46-208270287bcd"],
 
-Cell["\<\
-nbDir = NotebookDirectory[];
-Direc = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \
-\"TES\"}];
-Get[FileNameJoin[{nbDir, \"01_setup.nb\"}]];
-SetDirectory[Direc];
-Print[\"Direc = \", Direc];\
-\>", "Input",
- InitializationCell->
-  True,ExpressionUUID->"56faa5d6-78bc-45c9-a2b4-94489442baa8"]
+Cell[
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"01_setup.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "Input",
+ InitializationCell->True,
+ ExpressionUUID->"e3315246-953c-43dc-bd8a-757364dc1c7f"],
+
 }, Open  ]],
 
 Cell[CellGroupData[{
@@ -180,41 +179,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"5d9f6c1e-8be6-4db3-ad67-84ce25a07615"
+ExpressionUUID->"565fd58a-8c7a-4ff6-a9d7-4d7cca3cfe92"
 ]
 (* End of Notebook Content *)
-
-(* Internal cache information *)
-(*CellTagsOutline
-CellTagsIndex->{}
-*)
-(*CellTagsIndex
-CellTagsIndex->{}
-*)
-(*NotebookFileOutline
-Notebook[{
-Cell[CellGroupData[{
-Cell[576, 22, 100, 0, 96, "Title",ExpressionUUID->"c34f1d36-0195-4334-a3f8-16df3fb8cae2"],
-Cell[CellGroupData[{
-Cell[701, 26, 79, 0, 66, "Section",ExpressionUUID->"cfa4fc17-6ad1-4e45-aa26-0cc22fb82deb"],
-Cell[783, 28, 203, 6, 33, "Text",ExpressionUUID->"2f4ee8df-2f64-4d94-a83d-6b9235ed92f5"],
-Cell[989, 36, 319, 9, 114, "Input",ExpressionUUID->"56faa5d6-78bc-45c9-a2b4-94489442baa8",
- InitializationCell->True]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[1345, 50, 154, 3, 66, "Section",ExpressionUUID->"a7d7f6eb-75b7-764a-bab6-bd8feea762f7"],
-Cell[CellGroupData[{
-Cell[1524, 57, 154, 3, 53, "Subsection",ExpressionUUID->"36168b42-7ae6-664c-9c50-c418c8ce1ffa"],
-Cell[1681, 62, 1995, 45, 183, "Code",ExpressionUUID->"6ac20ec3-a5db-5f4d-8d9b-2e593ae0bfd3"],
-Cell[3679, 109, 1395, 36, 183, "Code",ExpressionUUID->"489364da-c40c-7449-b96f-656ff7144b0d"]
-}, Open  ]],
-Cell[CellGroupData[{
-Cell[5111, 150, 157, 3, 53, "Subsection",ExpressionUUID->"fd6d0cb5-9e35-d74c-9a04-a36a6ffa3565"],
-Cell[5271, 155, 682, 18, 51, "Code",ExpressionUUID->"680b428c-bd8b-734a-9338-8c16385c2a60"]
-}, Open  ]]
-}, Open  ]]
-}, Open  ]]
-}
-]
-*)
-

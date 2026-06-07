@@ -5,14 +5,16 @@ import uuid
 from pathlib import Path
 
 SECTIONS_TEMPLATE = [
-    ("01_setup",              "{D} - Setup (Constants/Units)",   "Constants"),
-    ("02_functions_math",     "{D} - Math/Utility Functions",     "Functions",            0),
-    ("03_functions_response", "{D} - Domain/FDM/eta/Resolution",  "Functions",            1),
-    ("04_material",           "{D} - Material ({M})",             "Material Input"),
-    ("05_parameters",         "{D} - Calculation Parameters",     "Parameters"),
-    ("06_response",           "{D} - Response function",          "Response function"),
-    ("07_data",               "{D} - Data for minimization",      "Data for minimization"),
-    ("08_minimization",       "{D} - Minimization",               "Minimization"),
+    ("01_setup",              "{D} - Setup (Constants/Units)",      "Constants"),
+    ("02_functions_math",     "{D} - Math/Utility Functions",        "Functions",            0),
+    ("03_functions_response", "{D} - Domain/FDM/eta/Resolution",     "Functions",            1),
+    ("04_material",           "{D} - Material ({M})",                "Material Input"),
+    ("05_parameters",         "{D} - Calculation Parameters",        "Parameters"),
+    # Response function is split into kernel definitions (06) + plot/matrix (07)
+    ("06_response_defs",      "{D} - Response Function Defs",        "Response function",    0, {"only": "defined functions"}),
+    ("07_response",           "{D} - Response (plot + matrices)",    "Response function",    0, {"skip": "defined functions"}),
+    ("08_data",               "{D} - Data for minimization",         "Data for minimization"),
+    ("09_minimization",       "{D} - Minimization",                  "Minimization"),
 ]
 
 OPEN_RE    = re.compile(r'^Cell\[CellGroupData\[\{\s*$')
@@ -48,6 +50,17 @@ def _find_close_from(lines, open_idx):
             if depth == 0:
                 return k
     return None
+
+
+def _list_subsections(lines, level="Subsection"):
+    """Return names of cells matching `Cell["<name>", "<level>"`."""
+    pat = re.compile(rf'^Cell\["([^"]+)", "{level}",')
+    out = []
+    for line in lines:
+        m = pat.match(line)
+        if m:
+            out.append(m.group(1))
+    return out
 
 
 def _extract_section(lines, name, occurrence=0):
@@ -222,27 +235,44 @@ def split_notebook(detector, src_name, material_label, remove_labels=None):
 
     sections = []
     for entry in SECTIONS_TEMPLATE:
-        if len(entry) == 4:
+        opts = {}
+        if len(entry) >= 5:
+            stem, title_tmpl, name, occ, opts = entry[:5]
+        elif len(entry) == 4:
             stem, title_tmpl, name, occ = entry
         else:
             stem, title_tmpl, name = entry
             occ = 0
         title = title_tmpl.format(D=detector, M=material_label)
-        sections.append((stem, title, name, occ))
+        sections.append((stem, title, name, occ, opts))
 
     plans = []
-    for stem, title, name, occ in sections:
+    for stem, title, name, occ, opts in sections:
         op, cl = _extract_section(lines, name, occ)
-        plans.append((stem, title, op, cl))
+        plans.append((stem, title, op, cl, opts))
         print(f"{stem}: {name!r}#{occ}  lines {op+1}-{cl+1}  ({cl-op+1} lines)")
 
-    for idx, (stem, title, op, cl) in enumerate(plans):
+    for idx, (stem, title, op, cl, opts) in enumerate(plans):
         prev = plans[idx-1][0] + ".nb" if idx > 0 else None
         section_lines = lines[op:cl+1]
+
+        # Apply only/skip filtering on Subsection level
+        if "only" in opts:
+            all_subs = _list_subsections(section_lines, "Subsection")
+            to_remove = [s for s in all_subs if s != opts["only"]]
+            if to_remove:
+                before = len(section_lines)
+                section_lines = _remove_subsections(section_lines, to_remove, levels=("Subsection",))
+                print(f"  {stem}: kept only {opts['only']!r}, removed {to_remove} ({before}→{len(section_lines)} lines)")
+        if "skip" in opts:
+            before = len(section_lines)
+            section_lines = _remove_subsections(section_lines, [opts["skip"]], levels=("Subsection",))
+            print(f"  {stem}: skipped {opts['skip']!r} ({before}→{len(section_lines)} lines)")
+
         if stem in remove_labels:
             before = len(section_lines)
             section_lines = _remove_subsections(section_lines, remove_labels[stem])
-            print(f"  {stem}: stripped subsections {remove_labels[stem]} ({before}→{len(section_lines)} lines)")
+            print(f"  {stem}: stripped material subsections {remove_labels[stem]} ({before}→{len(section_lines)} lines)")
         section_block = ''.join(section_lines)
         nb = _make_notebook(title, detector, prev, section_block)
         out_path = out_dir / f"{stem}.nb"

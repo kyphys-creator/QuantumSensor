@@ -10,7 +10,9 @@ split_notebook(
     remove_labels={
         # 04_material: drop TES (Al) Subsection
         "04_material": ["TES"],
-        # 06_response: drop Al Subsubsections (defined-functions + plot)
-        "06_response": ["Al"],
+        # 06_response_defs: drop Al Subsubsection inside "defined functions"
+        "06_response_defs": ["Al"],
+        # 07_response: drop Al Subsubsection inside "plot"
+        "07_response": ["Al"],
     },
 )

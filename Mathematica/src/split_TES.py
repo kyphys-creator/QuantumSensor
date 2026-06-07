@@ -10,7 +10,9 @@ split_notebook(
     remove_labels={
         # 04_material: drop MKID (TiN) Subsection
         "04_material": ["MKID"],
-        # 06_response: drop TiN Subsubsections (defined-functions + plot)
-        "06_response": ["TiN"],
+        # 06_response_defs: drop TiN Subsubsection inside "defined functions"
+        "06_response_defs": ["TiN"],
+        # 07_response: drop TiN Subsubsection inside "plot"
+        "07_response": ["TiN"],
     },
 )
