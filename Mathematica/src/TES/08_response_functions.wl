@@ -23,9 +23,9 @@
 (*  Run one group at a time (the curves are expensive), selected on the        *)
 (*  command line:                                                             *)
 (*                                                                            *)
-(*      wolframscript -file 08_response_function.wl bin5      (5 bins, all masses)   *)
-(*      wolframscript -file 08_response_function.wl bin10     (10 bins, all masses)  *)
-(*      wolframscript -file 08_response_function.wl bin5 M3   (5 bins, 1 GeV only)   *)
+(*      wolframscript -file 08_response_functions.wl bin5     (5 bins, all masses)   *)
+(*      wolframscript -file 08_response_functions.wl bin10    (10 bins, all masses)  *)
+(*      wolframscript -file 08_response_functions.wl bin5 M3  (5 bins, 1 GeV only)   *)
 (*                                                                            *)
 (*  bin5  = 5 bins, 0.2 eV wide;  bin10 = 10 bins, 0.1 eV wide.                *)
 (*  Optional 2nd arg M1 | M2 | M3 restricts to one mass (10 MeV / 100 / 1 GeV).*)
@@ -53,6 +53,12 @@ If[!DirectoryQ[functionDir], CreateDirectory[functionDir, CreateIntermediateDire
 Get[FileNameJoin[{fileDir, "06_response_defs.wl"}]];
 SetDirectory[inputDir];
 Print["functionDir = ", functionDir];
+
+(* Note: parallelising the v_min samples was tried (ParallelMap with the defs
+   distributed to subkernels) and was ~80x SLOWER -- CRTES closes over the large
+   Mermin interpolation, so the per-call MathLink overhead dwarfs the ~8 ms of
+   compute. It is therefore kept serial. The big win is the inlined gaussPDF in
+   06 (see there), which already made CRTES ~3.6x faster. *)
 
 
 (* ============================ Bins & masses ============================ *)
@@ -85,8 +91,11 @@ binEnergyLabels[binEdges_] := Table[
 
 (* buildResponseFunction[dmMass, fdmIndex][lowEdge, highEdge] -> an
    InterpolatingFunction of CRTES vs v_min for that energy bin. Order-1
-   (piecewise-linear) interpolation, matching the rest of the codebase and
-   robust to the sharp kernel features. *)
+   (piecewise-linear) interpolation is used deliberately: CRTES is >= 0
+   everywhere, and a linear interpolant never leaves the [min, max] of its
+   sample points, so it cannot overshoot or dip negative near the sharp kernel
+   peaks the way order-2/3 would. With the dense v_min grid this is still
+   smooth. *)
 buildResponseFunction[dmMass_, fdmIndex_][lowEdge_, highEdge_] := Module[{values},
   values = CRTES[dmMass, fdmIndex][lowEdge, highEdge][#] & /@ vminGrid;
   Interpolation[Transpose[{vminGrid, values}], InterpolationOrder -> 1]
@@ -125,5 +134,5 @@ Which[
   binGroup === "bin5",  runGroup["R5",  binEdges5],
   binGroup === "bin10", runGroup["R10", binEdges10],
   True, Print[
-    "usage: wolframscript -file 08_response_function.wl [bin5|bin10] [M1|M2|M3]"]
+    "usage: wolframscript -file 08_response_functions.wl [bin5|bin10] [M1|M2|M3]"]
 ];
