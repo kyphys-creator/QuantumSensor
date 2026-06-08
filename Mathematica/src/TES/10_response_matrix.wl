@@ -30,10 +30,10 @@
 (*  e.g.  wolframscript -file 10_response_matrix.wl Al_q0M3_R5 5 800 200       *)
 (*        wolframscript -file 10_response_matrix.wl ALL 5 500 100             *)
 (*                                                                            *)
-(*  Output (in output/TES/response_matrix/):                                   *)
-(*    <name>_v<lo>-<hi>_N<N>.csv        pure numeric matrix (nBins x N)        *)
-(*    <name>_v<lo>-<hi>_N<N>_vmin.csv   per-column {v_low, v_high, v_mid}      *)
-(*    <name>_v<lo>-<hi>_N<N>_bins.csv   per-row bin energy labels              *)
+(*  Output (in output/TES/response_matrix/<mass>/<name>_v<lo>-<hi>_N<N>/):     *)
+(*    matrix.csv   pure numeric matrix (nBins x N)                             *)
+(*    vmin.csv     per-column {v_low, v_high, v_mid}                           *)
+(*    bins.csv     per-row bin energy labels                                    *)
 (* ========================================================================== *)
 
 (* ============================ Arguments ============================ *)
@@ -61,6 +61,8 @@ functionDir = FileNameJoin[{mathDir, "output", "TES", "response_functions"}];
 matrixDir   = FileNameJoin[{mathDir, "output", "TES", "response_matrix"}];
 If[!DirectoryQ[matrixDir], CreateDirectory[matrixDir, CreateIntermediateDirectories -> True]];
 
+Get[FileNameJoin[{fileDir, "01_setup.wl"}]];
+
 
 (* ============================ Integration ============================ *)
 
@@ -77,9 +79,14 @@ integrateIF[f_, a_, b_] := Module[{nodes, xs, ys},
 
 (* ============================ Build one matrix ============================ *)
 
+extractMass[name_] := Module[{m},
+  m = StringCases[name, "M" ~~ d : DigitCharacter .. :> "M" <> d];
+  If[m === {}, "other", First[m]]
+];
+
 buildMatrix[wdxBaseName_] := Module[
   {wdxPath, data, responses, labels, fns, nBins, domLo, domHi,
-   vminLo, vminHi, edges, mids, matrix, stem},
+   vminLo, vminHi, edges, mids, matrix, stem, massTag, outDir},
 
   wdxPath = FileNameJoin[{functionDir, wdxBaseName <> ".wdx"}];
   If[!FileExistsQ[wdxPath], Print["skip (not found): ", wdxBaseName <> ".wdx"]; Return[]];
@@ -100,19 +107,25 @@ buildMatrix[wdxBaseName_] := Module[
   edges = Subdivide[vminLo, vminHi, nIntervals];          (* N+1 edges *)
   mids  = (Most[edges] + Rest[edges]) / 2;                 (* N midpoints *)
 
-  (* M[i, j] = integral of bin-i response over interval j *)
-  matrix = Table[
+  (* M[i, j] = integral of bin-i response over interval j.
+     The interpolation grid is in km/s; multiply by kps to convert dv to natural units. *)
+  matrix = kps Table[
     integrateIF[fns[[i]], edges[[j]], edges[[j + 1]]],
     {i, nBins}, {j, nIntervals}];
 
-  stem = wdxBaseName <> "_v" <> ToString[vminLoReq] <> "-" <> ToString[vminHiReq] <>
-         "_N" <> ToString[nIntervals];
-  Export[FileNameJoin[{matrixDir, stem <> ".csv"}], matrix];
-  Export[FileNameJoin[{matrixDir, stem <> "_vmin.csv"}],
-    Transpose[{Most[edges], Rest[edges], mids}]];
-  Export[FileNameJoin[{matrixDir, stem <> "_bins.csv"}], List /@ labels];
+  stem    = wdxBaseName <> "_v" <> ToString[vminLoReq] <> "-" <> ToString[vminHiReq] <>
+            "_N" <> ToString[nIntervals];
+  massTag = extractMass[wdxBaseName];
+  outDir  = FileNameJoin[{matrixDir, massTag, stem}];
+  If[!DirectoryQ[outDir], CreateDirectory[outDir, CreateIntermediateDirectories -> True]];
 
-  Print["Saved: ", stem, ".csv  (", nBins, " bins x ", nIntervals, " v_min intervals)"];
+  Export[FileNameJoin[{outDir, "matrix.csv"}], matrix];
+  Export[FileNameJoin[{outDir, "vmin.csv"}],
+    N /@ Transpose[{Most[edges], Rest[edges], mids}]];
+  Export[FileNameJoin[{outDir, "bins.csv"}],
+    N /@ (ToExpression /@ StringCases[#, NumberString] & /@ labels)];
+
+  Print["Saved: ", massTag, "/", stem, "/  (", nBins, " bins x ", nIntervals, " v_min intervals)"];
 ];
 
 

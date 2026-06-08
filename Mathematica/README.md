@@ -1,4 +1,4 @@
-# QuantumSensor / Mathematica — 応答計算パイプライン (01–06)
+# QuantumSensor / Mathematica — 応答計算パイプライン (01–10)
 
 ダークマター（DM）直接検出における**検出器応答**を計算するための Wolfram Language パッケージ群です。
 電子励起チャネルでの DM 散乱レートを、物質の誘電応答 `Im[-1/ε(ω, q)]` を用いて評価し、
@@ -26,7 +26,8 @@
 ```
 
 - **01–06 は `.wl`**（手書きパッケージ、ビルドスクリプト `src/build_wl.py` で TES/MKID 両方を生成）
-- **07–11 は `.nb`**（プロット・応答行列・データ・フィット。本 README の対象外）
+- **08, 10 は `.wl`**（応答関数の保存・応答行列の構築。CLI で実行）
+- **07, 09, 11 は `.nb`**（プロット・フィット等）
 
 ---
 
@@ -136,4 +137,64 @@ cd QuantumSensor/Mathematica
 - ロード成否・主要シンボルの定義有無・代表引数での数値スモークの 3 層を検査。
 - レポートは `output/<DET>/test/report.txt`（人間用）と `report.m`（機械可読）に出力。
 - 現状：**TES 20/20・MKID 18/18 パス**。
+
+---
+
+## 後段パイプライン (08, 10)
+
+01–06 で定義した応答関数を**保存・離散化**して、データ解析に使える行列形式に変換します。
+
+### 08_response_functions.wl — 応答関数の保存
+
+06 の `CRTES` を v_min グリッド上で評価し、各エネルギービンごとの応答を `InterpolatingFunction`（区分線形）として `.wdx` に保存します。
+
+```bash
+wolframscript -file 08_response_functions.wl bin5             # 5 bins, 全質量, heavy mediator
+wolframscript -file 08_response_functions.wl bin10 M3 q2      # 10 bins, 1 GeV, light mediator
+```
+
+- **ビン幅**: `bin5` = 0.2 eV 幅 × 5 本、`bin10` = 0.1 eV 幅 × 10 本
+- **質量**: `M1`(10 MeV) / `M2`(100 MeV) / `M3`(1 GeV) / `ALL`
+- **媒介子**: `q0`(heavy, n=0) / `q2`(light, n=2)
+- **出力**: `output/TES/response_functions/<name>.wdx`
+
+### 09_response_function_plot.wl — 応答関数のプロット
+
+08 で保存した `.wdx` を読み込み、各エネルギービンの応答関数 R_bin(v_min) を重ね描きした PDF を出力します。
+01–06 パイプラインのロードは不要です。
+
+```bash
+wolframscript -file 09_response_function_plot.wl          # 全ファイル
+wolframscript -file 09_response_function_plot.wl M3        # 名前に "M3" を含むもののみ
+```
+
+- **出力**: `output/TES/response_function_plots/<name>.pdf`
+
+### 10_response_matrix.wl — 応答行列の構築
+
+08 で保存した応答関数を v_min 区間上で積分し、レスポンス行列 `M[bin_i, interval_j]` を構築します。
+積分の測度は自然単位（`dv` に `kps` を乗算）で計算されます。
+
+```bash
+wolframscript -file 10_response_matrix.wl Al_q0M3_R5 4 800 1000
+wolframscript -file 10_response_matrix.wl ALL 4 800 1000      # 全 .wdx を一括処理
+```
+
+- `<name|ALL>` — `.wdx` のベース名、または `ALL` で一括
+- `<vminLo> <vminHi>` — 積分範囲 [km/s]（関数の定義域に自動クリップ）
+- `<N>` — v_min の等分割数（行列の列数）
+
+**出力構造**（質量別 → 実行ごとのサブフォルダ）:
+
+```
+output/TES/response_matrix/
+  M1/
+    Al_q0M1_R5_v4-800_N1000/
+      matrix.csv   # レスポンス行列 (nBins × N)
+      vmin.csv     # 各列の v_min 区間 {下限, 上限, 中央値} [km/s]
+      bins.csv     # 各行のエネルギービン {下限, 上限} [eV]
+  M2/
+    ...
+  M3/
+    ...
 ```
