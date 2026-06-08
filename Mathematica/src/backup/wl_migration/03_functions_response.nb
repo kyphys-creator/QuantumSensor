@@ -20,28 +20,28 @@ WindowFrame->Normal*)
 Notebook[{
 Cell[CellGroupData[{
 
-Cell["TES - Domain/FDM/eta/Resolution", "Title",
- ExpressionUUID->"86080f1f-6768-4024-ad10-eb20dedc1ae5"],
+Cell["MKID - Domain/FDM/eta/Resolution", "Title",
+ ExpressionUUID->"f2a3f524-7c09-47cd-a66d-f941e7e3ee05"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"63e496a8-aee7-4c60-8491-a494c6ac88a6"],
+ ExpressionUUID->"d160cca9-c35d-4883-97a1-79448bc2f792"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
 StyleBox["Direc", "Code"],
 " to ",
-StyleBox["../../input/TES", "Code"],
+StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"cb8539dd-26b9-4add-8a79-751abdb79058"],
+ ExpressionUUID->"124970c7-17c2-4d90-b435-f2b2e005608e"],
 
 Cell[
- "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"02_functions_math.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"02_functions_math.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"97556ab8-a3dc-4254-8970-d7dc45c48460"],
+ ExpressionUUID->"8a500c72-1384-42f6-b877-ab0e156375f5"],
 
 }, Open  ]],
 
@@ -661,6 +661,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"5f517167-b26a-4bae-a422-f77686bf0a8f"
+ExpressionUUID->"b53a4093-ab91-4c8e-9d9b-ac5e568bd7ad"
 ]
 (* End of Notebook Content *)

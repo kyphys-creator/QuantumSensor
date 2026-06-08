@@ -1,0 +1,308 @@
+(* Content-type: application/vnd.wolfram.mathematica *)
+
+(*** Wolfram Notebook File ***)
+(* http://www.wolfram.com/nb *)
+
+(* CreatedBy='Mathematica 14.3' *)
+
+(*CacheID: 234*)
+(* Internal cache information:
+NotebookFileLineBreakTest
+NotebookFileLineBreakTest
+NotebookDataPosition[         0,          0]
+NotebookDataLength[         0,          0]
+NotebookOptionsPosition[         0,          0]
+NotebookOutlinePosition[         0,          0]
+CellTagsIndexPosition[         0,          0]
+WindowFrame->Normal*)
+
+(* Beginning of Notebook Content *)
+Notebook[{
+Cell[CellGroupData[{
+
+Cell["MKID - Response Function Definitions", "Title",
+ ExpressionUUID->"2c7fbb93-ed63-466c-8130-4ba3a21e4698"],
+
+Cell[CellGroupData[{
+
+Cell["Setup", "Section",ExpressionUUID->"2dd93afa-052c-4cbe-8d48-42e850b8ddef"],
+
+Cell["\:25a0 Setup
+
+Direc \:3092 ../../input/MKID \:306b\:6307\:3059\:3002\:4e0a\:6d41\:30ce\:30fc\:30c8\:30d6\:30c3\:30af (05_parameters.nb) \:3092 Get \:3067\:8aad\:307f\:8fbc\:307f\:3001\:4f9d\:5b58\:3059\:308b\:5b9a\:6570\:30fb\:95a2\:6570\:3092\:53d6\:308a\:8fbc\:3080\:3002SetDirectory[Direc] \:3067 cwd \:3092\:30c7\:30fc\:30bf\:30c7\:30a3\:30ec\:30af\:30c8\:30ea\:306b\:5408\:308f\:305b\:308b\:3002", "Text",
+ Background->RGBColor[0.96, 0.96, 0.92],
+ CellTags->"doc",
+ ExpressionUUID->"9a666e17-e28e-4c9d-ae44-3b7c1a2bdd1e"],
+
+Cell["nbDir = NotebookDirectory[];
+Direc = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];
+Get[FileNameJoin[{nbDir, \"05_parameters.nb\"}]];
+SetDirectory[Direc];
+Print[\"Direc = \", Direc];", "Input",
+ InitializationCell->True,
+ Background->RGBColor[0.96, 0.96, 0.96],
+ ExpressionUUID->"7466e100-7508-4ae5-a68e-733612f1939e"],
+
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Helpers and resolution", "Section",ExpressionUUID->"8ee85d98-e878-44c7-ac2d-e7d4fb308400"],
+
+Cell["\:25a0 Helpers and resolution
+
+\:4ee5\:964d\:306e\:7bc0\:3067\:7e70\:308a\:8fd4\:3057\:4f7f\:3046\:6c4e\:7528\:6570\:5024\:7a4d\:5206\:30d8\:30eb\:30d1\:30fc\:3068\:3001\:30a8\:30cd\:30eb\:30ae\:30fc\:5206\:89e3\:80fd\:306e\:77e9\:5f62 PDF\:3002
+
+  \:2022 energySum[f, E1, E2, dE]    \:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc w \:3092 E1..E2 \:3067 dE \:523b\:307f\:30ea\:30fc\:30de\:30f3\:548c (\:00d7 eV)
+  \:2022 midpointSum[f, vmin, vmax, n]   \:901f\:5ea6 vm \:3092 [vmin, vmax] \:306e n \:4e2d\:70b9\:3067\:30b5\:30f3\:30d7\:30eb\:3057\:4e2d\:70b9\:5247\:7a4d\:5206
+  \:2022 BoxPDF[Ep, sig][ER]    \:4e2d\:5fc3 Ep \:534a\:5e45 sig \:306e\:77e9\:5f62 PDF (\:9ad8\:901f\:8a08\:7b97\:7528\:3001\:672c\:6d41\:3067\:306f Gaussian)", "Text",
+ Background->RGBColor[0.96, 0.96, 0.92],
+ CellTags->"doc",
+ ExpressionUUID->"524d6a7f-d930-4186-a704-2db3212ef2eb"],
+
+Cell["(* ---- Generic numerical integrators ---- *)
+
+(* energySum[f, E1, E2, dE]
+   \:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc w \:65b9\:5411\:306e\:30ea\:30fc\:30de\:30f3\:548c\:3002
+     \:30fbf \:306f\:5358\:5f15\:6570\:306e\:7d14\:95a2\:6570 (\:4f8b: kerRAll[md][n][#, sig #][vm kps] &)
+     \:30fb\:623b\:308a\:5024 = (\:03a3 f(w_i)) \:00d7 dE \:00d7 eV  (\:30a8\:30cd\:30eb\:30ae\:30fc\:6b21\:5143\:3092\:4ed8\:4e0e)
+     \:30fbdE \:306f\:30aa\:30d7\:30b7\:30e7\:30f3 (\:30c7\:30d5\:30a9\:30eb\:30c8 0.01)
+*)
+energySum[f_, E1_, E2_, dE_:0.01] := dE eV Total[f /@ Range[E1, E2, dE]];
+
+(* midpointSum[f, vmin, vmax, n]
+   \:901f\:5ea6 vm \:3092 [vmin, vmax] \:533a\:9593 n \:500b\:306e\:4e2d\:70b9\:3067\:8a55\:4fa1\:3059\:308b\:4e2d\:70b9\:5247\:3002
+     \:30fbf \:306f\:5358\:5f15\:6570\:306e\:7d14\:95a2\:6570 (\:4f8b: CRTES[md, n][E1, E2][#] &)
+     \:30fb\:623b\:308a\:5024 = (\:03a3 f(vm_i)) \:00d7 dv,  vm_i = vmin + (i - 0.5) dv
+*)
+midpointSum[f_, vmin_, vmax_, n_Integer] := With[
+  {dv = (vmax - vmin)/n},
+  dv Total[f /@ Table[vmin + (i - 0.5) dv, {i, n}]]
+];
+
+(* ---- Resolution function ---- *)
+
+(* BoxPDF[Ep, sig][ER]
+   \:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc Ep \:00b1 sig \:306e uniform PDF\:3002
+     \:30fb|ER - Ep| \:2264 sig \:3067 1/(2 sig)\:3001\:5916\:3067 0
+     \:30fb\:672c\:6d41\:306e IntkerR* \:306f Gaussian (NormalDistribution) \:3092\:4f7f\:3046\:304c\:3001
+       \:5358\:7d14\:5316\:30c6\:30b9\:30c8\:7528\:306b\:3053\:306e\:77e9\:5f62 PDF \:3082\:7528\:610f\:3002
+*)
+BoxPDF[Ep_, sig_][ER_] := UnitStep[sig - Abs[ER - Ep]] / (2 sig);", "Input",
+ InitializationCell->True,
+ Background->RGBColor[0.94, 0.94, 0.94],
+ ExpressionUUID->"3cbddc53-62c1-4ca4-8206-b0018cf52d0a"],
+
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Differential rate kernels", "Section",ExpressionUUID->"d6c30f79-9ed1-4006-ba29-115fd7f104ca"],
+
+Cell["\:25a0 Differential rate kernels
+
+DM-\:96fb\:5b50\:6563\:4e71\:306e\:53cd\:8df3\:30a8\:30cd\:30eb\:30ae\:30fc E \:306b\:5bfe\:3059\:308b dR/dE \:5bc4\:4e0e (TiN, left/right 2 \:30d6\:30e9\:30f3\:30c1)\:3002
+\:539f\:30b3\:30fc\:30c9 (kerR*Cut) \:306e\:30d0\:30b0 (\:5185\:90e8\:53c2\:7167\:30df\:30b9) \:306f\:9664\:53bb\:3002\:968e\:5c64\:306f\:4ee5\:4e0b:
+
+  Level 0: kerRTiNl, kerRTiNr                 raw \:5fae\:5206\:6563\:4e71\:7387\:30ab\:30fc\:30cd\:30eb (\:95a2\:6570 of E, m\:03c7, n, vmin)
+  Level 1: RangeTiNGen                       \:6570\:5024\:7a4d\:5206\:306e\:7a4d\:5206\:57df [emin, emax] \:751f\:6210
+  Level 2: IntkerRTiNl, IntkerRTiNr                 Gaussian \:5206\:89e3\:80fd\:3067\:7573\:307f\:8fbc\:3093\:3060\:89b3\:6e2c\:91cf dR/dE'
+  Level 3: KerRTiNl, KerRTiNr                 \:81ea\:52d5 range \:4ed8\:304d user-facing kernel
+
+\:5168\:4f53\:5171\:901a\:306e\:5f0f:
+    kerRTiN\:03b1(E, m\:03c7, n, vmin) = (1/\:03c1_TiN) (1/8\:03c0\:00b2 \:03b1) (1/\:03bc_\:03c7e\:00b2)
+                                  \:00d7 Jacob\:03b1(E, m\:03c7, vmin)
+                                  \:00d7 q\:03b1(E, m\:03c7, vmin)\:00b3
+                                  \:00d7 FDM(q\:03b1(E, m\:03c7, vmin))[n]\:00b2
+                                  \:00d7 Im[\:03b5_TiN(E, q\:03b1(E, m\:03c7, vmin))]
+    (\:03b1 \:2208 {l, r}; q\:03b1 \:304c\:5b9f\:6570\:5024\:3067\:306a\:3051\:308c\:3070 0)", "Text",
+ Background->RGBColor[0.96, 0.96, 0.92],
+ CellTags->"doc",
+ ExpressionUUID->"2dbed24b-1c4d-408e-b239-88501845f778"],
+
+Cell["(* ---- Level 0: Raw differential rate kernels ---- *)
+
+(* Left branch (q\:03b1 = ql) *)
+kerRTiNl[E_][m\\[Chi]_][n_][vmin_] := With[
+  {q = ql[E][m\\[Chi]][vmin]},
+  If[Internal`RealValuedNumericQ[q],
+    (1/rhoTiN) (1/(8 \\[Pi]^2 alpha)) (1/(\\[Mu]\\[Chi]t[m\\[Chi], me])^2) *
+      Jacobl[E][m\\[Chi]][vmin] q^3 *
+      FDM[q][n]^2 *
+      ImepsLTiN[E, q],
+    0
+  ]
+];
+
+(* Right branch (q\:03b1 = qr) *)
+kerRTiNr[E_][m\\[Chi]_][n_][vmin_] := With[
+  {q = qr[E][m\\[Chi]][vmin]},
+  If[Internal`RealValuedNumericQ[q],
+    (1/rhoTiN) (1/(8 \\[Pi]^2 alpha)) (1/(\\[Mu]\\[Chi]t[m\\[Chi], me])^2) *
+      Jacobr[E][m\\[Chi]][vmin] q^3 *
+      FDM[q][n]^2 *
+      ImepsLTiN[E, q],
+    0
+  ]
+];
+
+(* ---- Level 1: Integration domain ---- *)
+
+(* RangeTiNGen[vmin][md][Ep][Sig]
+   \:89b3\:6e2c Ep \:00b1 Sig \:3068 kinematic \:4e0a\:9650 (1/2 md vmin\:00b2) \:304b\:3089\:3001\:771f\:306e\:53cd\:8df3\:30a8\:30cd\:30eb\:30ae\:30fc
+   \:306e\:7a4d\:5206\:57df {emin, emax} \:3092\:8fd4\:3059\:3002emin \:2265 emax (\:7a7a) \:306e\:3068\:304d\:306f {0, 0}\:3002
+*)
+RangeTiNGen[vmin_][md_][Ep_][Sig_] := Module[
+  {emin, emax},
+  emax = Min[(md vmin^2)/2, Ep + Sig];
+  emin = Max[0.1 eV, Ep - Sig];
+  If[emin < emax, {emin, emax}, {0, 0}]
+];
+
+(* ---- Level 2: Resolution-convolved kernels ---- *)
+
+(* IntkerRTiNl, IntkerRTiNr
+   kerR* \:3092 Gaussian N(Ep, sig) \:3067 ER\:2208[E1, E2] \:306b\:308f\:305f\:3063\:3066\:7573\:307f\:8fbc\:3093\:3060\:89b3\:6e2c\:91cf\:3002
+   energySum \:3092\:6d41\:7528\:3057\:3001Riemann \:548c (\:0394E = 0.001 eV) \:3067\:96e2\:6563\:5316\:3002
+*)
+IntkerRTiNl[E1_, E2_][m\\[Chi]_][n_][Ep_, sig_][vmin_] :=
+  energySum[
+    PDF[NormalDistribution[Ep, sig], #] kerRTiNl[#][m\\[Chi]][n][vmin] &,
+    E1, E2, 0.001
+  ];
+
+IntkerRTiNr[E1_, E2_][m\\[Chi]_][n_][Ep_, sig_][vmin_] :=
+  energySum[
+    PDF[NormalDistribution[Ep, sig], #] kerRTiNr[#][m\\[Chi]][n][vmin] &,
+    E1, E2, 0.001
+  ];
+
+(* ---- Level 3: User-facing kernels (auto range) ---- *)
+
+(* KerRTiNl, KerRTiNr
+   RangeTiNGen \:3067\:7a4d\:5206\:57df\:3092\:81ea\:52d5\:6c7a\:5b9a\:3057\:3066 IntkerR* \:3092\:547c\:3076\:30e9\:30c3\:30d1\:30fc\:3002
+   range \:304c {0, 0} (\:7a7a) \:306a\:3089 0 \:3092\:8fd4\:3059\:3002
+*)
+KerRTiNl[md_][n_][Ep_, sig_][vmin_] := Module[
+  {r1, r2},
+  {r1, r2} = RangeTiNGen[vmin][md][Ep][sig];
+  If[r1 == 0 && r2 == 0, 0, IntkerRTiNl[r1, r2][md][n][Ep, sig][vmin]]
+];
+
+KerRTiNr[md_][n_][Ep_, sig_][vmin_] := Module[
+  {r1, r2},
+  {r1, r2} = RangeTiNGen[vmin][md][Ep][sig];
+  If[r1 == 0 && r2 == 0, 0, IntkerRTiNr[r1, r2][md][n][Ep, sig][vmin]]
+];", "Input",
+ InitializationCell->True,
+ Background->RGBColor[0.98, 0.94, 0.94],
+ ExpressionUUID->"3c605292-b2dd-4de7-b4af-88828e507825"],
+
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Energy-bin response (continuous in vm)", "Section",ExpressionUUID->"bd82cce8-f595-4ce9-b45d-1815ad113312"],
+
+Cell["\:25a0 Energy-bin response (continuous in vm)
+
+\:4efb\:610f\:306e\:6570\:5024 vm \:306b\:5bfe\:3057\:3001\:89b3\:6e2c\:30a8\:30cd\:30eb\:30ae\:30fc w \:3092 E1..E2 \:3067 w \:65b9\:5411\:306b\:30ea\:30fc\:30de\:30f3\:548c\:3092\:53d6\:3063\:3066\:8fd4\:3059\:3002
+vm \:306f ?NumericQ \:30d1\:30bf\:30fc\:30f3\:3067\:9023\:7d9a\:5909\:6570\:3068\:3057\:3066\:6271\:3048\:308b (Plot, NIntegrate, D \:53ef)\:3002
+
+  CRTiNLeft[md, n][E1, E2][vm]  = \:222b_E1^E2 KerRTiNl[md][n][w, MKIDsig\:00b7w][vm\:00b7kps] dw
+  CRTiNRight[md, n][E1, E2][vm]  = \:222b_E1^E2 KerRTiNr[md][n][w, MKIDsig\:00b7w][vm\:00b7kps] dw
+  CRTiN[md, n][E1, E2][vm]   = Left + Right  (energySum \:3092 1 \:56de\:3067\:6e08\:307e\:3059\:6700\:9069\:5316)", "Text",
+ Background->RGBColor[0.96, 0.96, 0.92],
+ CellTags->"doc",
+ ExpressionUUID->"8543e9d3-9884-485a-bb60-6c9b2708a41c"],
+
+Cell["CRTiNLeft[md_, n_][E1_, E2_][vm_?NumericQ] :=
+  energySum[KerRTiNl[md][n][#, MKIDsig #][vm kps] &, E1, E2];
+
+CRTiNRight[md_, n_][E1_, E2_][vm_?NumericQ] :=
+  energySum[KerRTiNr[md][n][#, MKIDsig #][vm kps] &, E1, E2];
+
+(* \:4e21\:30d6\:30e9\:30f3\:30c1\:548c\:306f Left + Right \:3092\:5225\:500b\:547c\:3076\:3088\:308a\:3001energySum \:3092 1 \:56de\:3067\:6e08\:307e\:3059\:65b9\:304c\:901f\:3044\:3002 *)
+CRTiN[md_, n_][E1_, E2_][vm_?NumericQ] :=
+  energySum[(KerRTiNl[md][n][#, MKIDsig #][vm kps] +
+             KerRTiNr[md][n][#, MKIDsig #][vm kps]) &, E1, E2];", "Input",
+ InitializationCell->True,
+ Background->RGBColor[0.94, 0.96, 0.98],
+ ExpressionUUID->"d8b9cf96-0b48-49df-aa92-5e4036bdac33"],
+
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Velocity-integrated response", "Section",ExpressionUUID->"baeb9c0d-f6ba-4fea-9f72-7cacc95d9033"],
+
+Cell["\:25a0 Velocity-integrated response
+
+CRTiN* \:3092 vm \:65b9\:5411\:306b [vmin, vmax] \:3067 ns \:70b9\:306e\:4e2d\:70b9\:5247\:3067\:7a4d\:5206\:3002midpointSum \:3092 1 \:884c\:547c\:3076\:3060\:3051\:3002
+
+  CRintTiN[md, n][E1, E2][vmin, vmax, ns]            = \:222b_vmin^vmax CRTiN[\:2026][vm] dvm
+  CRintTiNWeighted[md, n][E1, E2][vmin, vmax, ns, eta] = \:222b_vmin^vmax CRTiN[\:2026][vm] \:00b7 eta[vm] dvm
+
+Weighted \:7248\:306f halo \:901f\:5ea6\:5206\:5e03 \:03b7(vm) \:3068\:306e\:7573\:307f\:8fbc\:307f (= \:30a4\:30d9\:30f3\:30c8\:7387\:306e vm \:7a4d\:5206\:9805)\:3002", "Text",
+ Background->RGBColor[0.96, 0.96, 0.92],
+ CellTags->"doc",
+ ExpressionUUID->"8dd9cabe-faca-445d-bf91-617c5eb4e11c"],
+
+Cell["CRintTiNLeft[md_, n_][E1_, E2_][vmin_?NumericQ, vmax_?NumericQ, ns_Integer] :=
+  midpointSum[CRTiNLeft[md, n][E1, E2][#] &, vmin, vmax, ns];
+
+CRintTiNRight[md_, n_][E1_, E2_][vmin_?NumericQ, vmax_?NumericQ, ns_Integer] :=
+  midpointSum[CRTiNRight[md, n][E1, E2][#] &, vmin, vmax, ns];
+
+CRintTiN[md_, n_][E1_, E2_][vmin_?NumericQ, vmax_?NumericQ, ns_Integer] :=
+  midpointSum[CRTiN[md, n][E1, E2][#] &, vmin, vmax, ns];
+
+(* halo \:901f\:5ea6\:5206\:5e03 \:03b7(vm) \:3092\:639b\:3051\:305f\:7573\:307f\:8fbc\:307f\:7248\:3002 *)
+CRintTiNWeighted[md_, n_][E1_, E2_][vmin_?NumericQ, vmax_?NumericQ, ns_Integer, eta_] :=
+  midpointSum[CRTiN[md, n][E1, E2][#] eta[#] &, vmin, vmax, ns];", "Input",
+ InitializationCell->True,
+ Background->RGBColor[0.94, 0.98, 0.94],
+ ExpressionUUID->"abd77124-0893-47d9-ad25-6338e10b83b7"],
+
+}, Open  ]],
+
+Cell[CellGroupData[{
+
+Cell["Legacy table API", "Section",ExpressionUUID->"5ea40b59-68e7-4394-80d4-b545363224ee"],
+
+Cell["\:25a0 Legacy table API
+
+\:539f\:30b3\:30fc\:30c9\:306e While \:30eb\:30fc\:30d7\:5b9f\:88c5\:3092 Table \:3067\:66f8\:304d\:76f4\:3057\:305f\:8584\:3044\:30e9\:30c3\:30d1\:30fc\:3002
+08_response_matrix.nb \:3068\:306e\:5f8c\:65b9\:4e92\:63db\:306e\:305f\:3081\:6b8b\:7f6e\:3002CRTiN* \:306e\:9023\:7d9a\:95a2\:6570\:7248\:3092 vm \:30b0\:30ea\:30c3\:30c9\:3067\:30b5\:30f3\:30d7\:30eb\:3059\:308b\:3002
+
+\:539f\:5b9f\:88c5\:3068\:306e\:9055\:3044:
+  \:2022 \:623b\:308a\:5024\:306e Length \:304c\:5b9f\:969b\:306e\:30b5\:30f3\:30d7\:30eb\:70b9\:6570\:3068\:4e00\:81f4 (\:539f\:30b3\:30fc\:30c9\:306f 800 \:78ba\:4fdd\:3057\:672b\:5c3e\:3092 0 \:57cb\:3081\:3057\:3066\:3044\:305f)
+  \:2022 CRvmTiN[md, n][E1, E2]      vm = 6 \:2192 108 km/s, \:30b9\:30c6\:30c3\:30d7 0.51256 (\:4e21\:30d6\:30e9\:30f3\:30c1\:548c)
+  \:2022 CRvmTiNLeft/Right[md, n][E1, E2]  vm = 6 \:2192 200 km/s, \:30b9\:30c6\:30c3\:30d7 195/800", "Text",
+ Background->RGBColor[0.96, 0.96, 0.92],
+ CellTags->"doc",
+ ExpressionUUID->"25bc4e08-560c-4181-ab1a-653bdae06a62"],
+
+Cell["CRvmTiN[md_, n_][E1_, E2_] :=
+  Table[CRTiN[md, n][E1, E2][vm], {vm, 6, 108, 0.51256}];
+
+CRvmTiNLeft[md_, n_][E1_, E2_] :=
+  Table[CRTiNLeft[md, n][E1, E2][vm], {vm, 6, 200, 195/800}];
+
+CRvmTiNRight[md_, n_][E1_, E2_] :=
+  Table[CRTiNRight[md, n][E1, E2][vm], {vm, 6, 200, 195/800}];", "Input",
+ InitializationCell->True,
+ Background->RGBColor[0.97, 0.95, 0.97],
+ ExpressionUUID->"7b25d773-795f-4d31-80c9-b2d94eabb484"],
+
+}, Open  ]],
+
+}, Open  ]]
+},
+WindowSize->{1920, 954},
+WindowMargins->{{0, Automatic}, {Automatic, 0}},
+FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
+StyleDefinitions->"Default.nb",
+ExpressionUUID->"76aefb0a-0fd2-4d15-ab05-3aa5809b7e43"
+]
+(* End of Notebook Content *)

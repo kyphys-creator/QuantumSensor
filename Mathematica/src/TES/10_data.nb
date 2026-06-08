@@ -21,12 +21,12 @@ Notebook[{
 Cell[CellGroupData[{
 
 Cell["TES - Data for minimization", "Title",
- ExpressionUUID->"b86e84b5-6910-4ded-b5f1-7ea802b04305"],
+ ExpressionUUID->"17eac258-f229-44da-b2eb-31b52bf1bcf4"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"bcd5ce7d-065b-4de5-8dcc-456ecce51257"],
+ ExpressionUUID->"d58d4f9a-1af9-4eec-8fd9-41f3e5a20840"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
@@ -35,13 +35,13 @@ StyleBox["Direc", "Code"],
 StyleBox["../../input/TES", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"f812d933-6b0c-4d4d-9e63-e72f9c3ca08f"],
+ ExpressionUUID->"af31f81c-1b66-4a36-b098-c6d25abf5cbb"],
 
 Cell[
  "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"09_response_matrix_plot.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"f3324e83-a9e5-4951-b9a7-3bdfee1b9d03"],
+ ExpressionUUID->"854db81e-18e5-4606-bf19-432a3e9ea5d0"],
 
 }, Open  ]],
 
@@ -638,6 +638,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"125ab428-e15e-493b-9a80-06b84ac5ade5"
+ExpressionUUID->"a0589da8-d66b-4c35-b0b9-bee5f1b987b3"
 ]
 (* End of Notebook Content *)

@@ -20,28 +20,28 @@ WindowFrame->Normal*)
 Notebook[{
 Cell[CellGroupData[{
 
-Cell["TES - Calculation Parameters", "Title",
- ExpressionUUID->"84e0f633-55d0-4d39-b1b0-086c0e7bfeb4"],
+Cell["MKID - Calculation Parameters", "Title",
+ ExpressionUUID->"c9a5972a-dd77-4c31-be66-e86c98f74462"],
 
 Cell[CellGroupData[{
 
 Cell["Setup", "Section",
- ExpressionUUID->"25a9df05-b59a-412c-8fda-27008bf64287"],
+ ExpressionUUID->"918193e7-d703-49f7-ac22-3a60de343a55"],
 
 Cell[TextData[{
 "Loads upstream notebooks and points ",
 StyleBox["Direc", "Code"],
 " to ",
-StyleBox["../../input/TES", "Code"],
+StyleBox["../../input/MKID", "Code"],
 "."
 }], "Text",
- ExpressionUUID->"6ee2f4ed-e413-4fd5-8502-cafbffc90736"],
+ ExpressionUUID->"eeb69c94-2980-4a86-9a00-926b26ee714d"],
 
 Cell[
- "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"TES\"}];\nGet[FileNameJoin[{nbDir, \"04_material.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
+ "nbDir = NotebookDirectory[];\nDirec = FileNameJoin[{ParentDirectory[ParentDirectory[nbDir]], \"input\", \"MKID\"}];\nGet[FileNameJoin[{nbDir, \"04_material.nb\"}]];\nSetDirectory[Direc];\nPrint[\"Direc = \", Direc];",
  "Input",
  InitializationCell->True,
- ExpressionUUID->"a1c114d7-f598-4c14-98e5-75aa80d4c17c"],
+ ExpressionUUID->"73f9876d-c470-4718-ba71-df0de4d5a773"],
 
 }, Open  ]],
 
@@ -178,6 +178,6 @@ WindowSize->{1920, 954},
 WindowMargins->{{0, Automatic}, {Automatic, 0}},
 FrontEndVersion->"14.3 for Mac OS X ARM (64-bit) (July 8, 2025)",
 StyleDefinitions->"Default.nb",
-ExpressionUUID->"fe015dd3-641f-4208-bc7e-5bb24228f67f"
+ExpressionUUID->"ab7a67e8-75d3-4068-aa2e-3014afe33575"
 ]
 (* End of Notebook Content *)
