@@ -76,7 +76,11 @@ axisLabelRate = Style[" d\[ScriptCapitalR]/d\[Omega]' [\!\(\*SuperscriptBox[\(kg
 kernelCurveStyle[massColor_] := {
   MaxRecursion -> 0, PlotPoints -> 800,
   ScalingFunctions -> {"Log"},
-  PlotStyle -> {{Thick, massColor}, {Dashed, massColor}},
+  (* The two recoil energies share the mass colour but differ in opacity:
+     E_R = 0.1 eV is the bold (opaque) curve, E_R = 1 eV the faded one.
+     Opacity reads cleanly even on these sharp, spiky kernels, where a dashed
+     line on near-vertical strokes is impossible to make out. *)
+  PlotStyle -> {{Thick, massColor}, {Thick, Opacity[0.4], massColor}},
   Axes -> False,
   PlotRange -> All
 };
@@ -100,27 +104,27 @@ framed[plot_, titleText_] := Show[plot, Sequence @@ frameDecor[titleText]];
    v_min on a log y-axis. Recoil energy E_R = 1 eV.                           *)
 
 plotAlHeavy10MeV = Plot[
-  toPhysicalKgEv {-(KerRAll[10 MeV][0][0.1 eV, TESsig][vmin kps]) +
+  toPhysicalKgEv {(KerRAll[10 MeV][0][0.1 eV, TESsig][vmin kps]) +
      (KerRAlr[10 MeV][0][0.1 eV, TESsig][vmin kps]),
-     -(KerRAll[10 MeV][0][1 eV, TESsig][vmin kps]) +
+     (KerRAll[10 MeV][0][1 eV, TESsig][vmin kps]) +
      (KerRAlr[10 MeV][0][1 eV, TESsig][vmin kps])},
-  {vmin, 0, 10000},
+  {vmin, 1, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi10MeV]]];
 
 plotAlHeavy100MeV = Plot[
-  toPhysicalKgEv {-(KerRAll[100 MeV][0][0.1 eV, TESsig][vmin kps]) +
+  toPhysicalKgEv {(KerRAll[100 MeV][0][0.1 eV, TESsig][vmin kps]) +
      (KerRAlr[100 MeV][0][0.1 eV, TESsig][vmin kps]),
-     -(KerRAll[100 MeV][0][1 eV, TESsig][vmin kps]) +
+     (KerRAll[100 MeV][0][1 eV, TESsig][vmin kps]) +
      (KerRAlr[100 MeV][0][1 eV, TESsig][vmin kps])},
-  {vmin, 0, 10000},
+  {vmin, 1, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi100MeV]]];
 
 plotAlHeavy1GeV = Plot[
-  toPhysicalKgEv {-(KerRAll[1000 MeV][0][0.1 eV, TESsig][vmin kps]) +
+  toPhysicalKgEv {(KerRAll[1000 MeV][0][0.1 eV, TESsig][vmin kps]) +
      (KerRAlr[1000 MeV][0][0.1 eV, TESsig][vmin kps]),
-     -(KerRAll[1000 MeV][0][1 eV, TESsig][vmin kps]) +
+     (KerRAll[1000 MeV][0][1 eV, TESsig][vmin kps]) +
      (KerRAlr[1000 MeV][0][1 eV, TESsig][vmin kps])},
-  {vmin, 0, 10000},
+  {vmin, 1, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi1GeV]]];
 
 
@@ -129,27 +133,27 @@ plotAlHeavy1GeV = Plot[
    E_R = 1 eV (dashed).                                                       *)
 
 plotAlLight10MeV = Plot[
-  toPhysicalKgEv {-(KerRAll[10 MeV][2][0.1 eV, TESsig][vmin kps]) +
+  toPhysicalKgEv {(KerRAll[10 MeV][2][0.1 eV, TESsig][vmin kps]) +
       (KerRAlr[10 MeV][2][0.1 eV, TESsig][vmin kps]),
-   -(KerRAll[10 MeV][2][1 eV, TESsig][vmin kps]) +
+   (KerRAll[10 MeV][2][1 eV, TESsig][vmin kps]) +
       (KerRAlr[10 MeV][2][1 eV, TESsig][vmin kps])},
-  {vmin, 0, 10000},
+  {vmin, 1, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi10MeV]]];
 
 plotAlLight100MeV = Plot[
-  toPhysicalKgEv {-(KerRAll[100 MeV][2][0.1 eV, TESsig][vmin kps]) +
+  toPhysicalKgEv {(KerRAll[100 MeV][2][0.1 eV, TESsig][vmin kps]) +
       (KerRAlr[100 MeV][2][0.1 eV, TESsig][vmin kps]),
-   -(KerRAll[100 MeV][2][1 eV, TESsig][vmin kps]) +
+   (KerRAll[100 MeV][2][1 eV, TESsig][vmin kps]) +
       (KerRAlr[100 MeV][2][1 eV, TESsig][vmin kps])},
-  {vmin, 0, 10000},
+  {vmin, 1, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi100MeV]]];
 
 plotAlLight1GeV = Plot[
-  toPhysicalKgEv {-(KerRAll[1000 MeV][2][0.1 eV, TESsig][vmin kps]) +
+  toPhysicalKgEv {(KerRAll[1000 MeV][2][0.1 eV, TESsig][vmin kps]) +
       (KerRAlr[1000 MeV][2][0.1 eV, TESsig][vmin kps]),
-   -(KerRAll[1000 MeV][2][1 eV, TESsig][vmin kps]) +
+   (KerRAll[1000 MeV][2][1 eV, TESsig][vmin kps]) +
       (KerRAlr[1000 MeV][2][1 eV, TESsig][vmin kps])},
-  {vmin, 0, 10000},
+  {vmin, 1, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi1GeV]]];
 
 
@@ -166,10 +170,24 @@ plotAlLight1GeV = Plot[
    therefore dropped from the combined figures (see disabled block below).
    With only the kernel plots overlaid, the log y-axis auto-fits the data.    *)
 
+(* legendEntry[lineStyle, label][x, y] -> a legend row combining a short line
+   swatch and its text label, left-anchored at the ImageScaled position (x, y).
+   Black, so it reads as the recoil-energy E_R distinction (colour separately
+   encodes the DM mass). The 1 eV swatch is faded (Opacity) to match the faded
+   curve. Combining line + text in one Inset keeps them aligned in the frame.  *)
+legendEntry[lineStyle_, label_][x_, y_] := Inset[
+  Row[{
+    Graphics[{Black, Thick, lineStyle, Line[{{0, 0}, {1, 0}}]},
+      ImageSize -> 30, AspectRatio -> 0.16],
+    Style[" " <> label, 18, Black, FontFamily -> "Times"]
+  }],
+  ImageScaled[{x, y}], {Left, Center}];
+
 annotationLabels = {
   Inword["\[Omega]'"][20][.16, .36][{Black, Bold}],
-  Inword["0.1 eV"][18][.24, .3][Black],
-  Inword["1 eV"][18][.228, .24][Black],
+  (* E_R legend: bold line + "0.1 eV", faded line + "1 eV" *)
+  legendEntry[Opacity[1], "0.1 eV"][.18, .3],
+  legendEntry[Opacity[0.4], "1 eV"][.18, .24],
   Inword["\!\(\*SubscriptBox[\(m\), \(\[Chi]\)]\)"][20][.89, .85][Black],
   Inword["\!\(\*SuperscriptBox[\(10\), \(1\)]\) MeV"][18][.89, .78][colorMchi10MeV],
   Inword["\!\(\*SuperscriptBox[\(10\), \(2\)]\) MeV"][18][.89, .72][colorMchi100MeV],
@@ -191,11 +209,11 @@ figAlLight = Show[
 
 allFigures = {
   "Al_heavy_10MeV.pdf"   -> framed[plotAlHeavy10MeV,
-    "TES, heavy mediator, m\[Chi]=10MeV, \!\(\*\(E\)'\)=0.1eV, 1eV"],
+    "TES, heavy mediator, m\[Chi]=10MeV, \!\(\*E'\)=0.1eV, 1eV"],
   "Al_heavy_100MeV.pdf"  -> framed[plotAlHeavy100MeV,
-    "TES, heavy mediator, m\[Chi]=100MeV, \!\(\*\(E\)'\)=0.1eV, 1eV"],
+    "TES, heavy mediator, m\[Chi]=100MeV, \!\(\*E'\)=0.1eV, 1eV"],
   "Al_heavy_1GeV.pdf"    -> framed[plotAlHeavy1GeV,
-    "TES, heavy mediator, m\[Chi]=1GeV, \!\(\*\(E\)'\)=0.1eV, 1eV"],
+    "TES, heavy mediator, m\[Chi]=1GeV, \!\(\*E'\)=0.1eV, 1eV"],
   "Al_light_10MeV.pdf"   -> framed[plotAlLight10MeV,  "TES, light mediator"],
   "Al_light_100MeV.pdf"  -> framed[plotAlLight100MeV, "TES, light mediator"],
   "Al_light_1GeV.pdf"    -> framed[plotAlLight1GeV,   "TES, light mediator"],
@@ -208,18 +226,3 @@ Do[
   Print["Saved: ", entry[[1]]],
   {entry, allFigures}];
 
-
-(* ========================================================================== *)
-(*  TiN section (disabled)                                                    *)
-(*                                                                            *)
-(*  The original notebook carried TiN equivalents, but the TiN kernel plots   *)
-(*  are never defined in this TES notebook (they belong to the MKID pipeline). *)
-(*  Kept for reference; enable only once the TiN kernel plots exist.           *)
-(* --------------------------------------------------------------------------
-   figTiNHeavy = Show[plotTiNHeavy10MeV, plotTiNHeavy100MeV, plotTiNHeavy1GeV,
-     Epilog -> annotationLabels, PlotRange -> All];
-   figTiNLight = Show[plotTiNLight10MeV, plotTiNLight100MeV, plotTiNLight1GeV,
-     Epilog -> annotationLabels, PlotRange -> All];
-   Export[FileNameJoin[{figureDir, "TiN_heavy_combined.pdf"}], figTiNHeavy];
-   Export[FileNameJoin[{figureDir, "TiN_light_combined.pdf"}], figTiNLight];
-   -------------------------------------------------------------------------- *)
