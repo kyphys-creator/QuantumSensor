@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 (* ========================================================================== *)
 (*  TES - Binned velocity response (saved as interpolating functions)         *)
 (*  (formerly 08_response_matrix; renamed since it now builds and saves        *)
