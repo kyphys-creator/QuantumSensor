@@ -23,14 +23,15 @@
 (*  Run one group at a time (the curves are expensive), selected on the        *)
 (*  command line:                                                             *)
 (*                                                                            *)
-(*      wolframscript -file 08_response_functions.wl bin5     (5 bins, all masses)   *)
-(*      wolframscript -file 08_response_functions.wl bin10    (10 bins, all masses)  *)
-(*      wolframscript -file 08_response_functions.wl bin5 M3  (5 bins, 1 GeV only)   *)
+(*      wolframscript -file 08_response_functions.wl bin5         (5 bins, all masses, heavy) *)
+(*      wolframscript -file 08_response_functions.wl bin10        (10 bins, all masses, heavy)*)
+(*      wolframscript -file 08_response_functions.wl bin5 M3      (5 bins, 1 GeV, heavy)       *)
+(*      wolframscript -file 08_response_functions.wl bin5 ALL q2  (5 bins, all masses, light)  *)
 (*                                                                            *)
 (*  bin5  = 5 bins, 0.2 eV wide;  bin10 = 10 bins, 0.1 eV wide.                *)
-(*  Optional 2nd arg M1 | M2 | M3 restricts to one mass (10 MeV / 100 / 1 GeV).*)
-(*  Heavy mediator (q0, fdmIndex=0) and Al only, as in the original; light      *)
-(*  (fdmIndex=2) can be added by passing fdmIndex / extending dmMasses.         *)
+(*  Optional 2nd arg M1 | M2 | M3 (default ALL) restricts to one mass.         *)
+(*  Optional 3rd arg q0 | q2 (default q0) selects heavy (n=0) / light (n=2)    *)
+(*  mediator. Al only. File name encodes the mediator: Al_q0M1_R5 / Al_q2M1_R5.*)
 (*                                                                            *)
 (*  Output: output/TES/response_functions/*.wdx                                *)
 (* ========================================================================== *)
@@ -40,6 +41,13 @@
 commandLineArgs = Rest[$ScriptCommandLine];
 binGroup     = If[Length[commandLineArgs] >= 1, ToLowerCase[commandLineArgs[[1]]], ""];
 selectedMass = If[Length[commandLineArgs] >= 2, ToUpperCase[commandLineArgs[[2]]], "ALL"];
+mediatorArg  = If[Length[commandLineArgs] >= 3, ToLowerCase[commandLineArgs[[3]]], "q0"];
+
+(* Mediator -> {FDM index, file tag}. q0 = heavy (n=0), q2 = light (n=2). *)
+{fdmIndex, qTag} = Switch[mediatorArg,
+  "q0" | "heavy", {0, "q0"},
+  "q2" | "light", {2, "q2"},
+  _, {0, "q0"}];
 
 
 (* ============================ Setup ============================ *)
@@ -112,14 +120,14 @@ runGroup[binTag_, binEdges_] := Do[
       responses = AssociationThread[
         binEnergyLabels[binEdges] ->
         Table[
-          buildResponseFunction[dmMass, 0][binEdges[[i]], binEdges[[i + 1]]],
+          buildResponseFunction[dmMass, fdmIndex][binEdges[[i]], binEdges[[i + 1]]],
           {i, nBins}]];
       payload = <|
         "dmMass"    -> dmMass,
-        "fdmIndex"  -> 0,
+        "fdmIndex"  -> fdmIndex,
         "vminRange" -> {vminMin, vminMax},
         "responses" -> responses |>;
-      fileName = "Al_q0" <> massTag <> "_" <> binTag <> ".wdx";
+      fileName = "Al_" <> qTag <> massTag <> "_" <> binTag <> ".wdx";
       Export[FileNameJoin[{functionDir, fileName}], payload];
       Print["Saved: ", fileName, "  (", nBins, " bins)"];
     ];
@@ -134,5 +142,5 @@ Which[
   binGroup === "bin5",  runGroup["R5",  binEdges5],
   binGroup === "bin10", runGroup["R10", binEdges10],
   True, Print[
-    "usage: wolframscript -file 08_response_functions.wl [bin5|bin10] [M1|M2|M3]"]
+    "usage: wolframscript -file 08_response_functions.wl [bin5|bin10] [M1|M2|M3|ALL] [q0|q2]"]
 ];
