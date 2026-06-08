@@ -1,3 +1,5 @@
+(* ::Package:: *)
+
 (* ========================================================================== *)
 (*  TES - d(curly R)/dE' kernel plots                                         *)
 (*  Migrated from 07_dcurlyRdEprime_plot.nb.                                   *)
@@ -98,21 +100,27 @@ framed[plot_, titleText_] := Show[plot, Sequence @@ frameDecor[titleText]];
    v_min on a log y-axis. Recoil energy E_R = 1 eV.                           *)
 
 plotAlHeavy10MeV = Plot[
-  toPhysicalKgEv {-(KerRAll[10 MeV][0][1 eV, TESsig][vmin kps]) +
+  toPhysicalKgEv {-(KerRAll[10 MeV][0][0.1 eV, TESsig][vmin kps]) +
+     (KerRAlr[10 MeV][0][0.1 eV, TESsig][vmin kps]),
+     -(KerRAll[10 MeV][0][1 eV, TESsig][vmin kps]) +
      (KerRAlr[10 MeV][0][1 eV, TESsig][vmin kps])},
   {vmin, 0, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi10MeV]]];
 
 plotAlHeavy100MeV = Plot[
-  toPhysicalKgEv {KerRAll[100 MeV][0][1, TESsig*1][vmin kps],
-   KerRAlr[100 MeV][0][1, TESsig*1][vmin kps]},
-  {vmin, 0, 1000},
+  toPhysicalKgEv {-(KerRAll[100 MeV][0][0.1 eV, TESsig][vmin kps]) +
+     (KerRAlr[100 MeV][0][0.1 eV, TESsig][vmin kps]),
+     -(KerRAll[100 MeV][0][1 eV, TESsig][vmin kps]) +
+     (KerRAlr[100 MeV][0][1 eV, TESsig][vmin kps])},
+  {vmin, 0, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi100MeV]]];
 
 plotAlHeavy1GeV = Plot[
-  toPhysicalKgEv {KerRAll[1000 MeV][0][1, TESsig*1][vmin kps],
-   KerRAlr[1000 MeV][0][1, TESsig*1][vmin kps]},
-  {vmin, 0, 1000},
+  toPhysicalKgEv {-(KerRAll[1000 MeV][0][0.1 eV, TESsig][vmin kps]) +
+     (KerRAlr[1000 MeV][0][0.1 eV, TESsig][vmin kps]),
+     -(KerRAll[1000 MeV][0][1 eV, TESsig][vmin kps]) +
+     (KerRAlr[1000 MeV][0][1 eV, TESsig][vmin kps])},
+  {vmin, 0, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi1GeV]]];
 
 
@@ -121,27 +129,27 @@ plotAlHeavy1GeV = Plot[
    E_R = 1 eV (dashed).                                                       *)
 
 plotAlLight10MeV = Plot[
-  toPhysicalKgEv {(KerRAll[10 MeV][2][0.1, TESsig*.1][vmin kps] +
-      KerRAlr[10 MeV][2][0.1, TESsig*.1][vmin kps]),
-   (KerRAll[10 MeV][2][1, TESsig*1][vmin kps] +
-      KerRAlr[10 MeV][2][1, TESsig*1][vmin kps])},
+  toPhysicalKgEv {-(KerRAll[10 MeV][2][0.1 eV, TESsig][vmin kps]) +
+      (KerRAlr[10 MeV][2][0.1 eV, TESsig][vmin kps]),
+   -(KerRAll[10 MeV][2][1 eV, TESsig][vmin kps]) +
+      (KerRAlr[10 MeV][2][1 eV, TESsig][vmin kps])},
   {vmin, 0, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi10MeV]]];
 
 plotAlLight100MeV = Plot[
-  toPhysicalKgEv {(KerRAll[100 MeV][2][0.1, TESsig*.1][vmin kps] +
-      KerRAlr[100 MeV][2][0.1, TESsig*.1][vmin kps]),
-   (KerRAll[100 MeV][2][1, TESsig*1][vmin kps] +
-      KerRAlr[100 MeV][2][1, TESsig*1][vmin kps])},
-  {vmin, 0, 1000},
+  toPhysicalKgEv {-(KerRAll[100 MeV][2][0.1 eV, TESsig][vmin kps]) +
+      (KerRAlr[100 MeV][2][0.1 eV, TESsig][vmin kps]),
+   -(KerRAll[100 MeV][2][1 eV, TESsig][vmin kps]) +
+      (KerRAlr[100 MeV][2][1 eV, TESsig][vmin kps])},
+  {vmin, 0, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi100MeV]]];
 
 plotAlLight1GeV = Plot[
-  toPhysicalKgEv {(KerRAll[1000 MeV][2][0.1, TESsig*.1][vmin kps] +
-      KerRAlr[1000 MeV][2][0.1, TESsig*.1][vmin kps]),
-   (KerRAll[1000 MeV][2][1, TESsig*1][vmin kps] +
-      KerRAlr[1000 MeV][2][1, TESsig*1][vmin kps])},
-  {vmin, 0, 800},
+  toPhysicalKgEv {-(KerRAll[1000 MeV][2][0.1 eV, TESsig][vmin kps]) +
+      (KerRAlr[1000 MeV][2][0.1 eV, TESsig][vmin kps]),
+   -(KerRAll[1000 MeV][2][1 eV, TESsig][vmin kps]) +
+      (KerRAlr[1000 MeV][2][1 eV, TESsig][vmin kps])},
+  {vmin, 0, 10000},
   Evaluate[Sequence @@ kernelCurveStyle[colorMchi1GeV]]];
 
 
@@ -183,11 +191,11 @@ figAlLight = Show[
 
 allFigures = {
   "Al_heavy_10MeV.pdf"   -> framed[plotAlHeavy10MeV,
-    "TES, heavy mediator, m\[Chi]=10MeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"],
+    "TES, heavy mediator, m\[Chi]=10MeV, \!\(\*\(E\)'\)=0.1eV, 1eV"],
   "Al_heavy_100MeV.pdf"  -> framed[plotAlHeavy100MeV,
-    "TES, heavy mediator, m\[Chi]=100MeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"],
+    "TES, heavy mediator, m\[Chi]=100MeV, \!\(\*\(E\)'\)=0.1eV, 1eV"],
   "Al_heavy_1GeV.pdf"    -> framed[plotAlHeavy1GeV,
-    "TES, heavy mediator, m\[Chi]=1GeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"],
+    "TES, heavy mediator, m\[Chi]=1GeV, \!\(\*\(E\)'\)=0.1eV, 1eV"],
   "Al_light_10MeV.pdf"   -> framed[plotAlLight10MeV,  "TES, light mediator"],
   "Al_light_100MeV.pdf"  -> framed[plotAlLight100MeV, "TES, light mediator"],
   "Al_light_1GeV.pdf"    -> framed[plotAlLight1GeV,   "TES, light mediator"],
