@@ -40,6 +40,16 @@ Print["inputDir  = ", inputDir];
 Print["figureDir = ", figureDir];
 
 
+(* ============================ Unit conversion ============================ *)
+(* The kernels are computed in natural units (all quantities in GeV, see
+   01_setup). The response d(curly R)/d omega' carries dimension GeV^-2, i.e.
+   (mass * energy)^-1. Multiplying by the natural-unit values of kg and eV
+   (i.e. dividing by the physical unit kg^-1 eV^-1 = 1/(kg eV)) expresses it
+   numerically in kg^-1 eV^-1. No hard-coded factor: kg and eV come from
+   01_setup, so the conversion stays consistent with the rest of the code.   *)
+toPhysicalKgEv = kg eV;
+
+
 (* ============================ Shared plot styling ============================ *)
 
 (* One colour per DM mass (Wolfram colour scheme 116). *)
@@ -49,7 +59,7 @@ colorMchi1GeV   = ColorData[116, 3];
 
 (* Common axis labels. *)
 axisLabelVmin = Style["\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]", 20, SingleLetterItalics -> False];
-axisLabelRate = Style[" d\[ScriptCapitalR]/d\[Omega]' ( Scaled )", 20];
+axisLabelRate = Style[" d\[ScriptCapitalR]/d\[Omega]' [\!\(\*SuperscriptBox[\(kg\), \(-1\)]\) \!\(\*SuperscriptBox[\(eV\), \(-1\)]\)]", 20];
 
 (* kernelPlotStyle[massColour, titleText] -> common Plot option list.
    The solid style is the first curve, the dashed style the second.          *)
@@ -70,21 +80,21 @@ kernelPlotStyle[massColor_, titleText_] := {
    v_min on a log y-axis. Recoil energy E_R = 1 eV.                           *)
 
 plotAlHeavy10MeV = Plot[
-  {-(KerRAll[10 MeV][0][1 eV, TESsig][vmin kps]) +
+  toPhysicalKgEv {-(KerRAll[10 MeV][0][1 eV, TESsig][vmin kps]) +
      (KerRAlr[10 MeV][0][1 eV, TESsig][vmin kps])},
   {vmin, 0, 10000},
   Evaluate[Sequence @@ kernelPlotStyle[colorMchi10MeV,
     "TES, heavy mediator, m\[Chi]=10MeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"]]];
 
 plotAlHeavy100MeV = Plot[
-  {KerRAll[100 MeV][0][1, TESsig*1][vmin kps],
+  toPhysicalKgEv {KerRAll[100 MeV][0][1, TESsig*1][vmin kps],
    KerRAlr[100 MeV][0][1, TESsig*1][vmin kps]},
   {vmin, 0, 1000},
   Evaluate[Sequence @@ kernelPlotStyle[colorMchi100MeV,
     "TES, heavy mediator, m\[Chi]=100MeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"]]];
 
 plotAlHeavy1GeV = Plot[
-  {KerRAll[1000 MeV][0][1, TESsig*1][vmin kps],
+  toPhysicalKgEv {KerRAll[1000 MeV][0][1, TESsig*1][vmin kps],
    KerRAlr[1000 MeV][0][1, TESsig*1][vmin kps]},
   {vmin, 0, 1000},
   Evaluate[Sequence @@ kernelPlotStyle[colorMchi1GeV,
@@ -96,7 +106,7 @@ plotAlHeavy1GeV = Plot[
    E_R = 1 eV (dashed).                                                       *)
 
 plotAlLight10MeV = Plot[
-  {(KerRAll[10 MeV][2][0.1, TESsig*.1][vmin kps] +
+  toPhysicalKgEv {(KerRAll[10 MeV][2][0.1, TESsig*.1][vmin kps] +
       KerRAlr[10 MeV][2][0.1, TESsig*.1][vmin kps]),
    (KerRAll[10 MeV][2][1, TESsig*1][vmin kps] +
       KerRAlr[10 MeV][2][1, TESsig*1][vmin kps])},
@@ -104,7 +114,7 @@ plotAlLight10MeV = Plot[
   Evaluate[Sequence @@ kernelPlotStyle[colorMchi10MeV, "TES, light mediator"]]];
 
 plotAlLight100MeV = Plot[
-  {(KerRAll[100 MeV][2][0.1, TESsig*.1][vmin kps] +
+  toPhysicalKgEv {(KerRAll[100 MeV][2][0.1, TESsig*.1][vmin kps] +
       KerRAlr[100 MeV][2][0.1, TESsig*.1][vmin kps]),
    (KerRAll[100 MeV][2][1, TESsig*1][vmin kps] +
       KerRAlr[100 MeV][2][1, TESsig*1][vmin kps])},
@@ -112,7 +122,7 @@ plotAlLight100MeV = Plot[
   Evaluate[Sequence @@ kernelPlotStyle[colorMchi100MeV, "TES, light mediator"]]];
 
 plotAlLight1GeV = Plot[
-  {(KerRAll[1000 MeV][2][0.1, TESsig*.1][vmin kps] +
+  toPhysicalKgEv {(KerRAll[1000 MeV][2][0.1, TESsig*.1][vmin kps] +
       KerRAlr[1000 MeV][2][0.1, TESsig*.1][vmin kps]),
    (KerRAll[1000 MeV][2][1, TESsig*1][vmin kps] +
       KerRAlr[1000 MeV][2][1, TESsig*1][vmin kps])},
