@@ -61,18 +61,36 @@ colorMchi1GeV   = ColorData[116, 3];
 axisLabelVmin = Style["\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]", 20, SingleLetterItalics -> False];
 axisLabelRate = Style[" d\[ScriptCapitalR]/d\[Omega]' [\!\(\*SuperscriptBox[\(kg\), \(-1\)]\) \!\(\*SuperscriptBox[\(eV\), \(-1\)]\)]", 20];
 
-(* kernelPlotStyle[massColour, titleText] -> common Plot option list.
-   The solid style is the first curve, the dashed style the second.          *)
-kernelPlotStyle[massColor_, titleText_] := {
+(* kernelCurveStyle[massColour] -> options for the data curves ONLY (no frame).
+   Solid style = first curve, dashed = second. The frame, axis labels and title
+   are added separately (by `framed` for single plots, or frameDecor at the
+   combined Show). Keeping the curve plots frame-less is what prevents a
+   spurious vertical line: when several plots are overlaid with Show, each
+   sub-plot would otherwise draw its own axes, and on the log v_min axis a
+   sub-plot's y-axis is placed at the left edge of *its* range. The 10 MeV
+   plot begins near v_min ~ 10, so its y-axis appeared as a stray vertical
+   line at v_min ~ 10. Axes -> False removes it; the single frame from
+   frameDecor provides the box and ticks instead.                             *)
+kernelCurveStyle[massColor_] := {
   MaxRecursion -> 0, PlotPoints -> 800,
   ScalingFunctions -> {"Log"},
   PlotStyle -> {{Thick, massColor}, {Dashed, massColor}},
+  Axes -> False,
+  PlotRange -> All
+};
+
+(* frameDecor[titleText] -> frame / axis-label / title options, applied once at
+   the Show level so the whole figure has a single frame. *)
+frameDecor[titleText_] := {
   Frame -> True,
   LabelStyle -> Directive[FontFamily -> "Times", Black, 20, Bold],
   FrameStyle -> {Black},
   FrameLabel -> {axisLabelVmin, axisLabelRate, Style[titleText, 20]},
-  PlotRange -> All, ImageSize -> Large
+  ImageSize -> Large
 };
+
+(* framed[plot, title] -> one kernel curve-plot decorated with frame + labels. *)
+framed[plot_, titleText_] := Show[plot, Sequence @@ frameDecor[titleText]];
 
 
 (* ============================ Heavy mediator (n = 0) ============================ *)
@@ -83,22 +101,19 @@ plotAlHeavy10MeV = Plot[
   toPhysicalKgEv {-(KerRAll[10 MeV][0][1 eV, TESsig][vmin kps]) +
      (KerRAlr[10 MeV][0][1 eV, TESsig][vmin kps])},
   {vmin, 0, 10000},
-  Evaluate[Sequence @@ kernelPlotStyle[colorMchi10MeV,
-    "TES, heavy mediator, m\[Chi]=10MeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"]]];
+  Evaluate[Sequence @@ kernelCurveStyle[colorMchi10MeV]]];
 
 plotAlHeavy100MeV = Plot[
   toPhysicalKgEv {KerRAll[100 MeV][0][1, TESsig*1][vmin kps],
    KerRAlr[100 MeV][0][1, TESsig*1][vmin kps]},
   {vmin, 0, 1000},
-  Evaluate[Sequence @@ kernelPlotStyle[colorMchi100MeV,
-    "TES, heavy mediator, m\[Chi]=100MeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"]]];
+  Evaluate[Sequence @@ kernelCurveStyle[colorMchi100MeV]]];
 
 plotAlHeavy1GeV = Plot[
   toPhysicalKgEv {KerRAll[1000 MeV][0][1, TESsig*1][vmin kps],
    KerRAlr[1000 MeV][0][1, TESsig*1][vmin kps]},
   {vmin, 0, 1000},
-  Evaluate[Sequence @@ kernelPlotStyle[colorMchi1GeV,
-    "TES, heavy mediator, m\[Chi]=1GeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"]]];
+  Evaluate[Sequence @@ kernelCurveStyle[colorMchi1GeV]]];
 
 
 (* ============================ Light mediator (n = 2) ============================ *)
@@ -111,7 +126,7 @@ plotAlLight10MeV = Plot[
    (KerRAll[10 MeV][2][1, TESsig*1][vmin kps] +
       KerRAlr[10 MeV][2][1, TESsig*1][vmin kps])},
   {vmin, 0, 10000},
-  Evaluate[Sequence @@ kernelPlotStyle[colorMchi10MeV, "TES, light mediator"]]];
+  Evaluate[Sequence @@ kernelCurveStyle[colorMchi10MeV]]];
 
 plotAlLight100MeV = Plot[
   toPhysicalKgEv {(KerRAll[100 MeV][2][0.1, TESsig*.1][vmin kps] +
@@ -119,7 +134,7 @@ plotAlLight100MeV = Plot[
    (KerRAll[100 MeV][2][1, TESsig*1][vmin kps] +
       KerRAlr[100 MeV][2][1, TESsig*1][vmin kps])},
   {vmin, 0, 1000},
-  Evaluate[Sequence @@ kernelPlotStyle[colorMchi100MeV, "TES, light mediator"]]];
+  Evaluate[Sequence @@ kernelCurveStyle[colorMchi100MeV]]];
 
 plotAlLight1GeV = Plot[
   toPhysicalKgEv {(KerRAll[1000 MeV][2][0.1, TESsig*.1][vmin kps] +
@@ -127,7 +142,7 @@ plotAlLight1GeV = Plot[
    (KerRAll[1000 MeV][2][1, TESsig*1][vmin kps] +
       KerRAlr[1000 MeV][2][1, TESsig*1][vmin kps])},
   {vmin, 0, 800},
-  Evaluate[Sequence @@ kernelPlotStyle[colorMchi1GeV, "TES, light mediator"]]];
+  Evaluate[Sequence @@ kernelCurveStyle[colorMchi1GeV]]];
 
 
 (* ============================ Combined figures ============================ *)
@@ -155,22 +170,27 @@ annotationLabels = {
 
 figAlHeavy = Show[
   plotAlHeavy10MeV, plotAlHeavy100MeV, plotAlHeavy1GeV,
+  Sequence @@ frameDecor["TES, heavy mediator"],
   Epilog -> annotationLabels, PlotRange -> All];
 
 figAlLight = Show[
   plotAlLight10MeV, plotAlLight100MeV, plotAlLight1GeV,
+  Sequence @@ frameDecor["TES, light mediator"],
   Epilog -> annotationLabels, PlotRange -> All];
 
 
 (* ============================ Export every figure ============================ *)
 
 allFigures = {
-  "Al_heavy_10MeV.pdf"   -> plotAlHeavy10MeV,
-  "Al_heavy_100MeV.pdf"  -> plotAlHeavy100MeV,
-  "Al_heavy_1GeV.pdf"    -> plotAlHeavy1GeV,
-  "Al_light_10MeV.pdf"   -> plotAlLight10MeV,
-  "Al_light_100MeV.pdf"  -> plotAlLight100MeV,
-  "Al_light_1GeV.pdf"    -> plotAlLight1GeV,
+  "Al_heavy_10MeV.pdf"   -> framed[plotAlHeavy10MeV,
+    "TES, heavy mediator, m\[Chi]=10MeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"],
+  "Al_heavy_100MeV.pdf"  -> framed[plotAlHeavy100MeV,
+    "TES, heavy mediator, m\[Chi]=100MeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"],
+  "Al_heavy_1GeV.pdf"    -> framed[plotAlHeavy1GeV,
+    "TES, heavy mediator, m\[Chi]=1GeV, \!\(\*SubscriptBox[\(E\), \(R\)]\)=1eV"],
+  "Al_light_10MeV.pdf"   -> framed[plotAlLight10MeV,  "TES, light mediator"],
+  "Al_light_100MeV.pdf"  -> framed[plotAlLight100MeV, "TES, light mediator"],
+  "Al_light_1GeV.pdf"    -> framed[plotAlLight1GeV,   "TES, light mediator"],
   "Al_heavy_combined.pdf" -> figAlHeavy,
   "Al_light_combined.pdf" -> figAlLight
 };
