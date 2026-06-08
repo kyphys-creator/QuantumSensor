@@ -1,0 +1,28 @@
+==== test_definitions report :: TES ====
+loaded : /Users/koichiromacstudio/Documents/Claude/QuantumSensor/Mathematica/src/TES/06_response_defs.wl
+passed : 20 / 20
+failed : 0
+----------------------------------------
+[PASS] load/06_response_defs  -- /Users/koichiromacstudio/Documents/Claude/QuantumSensor/Mathematica/src/TES/06_response_defs.wl
+[PASS] defs/01_setup  -- 25 symbols
+[PASS] defs/02_functions_math  -- 3 symbols
+[PASS] defs/03_functions_response  -- 17 symbols
+[PASS] defs/04_material  -- 18 symbols
+[PASS] defs/05_parameters  -- 6 symbols
+[PASS] defs/06_response_defs  -- 20 symbols
+[PASS] smoke/mu_chi_t  -- 510738.
+[PASS] smoke/FDM_n1  -- 0.0372992
+[PASS] smoke/FDM_n0  -- 1.
+[PASS] smoke/vmin  -- 0.00015
+[PASS] smoke/KKf  --           -9
+2.16163 10
+[PASS] smoke/eta_th  --           -33
+5.95329 10
+[PASS] smoke/energySum  -- 358.625
+[PASS] smoke/midpointSum  -- 0.5
+[PASS] smoke/ImepsAlf  -- 0.0557898
+[PASS] smoke/eps1Alf  -- -2.57987
+[PASS] smoke/Dw  -- 6.9537
+[PASS] smoke/AveOmg  -- 0.0255029
+[PASS] smoke/kerRAll  --           -16
+7.75734 10
