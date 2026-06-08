@@ -1,8 +1,7 @@
-(* ::Package:: *)
-
 (* ========================================================================== *)
 (*  TES - Binned velocity response (saved as interpolating functions)         *)
-(*  (historically "08_response_matrix"; repurposed.)                          *)
+(*  (formerly 08_response_matrix; renamed since it now builds and saves        *)
+(*  response functions, not a matrix.)                                         *)
 (*                                                                            *)
 (*  For each observed-energy bin [E1, E2] (in eV) this evaluates the binned    *)
 (*  response  CRTES[mass, n][E1, E2][v_min]  on a v_min grid and builds an     *)
@@ -22,9 +21,9 @@
 (*  Run one group at a time (the curves are expensive), selected on the        *)
 (*  command line:                                                             *)
 (*                                                                            *)
-(*      wolframscript -file 08_response_matrix.wl bin5        (5 bins, all masses)   *)
-(*      wolframscript -file 08_response_matrix.wl bin10       (10 bins, all masses)  *)
-(*      wolframscript -file 08_response_matrix.wl bin5 M3     (5 bins, 1 GeV only)   *)
+(*      wolframscript -file 08_response_function.wl bin5      (5 bins, all masses)   *)
+(*      wolframscript -file 08_response_function.wl bin10     (10 bins, all masses)  *)
+(*      wolframscript -file 08_response_function.wl bin5 M3   (5 bins, 1 GeV only)   *)
 (*                                                                            *)
 (*  bin5  = 5 bins, 0.2 eV wide;  bin10 = 10 bins, 0.1 eV wide.                *)
 (*  Optional 2nd arg M1 | M2 | M3 restricts to one mass (10 MeV / 100 / 1 GeV).*)
@@ -124,5 +123,5 @@ Which[
   binGroup === "bin5",  runGroup["R5",  binEdges5],
   binGroup === "bin10", runGroup["R10", binEdges10],
   True, Print[
-    "usage: wolframscript -file 08_response_matrix.wl [bin5|bin10] [M1|M2|M3]"]
+    "usage: wolframscript -file 08_response_function.wl [bin5|bin10] [M1|M2|M3]"]
 ];
