@@ -78,7 +78,7 @@ dmMasses = {
 (* The InterpolatingFunction is built on this grid [km/s]. Increase nVminSamples
    for finer resolution (and longer run time); the cost scales linearly.       *)
 
-vminMin = 1;  vminMax = 800;  nVminSamples = 800;
+vminMin = 1;  vminMax = 800;  nVminSamples = 8000;
 vminGrid = Subdivide[vminMin, vminMax, nVminSamples - 1];   (* nVminSamples points *)
 
 
