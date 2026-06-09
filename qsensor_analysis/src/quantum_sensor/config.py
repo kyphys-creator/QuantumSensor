@@ -76,4 +76,4 @@ BACKGROUND_SCENARIOS: dict[str, BackgroundModel] = {
 # material-independent number (no per-quantity ``cons1``/``cons2``, no per-mass
 # table). Keep it roughly O(1/||M column||) so OSQP's constraint matrix is well
 # scaled.
-CONDITION_C: float = 1e-27
+CONDITION_C: float = 1e-30
