@@ -56,13 +56,18 @@ binColors[nBins_] := If[nBins <= 1, {ColorData["DarkRainbow"][0.5]},
 
 (* plotResponseFile[wdxPath] -> overlay every bin's R_bin(v_min) and save a PDF. *)
 plotResponseFile[wdxPath_] := Module[
-  {data, responses, labels, fns, nBins, vlo, vhi, title, figure, outName},
+  {data, responses, labels, fns, nBins, domains, vlo, vhi, title, figure, outName},
   data      = Import[wdxPath];
   responses = data["responses"];
   labels    = Keys[responses];
   fns       = Values[responses];
   nBins     = Length[fns];
-  {vlo, vhi} = data["vminRange"];
+  (* Plot over the FULL domain of the saved interpolating functions (read from
+     the functions themselves, not the stored vminRange), and pin the x-axis to
+     it so nothing is cropped. *)
+  domains   = #["Domain"][[1]] & /@ fns;
+  vlo       = Min[domains[[All, 1]]];
+  vhi       = Max[domains[[All, 2]]];
   title     = FileBaseName[wdxPath];
 
   figure = Plot[
@@ -72,7 +77,7 @@ plotResponseFile[wdxPath_] := Module[
     ScalingFunctions -> {"Log"},
     Axes -> False, Frame -> True,
     PlotStyle -> ({Thick, #} & /@ binColors[nBins]),
-    PlotRange -> All,
+    PlotRange -> {{vlo, vhi}, All},
     LabelStyle -> Directive[FontFamily -> "Times", Black, 16],
     FrameStyle -> Black,
     FrameLabel -> {axisLabelVmin, axisLabelRate, title},
