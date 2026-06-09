@@ -30,7 +30,8 @@ ETA_TO_CM_INV = CM
 def _config_tag(analysis) -> str:
     """The per-run config tag (no background -- that is a parent folder)."""
     c = analysis.config
-    return f"{c.material}_q{c.q}_M{c.mass}_R{c.nbins}_{c.eta}"
+    eta_tag = c.eta if c.disk_fraction is None else f"mix{round(c.disk_fraction * 100)}"
+    return f"{c.material}_q{c.q}_M{c.mass}_R{c.nbins}_{eta_tag}"
 
 
 def _label(analysis) -> str:
@@ -78,9 +79,23 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
     eta_phys = analysis.eta * ETA_TO_CM_INV
     flux_phys = analysis.flux * ETA_TO_CM_INV
 
-    ax.plot(rm.vmin_mid, eta_phys, color="red", lw=2, label=r"input $\eta(v_{min})$")
+    p = analysis.config.disk_fraction
+    eta_label = (r"fit $\eta$ (mix " + f"{round(p * 100)}% disk)"
+                 if p is not None else r"input $\eta(v_{min})$")
+    ax.plot(rm.vmin_mid, eta_phys, color="red", lw=2, label=eta_label)
     ax.hlines(flux_phys, rm.vmin_low, rm.vmin_high,
               color="C0", lw=1.5, label="Best-Fit")
+
+    # For a mixture fit, also show the two reference components: the full 100% SHM
+    # halo, and the dark-disk part at its mixing weight (p * pure disk).
+    if p is not None:
+        if analysis.eta_halo is not None:
+            ax.plot(rm.vmin_mid, analysis.eta_halo * ETA_TO_CM_INV,
+                    color="gray", lw=1.5, ls="--", label="100% SHM")
+        if analysis.eta_disk is not None:
+            ax.plot(rm.vmin_mid, p * analysis.eta_disk * ETA_TO_CM_INV,
+                    color="green", lw=1.5, ls=":",
+                    label=f"{round(p * 100)}% pure disk")
 
     ax.set_xscale("log")
     ax.set_xlim(rm.vmin_low[0], rm.vmin_high[-1])

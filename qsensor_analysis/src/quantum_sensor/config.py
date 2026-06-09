@@ -21,7 +21,13 @@ class RunConfig:
     mass     : DM-mass tag -- "1" (10 MeV), "2" (100 MeV), "3" (1 GeV).
     nbins    : number of observed-energy bins. Al (TES): 5 or 10. TiN (MKID):
                5 or 9 (threshold 0.2 eV, so the fine binning is R9, not R10).
-    eta      : halo velocity-distribution model ("Halo", "Disk", "Bound").
+    eta      : velocity-distribution model used when disk_fraction is None --
+               "Halo" (SHM) or "Disk" (pure dark disk).
+    disk_fraction : if set (0..1), the eta driving the fit is the MIXTURE
+               (1 - p) * eta_Halo + p * eta_Disk with p = disk_fraction, instead
+               of the single `eta` model. Both components are normalised to the
+               same local DM density, so the mixture's density equals 100% SHM
+               for any p. None (default) = use the single `eta` model.
     background : background scenario name (see BACKGROUND_SCENARIOS); "none"
                  fits the signal-only counts.
     run      : optional substring to pick a specific matrix folder/run.
@@ -32,6 +38,7 @@ class RunConfig:
     mass: str = "3"
     nbins: int = 5
     eta: str = "Halo"
+    disk_fraction: float | None = None
     background: str = "none"
     run: str | None = None
 
@@ -69,4 +76,4 @@ BACKGROUND_SCENARIOS: dict[str, BackgroundModel] = {
 # material-independent number (no per-quantity ``cons1``/``cons2``, no per-mass
 # table). Keep it roughly O(1/||M column||) so OSQP's constraint matrix is well
 # scaled.
-CONDITION_C: float = 1e-31
+CONDITION_C: float = 1e-27

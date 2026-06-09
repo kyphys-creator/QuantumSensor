@@ -36,10 +36,15 @@ MATERIAL_GRID = {
     "TiN": [("0", 5), ("0", 9)],
 }
 MASSES = ("1", "2", "3")
-# Velocity-distribution models to render (need eta_<model>.csv from 12_eta.wl).
+# Pure velocity models rendered as references (need eta_<model>.csv from 12_eta.wl).
 ETAS = ("Halo", "Disk")
+# Dark-disk mixing fractions p for the best-fit eta = (1-p)*Halo + p*Disk.
+DISK_FRACTIONS = (0.1, 0.2, 0.5)
 # Background scenarios to render. "none" is signal-only; add others as needed.
 BACKGROUNDS = ("none",)
+
+# eta specs as (eta_model, disk_fraction): pure references + mixture best-fits.
+ETA_SPECS = [(m, None) for m in ETAS] + [("Halo", p) for p in DISK_FRACTIONS]
 
 
 def main(write_pdf: bool = True) -> None:
@@ -48,14 +53,16 @@ def main(write_pdf: bool = True) -> None:
         det = DETECTOR_OF.get(material, material)
         for q, nbins in combos:
             for mass in MASSES:
-                for eta in ETAS:
+                for eta, disk_fraction in ETA_SPECS:
                     for background in BACKGROUNDS:
                         cfg = RunConfig(material=material, q=q, mass=mass,
-                                        nbins=nbins, eta=eta, background=background)
+                                        nbins=nbins, eta=eta,
+                                        disk_fraction=disk_fraction, background=background)
                         try:
                             a = DarkMatterQuantumAnalysis(cfg)
                         except FileNotFoundError as exc:
-                            print(f"skip {det} {material} q{q} M{mass} R{nbins} {eta}: {exc}")
+                            tag = eta if disk_fraction is None else f"mix{round(disk_fraction*100)}"
+                            print(f"skip {det} {material} q{q} M{mass} R{nbins} {tag}: {exc}")
                             n_skip += 1
                             continue
                         a.optimize(solver="osqp")
