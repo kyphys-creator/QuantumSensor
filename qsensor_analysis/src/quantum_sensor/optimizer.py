@@ -215,11 +215,38 @@ class _OSQPBackend:
 
     def solve(self, qp):
         D = _column_scale(qp['M_active'])
+        out = _Result()
 
-        # 1. QP interior solution (smooth ramp) + fitted values mu.
+        # Stage 0: exact-fit vertex. The chi^2 = 0 minimiser exists whenever the
+        # signal y = data - background is reproducible by a monotone non-negative
+        # flux -- always the case for the self-consistent forward model, where
+        # y = M @ eta and eta is itself monotone and >= 0. Solving the vertex LP
+        # directly at mu = y bypasses the QP interior, which is badly conditioned
+        # when the counts span many orders of magnitude (the dense, steeply
+        # falling Bound eta makes OSQP report "dual infeasible"). It reduces to
+        # the same vertex the QP path would pick when that path converges, so it
+        # is the default fast/robust route, not a special case.
+        if self.vertex_select and qp['n'] > qp['m_active']:
+            y = qp['y_active']
+            x_exact = _vertex_select(qp, D, y)
+            if x_exact is not None and np.allclose(qp['M_active'] @ x_exact, y,
+                                                   rtol=1e-6, atol=0):
+                out.backend = 'highs-vertex-exact'
+                out.staircase = True
+                out.success = True
+                out.message = 'exact-fit vertex'
+                out.nit = 0
+                out.solve_time = 0.0
+                out.x = x_exact
+                out.fun = float(0.5 * x_exact @ qp['P'] @ x_exact
+                                + qp['q'] @ x_exact + qp['const'])
+                return out
+
+        # Stage 1 (fallback): QP interior solution (smooth ramp) + fitted mu.
+        # Needed when no exact monotone fit exists (e.g. Poisson pseudo-data),
+        # so the chi^2 minimum is > 0 and mu must come from the QP.
         x_int, res = self._osqp_interior(qp, D)
 
-        out = _Result()
         out.backend = 'osqp'
         out.staircase = False
         out.nit = res.info.iter
@@ -228,7 +255,7 @@ class _OSQPBackend:
         out.success = True
         out.x = x_int
 
-        # 2. vertex selection on mu = M_active @ x_interior (tail-weighted LP).
+        # Stage 2: vertex selection on mu = M_active @ x_interior.
         if self.vertex_select and qp['n'] > qp['m_active']:
             mu = qp['M_active'] @ x_int
             x_v = _vertex_select(qp, D, mu)
