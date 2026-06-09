@@ -98,6 +98,10 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
         if analysis.eta_halo is not None:
             ax.plot(rm.vmin_mid, analysis.eta_halo * ETA_TO_CM_INV,
                     color="gray", lw=1.5, ls="--", label="100% SHM")
+            # the SHM component actually in the mixture, (1-p) * SHM
+            ax.plot(rm.vmin_mid, (1.0 - p) * analysis.eta_halo * ETA_TO_CM_INV,
+                    color="orange", lw=1.5, ls="-.",
+                    label=f"{round((1 - p) * 100)}% SHM")
         if analysis.eta_disk is not None:
             ax.plot(rm.vmin_mid, p * analysis.eta_disk * ETA_TO_CM_INV,
                     color="green", lw=1.5, ls=":",
