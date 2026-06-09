@@ -80,14 +80,20 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
     flux_phys = analysis.flux * ETA_TO_CM_INV
 
     p = analysis.config.disk_fraction
-    eta_label = (r"fit $\eta$ (mix " + f"{round(p * 100)}% disk)"
-                 if p is not None else r"input $\eta(v_{min})$")
+    is_bound = analysis.config.eta == "Bound" and p is None
+    if p is not None:
+        eta_label = r"fit $\eta$ (mix " + f"{round(p * 100)}% disk)"
+    elif is_bound:
+        eta_label = r"fit $\eta$ (Bound + 100% SHM)"
+    else:
+        eta_label = r"input $\eta(v_{min})$"
     ax.plot(rm.vmin_mid, eta_phys, color="red", lw=2, label=eta_label)
     ax.hlines(flux_phys, rm.vmin_low, rm.vmin_high,
               color="C0", lw=1.5, label="Best-Fit")
 
-    # For a mixture fit, also show the two reference components: the full 100% SHM
-    # halo, and the dark-disk part at its mixing weight (p * pure disk).
+    # Show the components that make up the fit eta:
+    #   mixture -> 100% SHM (gray) and p x pure disk (green);
+    #   Bound   -> 100% SHM (gray) and the bound population (green).
     if p is not None:
         if analysis.eta_halo is not None:
             ax.plot(rm.vmin_mid, analysis.eta_halo * ETA_TO_CM_INV,
@@ -96,6 +102,13 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
             ax.plot(rm.vmin_mid, p * analysis.eta_disk * ETA_TO_CM_INV,
                     color="green", lw=1.5, ls=":",
                     label=f"{round(p * 100)}% pure disk")
+    elif is_bound:
+        if analysis.eta_halo is not None:
+            ax.plot(rm.vmin_mid, analysis.eta_halo * ETA_TO_CM_INV,
+                    color="gray", lw=1.5, ls="--", label="100% SHM")
+        if analysis.eta_bound is not None:
+            ax.plot(rm.vmin_mid, analysis.eta_bound * ETA_TO_CM_INV,
+                    color="green", lw=1.5, ls=":", label="Bound")
 
     ax.set_xscale("log")
     # Bound eta falls many decades over a few km/s, so show it on a log y-axis
