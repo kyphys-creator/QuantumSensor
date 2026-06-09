@@ -39,7 +39,7 @@ MASSES = ("1", "2", "3")
 # Pure velocity models rendered as references (need eta_<model>.csv from 12_eta.wl).
 ETAS = ("Halo", "Disk")
 # Dark-disk mixing fractions p for the best-fit eta = (1-p)*Halo + p*Disk.
-DISK_FRACTIONS = (0.1, 0.2, 0.5)
+DISK_FRACTIONS = (0.05, 0.25)
 # Background scenarios to render. "none" is signal-only; add others as needed.
 BACKGROUNDS = ("none",)
 
