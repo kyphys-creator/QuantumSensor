@@ -18,24 +18,25 @@
 (*  next to matrix.csv so the Python loader can pick it up with no alignment   *)
 (*  and no unit conversion.                                                    *)
 (*                                                                            *)
-(*  Physics: etaSHM = \[Eta]th from 03_functions_response.wl, the standard     *)
-(*  halo (SHM) speed integral, which already carries the (rhoDM sigmae/mchi)   *)
+(*  Physics: eta = \[Eta]th from 03_functions_response.wl, the truncated-       *)
+(*  Maxwellian speed integral, which already carries the (rhoDM sigmae/mchi)    *)
 (*  prefactor. CRTiN (06) carries NO rho/sigma/mass, so M @ eta does not        *)
-(*  double-count. The SHM parameters v0, ve, vesc come from 01_setup.wl.       *)
+(*  double-count.                                                              *)
 (*                                                                            *)
-(*  Scope: Halo (SHM) only. Disk/Bound are not defined in the current .wl      *)
-(*  pipeline (03 has \[Eta]th == \[Eta]td and no Bound); their legacy CSVs are *)
-(*  from an older pipeline and are intentionally not reproduced here.          *)
+(*  Models (same \[Eta]th functional form + same DM density; only the velocity  *)
+(*  parameters differ, all from 01_setup.wl):                                   *)
+(*    Halo  standard halo (SHM):     v0, ve, vesc                               *)
+(*    Disk  pure dark disk (colder): v0DD, veDD, vescDD                         *)
 (*                                                                            *)
 (*  Usage:                                                                     *)
 (*      wolframscript -file 12_eta.wl <name|ALL> [model]                       *)
 (*                                                                            *)
 (*    <name>   substring of a matrix folder under output/MKID/response_matrix/ *)
 (*             (e.g. TiN_q0M1_R5), or ALL for every folder found              *)
-(*    [model]  velocity-distribution model; only "Halo" is implemented         *)
-(*             (default Halo)                                                  *)
+(*    [model]  velocity-distribution model: Halo (default) or Disk             *)
 (*                                                                            *)
 (*  e.g.  wolframscript -file 12_eta.wl ALL                                    *)
+(*        wolframscript -file 12_eta.wl ALL Disk                               *)
 (*        wolframscript -file 12_eta.wl TiN_q0M1_R5 Halo                       *)
 (*                                                                            *)
 (*  Output (in each matched output/MKID/response_matrix/M*/<name>/ folder):    *)
@@ -47,11 +48,6 @@
 commandLineArgs = Rest[$ScriptCommandLine];
 nameArg  = If[Length[commandLineArgs] >= 1, commandLineArgs[[1]], "ALL"];
 modelArg = If[Length[commandLineArgs] >= 2, Capitalize[ToLowerCase[commandLineArgs[[2]]]], "Halo"];
-
-If[modelArg =!= "Halo",
-  Print["error: only model 'Halo' is implemented (got ", modelArg, ")."];
-  Print["       Disk/Bound are not defined in the current .wl pipeline."];
-  Exit[1]];
 
 
 (* ============================ Setup ============================ *)
@@ -78,9 +74,23 @@ extractMass[name_] := Module[{m},
   m = StringCases[name, "M" ~~ d : DigitCharacter .. :> "M" <> d];
   If[m === {}, $Failed, First[m]]];
 
-(* Natural-units halo speed integral evaluated at a v_min given in km/s.
-   etaSHM[md][vKmS] = \[Eta]th[md][vKmS kps][v0, ve, vesc]. *)
-etaSHM[md_][vKmS_] := \[Eta]th[md][vKmS kps][v0, ve, vesc];
+(* Velocity-distribution model -> {v0, ve, vesc}. The eta functional form
+   (03's truncated-Maxwellian \[Eta]th) and the DM density are the same for all
+   models; only the velocity parameters differ.
+     Halo = standard halo (SHM):       v0, ve, vesc from 01_setup
+     Disk = pure dark disk (colder):   v0DD, veDD, vescDD (same DM density) *)
+etaParams = Switch[modelArg,
+  "Halo", {v0, ve, vesc},
+  "Disk", {v0DD, veDD, vescDD},
+  _, $Failed];
+If[etaParams === $Failed,
+  Print["error: model must be 'Halo' or 'Disk' (got ", modelArg, ")."];
+  Exit[1]];
+
+(* Natural-units speed integral at a v_min given in km/s, for the chosen model.
+   etaModel[md][vKmS] = \[Eta]th[md][vKmS kps][v0, ve, vesc] of that model. *)
+etaModel[md_][vKmS_] := \[Eta]th[md][vKmS kps][
+  etaParams[[1]], etaParams[[2]], etaParams[[3]]];
 
 
 (* ============================ Process one folder ============================ *)
@@ -99,7 +109,7 @@ processFolder[dir_] := Module[
   If[md === $Failed,
     Print["skip (no usable mass tag): ", dir]; Return[]];
 
-  etaVals = N[etaSHM[md][#]] & /@ vmid;        (* natural units, one per v_min column *)
+  etaVals = N[etaModel[md][#]] & /@ vmid;       (* natural units, one per v_min column *)
 
   outFile = FileNameJoin[{dir, "eta_" <> modelArg <> ".csv"}];
   Export[outFile, List /@ etaVals];            (* single column *)

@@ -49,6 +49,12 @@ ve = 250 kps;
 vesc = 544 kps;
 
 
+(* ---- Pure dark-disk (DD) velocities; same DM density, colder kinematics ---- *)
+v0DD = 70 kps;
+veDD = 100 kps;
+vescDD = 694 kps;
+
+
 (* ---- Particle physics constants and DM density ---- *)
 alpha = 1 / 137;
 \[Rho]DM = 0.4 GeV / cm^3;
