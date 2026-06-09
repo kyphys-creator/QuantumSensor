@@ -65,7 +65,20 @@ class DarkMatterQuantumAnalysis:
     # -- inversion -----------------------------------------------------------
     def optimize(self, solver: str = "osqp", x0=None, display: bool = False,
                  fix=None, vertex_select: bool = True):
-        """Recover the monotone non-negative flux from the observed counts."""
+        """Recover the monotone non-negative flux from the observed counts.
+
+        The inverse is heavily under-determined (few energy bins, many v_min
+        bins), so its feasible set is a whole face. ``vertex_select=True``
+        (default) returns the sparse staircase vertex -- a flux that is
+        piecewise-constant in a few v_min steps, the intended physical
+        representation. ``vertex_select=False`` returns the minimum-norm point,
+        which tracks the smooth input eta more closely but is not a clean
+        staircase.
+
+        Either way the high-v tail is only weakly constrained by a handful of
+        energy bins (nbins=10 helps only marginally); a smoothness/maximum-
+        entropy regulariser would be needed to track the tail closely.
+        """
         m_cond, data_cond, bkg_cond, unscale = condition(
             self.m_phys, self.observed, self.background)
 
