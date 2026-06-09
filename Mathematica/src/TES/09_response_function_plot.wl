@@ -35,6 +35,9 @@ mathDir     = ParentDirectory[ParentDirectory[fileDir]];
 functionDir = FileNameJoin[{mathDir, "output", "TES", "response_functions"}];
 plotDir     = FileNameJoin[{mathDir, "output", "TES", "response_function_plots"}];
 If[!DirectoryQ[plotDir], CreateDirectory[plotDir, CreateIntermediateDirectories -> True]];
+
+Get[FileNameJoin[{fileDir, "01_setup.wl"}]];
+
 Print["functionDir = ", functionDir];
 Print["plotDir     = ", plotDir];
 
@@ -42,7 +45,7 @@ Print["plotDir     = ", plotDir];
 (* ============================ Styling ============================ *)
 
 axisLabelVmin = Style["\!\(\*SubscriptBox[\(v\), \(min\)]\) [km/s]", 16, SingleLetterItalics -> False];
-axisLabelRate = Style["\!\(\*SubscriptBox[\(R\), \(bin\)]\)(\!\(\*SubscriptBox[\(v\), \(min\)]\))  [natural units]", 16];
+axisLabelRate = Style["\!\(\*SubscriptBox[\(R\), \(bin\)]\)(\!\(\*SubscriptBox[\(v\), \(min\)]\))  [\!\(\*SuperscriptBox[\(kg\), \(-1\)]\)]", 16];
 
 (* One distinct colour per bin. *)
 binColors[nBins_] := If[nBins <= 1, {ColorData["DarkRainbow"][0.5]},
@@ -63,7 +66,7 @@ plotResponseFile[wdxPath_] := Module[
   title     = FileBaseName[wdxPath];
 
   figure = Plot[
-    Evaluate[Through[fns[vmin]]],
+    Evaluate[Through[fns[vmin]] kg],
     {vmin, vlo, vhi},
     PlotPoints -> 300, MaxRecursion -> 2,
     ScalingFunctions -> {"Log"},
