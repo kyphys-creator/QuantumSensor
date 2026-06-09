@@ -16,6 +16,10 @@
 (*  functions, each integral is computed exactly by the trapezoid rule over    *)
 (*  the function's own grid nodes inside the interval.                         *)
 (*                                                                            *)
+(*  Leading all-zero columns are trimmed: everything before the first non-zero  *)
+(*  entry of the first row is dropped from the matrix, and the same number of   *)
+(*  rows is dropped from the top of vmin.csv so the columns stay aligned.       *)
+(*                                                                            *)
 (*  This stage is light: it only imports the .wdx (self-contained) -- it does   *)
 (*  NOT load the 01-06 pipeline.                                               *)
 (*                                                                            *)
@@ -86,7 +90,7 @@ extractMass[name_] := Module[{m},
 
 buildMatrix[wdxBaseName_] := Module[
   {wdxPath, data, responses, labels, fns, nBins, domLo, domHi,
-   vminLo, vminHi, edges, mids, matrix, stem, massTag, outDir},
+   vminLo, vminHi, edges, mids, matrix, vminRows, firstCol, stem, massTag, outDir},
 
   wdxPath = FileNameJoin[{functionDir, wdxBaseName <> ".wdx"}];
   If[!FileExistsQ[wdxPath], Print["skip (not found): ", wdxBaseName <> ".wdx"]; Return[]];
@@ -109,9 +113,20 @@ buildMatrix[wdxBaseName_] := Module[
 
   (* M[i, j] = integral of bin-i response over interval j.
      The interpolation grid is in km/s; multiply by kps to convert dv to natural units. *)
-  matrix = kps Table[
+  matrix   = kps Table[
     integrateIF[fns[[i]], edges[[j]], edges[[j + 1]]],
     {i, nBins}, {j, nIntervals}];
+  vminRows = N /@ Transpose[{Most[edges], Rest[edges], mids}];
+
+  (* Trim leading all-zero columns: drop every column before the first non-zero
+     entry of the FIRST row (the lowest-energy bin, which crosses threshold at
+     the lowest v_min). The v_min list is trimmed from the top by the same
+     amount, so columns and v_min rows stay aligned. *)
+  firstCol = SelectFirst[Range[nIntervals], matrix[[1, #]] != 0 &, 1];
+  If[firstCol > 1,
+    matrix   = matrix[[All, firstCol ;;]];
+    vminRows = vminRows[[firstCol ;;]];
+    Print["  trimmed ", firstCol - 1, " leading zero column(s)"]];
 
   stem    = wdxBaseName <> "_v" <> ToString[vminLoReq] <> "-" <> ToString[vminHiReq] <>
             "_N" <> ToString[nIntervals];
@@ -120,12 +135,12 @@ buildMatrix[wdxBaseName_] := Module[
   If[!DirectoryQ[outDir], CreateDirectory[outDir, CreateIntermediateDirectories -> True]];
 
   Export[FileNameJoin[{outDir, "matrix.csv"}], matrix];
-  Export[FileNameJoin[{outDir, "vmin.csv"}],
-    N /@ Transpose[{Most[edges], Rest[edges], mids}]];
+  Export[FileNameJoin[{outDir, "vmin.csv"}], vminRows];
   Export[FileNameJoin[{outDir, "bins.csv"}],
     N /@ (ToExpression /@ StringCases[#, NumberString] & /@ labels)];
 
-  Print["Saved: ", massTag, "/", stem, "/  (", nBins, " bins x ", nIntervals, " v_min intervals)"];
+  Print["Saved: ", massTag, "/", stem, "/  (", nBins, " bins x ", Length[matrix[[1]]],
+    " v_min intervals)"];
 ];
 
 

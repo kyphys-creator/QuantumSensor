@@ -83,10 +83,14 @@ dmMasses = {
 
 
 (* ============================ v_min sampling grid ============================ *)
-(* The InterpolatingFunction is built on this grid [km/s]. Increase nVminSamples
-   for finer resolution (and longer run time); the cost scales linearly.       *)
+(* The InterpolatingFunction is built on this grid [km/s]. The grid depends on
+   the mediator: the light mediator (q2) response extends to higher v_min, so
+   it uses a wider domain and more samples (same ~10 pts/km/s density).
+   Increase nVminSamples for finer resolution (cost scales linearly).          *)
 
-vminMin = 1;  vminMax = 800;  nVminSamples = 8000;
+{vminMin, vminMax, nVminSamples} = If[fdmIndex == 2,
+  {1, 2000, 20000},   (* light (q2) *)
+  {1,  800,  8000}];  (* heavy (q0) *)
 vminGrid = Subdivide[vminMin, vminMax, nVminSamples - 1];   (* nVminSamples points *)
 
 
