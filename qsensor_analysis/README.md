@@ -112,11 +112,6 @@ There are **four kinds** of input. For each, "entity", "source" and "loading cod
   `load_natural_eta(rm, model)`. If the length does not match `n_vmin` or the
   file is missing, it raises an explicit error prompting the command above.
 
-> The legacy physical-unit eta (`data/Eta_data/Eta<eta>M<mass>_Ko.csv`, ≈ cm⁻¹,
-> 800 samples) is still readable via `load_eta()` / `model.align_eta()`, but is
-> **for cross-checks only** since it is inconsistent with the natural-unit
-> matrix. It is not used on the main path.
-
 #### 1-C. Physical constants
 
 - **Entity**: natural-unit (GeV-based) physical constants (unit conversions,
@@ -137,14 +132,6 @@ There are **four kinds** of input. For each, "entity", "source" and "loading cod
 - **Source**: `BACKGROUND_SCENARIOS` in
   [`config.py`](src/quantum_sensor/config.py) (the only place the background
   numbers live).
-
-#### (Reference) legacy cross-check data — unused in the normal flow
-
-`data_loader.py` also has these loaders, **not called on the standard analysis
-path** (kept for unit/exposure calibration and comparison with old results):
-- `load_ratebin()` — old 5-bin observed counts `data/Ratebin/Event5...csv`
-- `load_legacy_response_matrix()` — old exposure-weighted matrix
-  `data/curlyRplotting/...csv`
 
 ---
 
@@ -287,7 +274,7 @@ attributes.
 | [`config.py`](src/quantum_sensor/config.py) | `RunConfig`, `BackgroundModel`, `BACKGROUND_SCENARIOS` (the single home of run params and background numbers) |
 | [`constants.py`](src/quantum_sensor/constants.py) | physical constants (single source of truth, copied from Mathematica 01/05) |
 | [`data_loader.py`](src/quantum_sensor/data_loader.py) | load the response matrix + natural-unit eta (`eta_<model>.csv`), `ResponseMatrix`. Also keeps legacy eta/ratebin |
-| [`model.py`](src/quantum_sensor/model.py) | forward operator `m_phys`, data-derived conditioning (`align_eta` is legacy-only) |
+| [`model.py`](src/quantum_sensor/model.py) | forward operator `m_phys` (exposure × matrix) and the conditioning reparametrisation |
 | [`backgrounds.py`](src/quantum_sensor/backgrounds.py) | background counts on the matrix energy bins |
 | [`optimizer.py`](src/quantum_sensor/optimizer.py) | monotone non-negative χ²/QP solver (OSQP / CLARABEL / HiGHS vertex / trust-constr) |
 | [`analysis.py`](src/quantum_sensor/analysis.py) | `DarkMatterQuantumAnalysis(config)` — entry point / orchestrator |
@@ -356,13 +343,11 @@ The minimal end-to-end example is
 python examples/run_example.py
 ```
 
-> **Scope**: TES (Al). `eta` is for now generated in natural units **for Halo
-> (SHM) only** ([`12_eta.wl`](../Mathematica/src/TES/12_eta.wl)). Disk/Bound are
-> unsupported as the current `.wl` has no definition; their legacy physical-unit
-> CSVs are kept for cross-checks. The legacy `data/` (eta, ratebin) and the old
-> `curlyRplotting` matrices are likewise kept. R10 / q2 also work. Observed
-> counts are generated from the self-consistent forward model, not the legacy
-> 5-bin Ratebin.
+> **Scope**: both detectors (TES/Al, MKID/TiN), heavy/light mediator (q0/q2),
+> all masses and binnings. `eta` is generated in natural units by
+> [`12_eta.wl`](../Mathematica/src/TES/12_eta.wl) for **Halo**, **Disk** and
+> **Bound**. Observed counts are generated from the self-consistent forward
+> model (`exposure · M @ eta`).
 
 ---
 
@@ -435,10 +420,8 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
     wolframscript -file Mathematica/src/TES/12_eta.wl ALL Halo
     ```
     [`12_eta.wl`](../Mathematica/src/TES/12_eta.wl) は各フォルダの `vmin.csv` を読み、その `v_mid` で `\[Eta]th[dmMass][v_mid·kps][v0,ve,vesc]` を評価して `eta_<model>.csv` を出力する（パラメータは `01_setup.wl`、`σe` は `05_parameters.wl`、`\[Eta]th` は `03_functions_response.wl`）。
-  - **スコープ**: 現状 **Halo (SHM) のみ**。`.wl` パイプラインには `\[Eta]th ≡ \[Eta]td` で `Bound` の定義が無く、Disk/Bound のレガシー CSV は旧パイプライン由来のため、ここでは再生成しない。
+  - **スコープ**: **Halo / Disk / Bound** に対応（[`12_eta.wl`](../Mathematica/src/TES/12_eta.wl)）。`eta_<model>.csv` として行列フォルダに出力される。
 - **読み込むコード**: [`data_loader.py`](src/quantum_sensor/data_loader.py) の `load_natural_eta(rm, model)`。長さが `n_vmin` と合わない／ファイルが無い場合は、上記コマンドを促す明示的なエラーを出す。
-
-> レガシーの物理単位 eta（`data/Eta_data/Eta<eta>M<mass>_Ko.csv`、≈ cm⁻¹、800 サンプル）は `load_eta()` / `model.align_eta()` で読めるが、**自然単位の行列と不整合なのでクロスチェック専用**。主経路では使わない。
 
 #### 1-C. 物理定数
 
@@ -450,11 +433,6 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 - **実体**: 背景スペクトル `R(E) = A·exp(-E/B) + C` の係数 `(A, B, C)` を持つシナリオ表。`"none"`/`"a"` は背景ゼロ（信号のみ）。
 - **出所**: [`config.py`](src/quantum_sensor/config.py) の `BACKGROUND_SCENARIOS`（背景の数値が存在する唯一の場所）。
 
-#### （参考）クロスチェック用レガシーデータ — 通常の流れでは未使用
-
-`data_loader.py` には次の読み込み関数もあるが、**標準の解析経路では呼ばれない**（単位・露光較正や過去結果との突き合わせ用）:
-- `load_ratebin()` — 旧 5 ビン観測カウント `data/Ratebin/Event5...csv`
-- `load_legacy_response_matrix()` — 旧露光込み行列 `data/curlyRplotting/...csv`
 
 ---
 
@@ -556,7 +534,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 | [`config.py`](src/quantum_sensor/config.py) | `RunConfig`, `BackgroundModel`, `BACKGROUND_SCENARIOS`（実行パラメータと背景数値の唯一の置き場） |
 | [`constants.py`](src/quantum_sensor/constants.py) | 物理定数（Mathematica 01/05 から写した単一の真実の源） |
 | [`data_loader.py`](src/quantum_sensor/data_loader.py) | 応答行列＋自然単位 eta（`eta_<model>.csv`）の読み込み、`ResponseMatrix`。レガシー eta/ratebin も保持 |
-| [`model.py`](src/quantum_sensor/model.py) | 順方向演算子 `m_phys`、データ由来コンディショニング（`align_eta` はレガシー専用） |
+| [`model.py`](src/quantum_sensor/model.py) | 順方向演算子 `m_phys`（露光 × 行列）とコンディショニングの再パラメータ化 |
 | [`backgrounds.py`](src/quantum_sensor/backgrounds.py) | 行列のエネルギービン上での背景カウント |
 | [`optimizer.py`](src/quantum_sensor/optimizer.py) | 単調非負 χ²/QP ソルバ（OSQP / CLARABEL / HiGHS 頂点 / trust-constr） |
 | [`analysis.py`](src/quantum_sensor/analysis.py) | `DarkMatterQuantumAnalysis(config)` — エントリポイント・司令塔 |
@@ -602,4 +580,4 @@ a.save_flux()                       # フラックス＋v_min グリッドを CS
 python examples/run_example.py
 ```
 
-> **スコープ**: TES（Al）。`eta` は当面 **Halo (SHM) のみ**自然単位で生成（[`12_eta.wl`](../Mathematica/src/TES/12_eta.wl)）。Disk/Bound は現行 `.wl` に定義が無いため未対応で、レガシー物理単位 CSV はクロスチェック用に残す。レガシーの `data/`（eta, ratebin）と旧 `curlyRplotting` 行列も同様。R10 / q2 も動く。観測カウントはレガシーの 5 ビン Ratebin ではなく、自己無撞着な順方向モデルから生成する。
+> **スコープ**: 両検出器（TES/Al, MKID/TiN）、重い/軽い媒介子（q0/q2）、全質量・全ビン。`eta` は [`12_eta.wl`](../Mathematica/src/TES/12_eta.wl) が **Halo / Disk / Bound** を自然単位で生成。観測カウントは自己無撞着な順方向モデル（`露光 · M @ eta`）から生成する。

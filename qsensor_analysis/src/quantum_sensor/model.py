@@ -33,23 +33,6 @@ def exposure_factor(material: str) -> float:
         raise ValueError(f"no exposure defined for material {material!r}") from exc
 
 
-def align_eta(eta_raw: np.ndarray, vmin_mid: np.ndarray,
-              v_lo: float = 1.0, v_hi: float = 800.0) -> np.ndarray:
-    """Resample a tabulated eta(v_min) onto the matrix's v_min interval mid-points.
-
-    LEGACY / cross-check only. The main pipeline no longer uses this: it loads a
-    natural-units eta already sampled on the matrix grid (``load_natural_eta`` /
-    ``12_eta.wl``). This resamples the legacy *physical-units* eta files, which
-    are NOT unit-consistent with the natural-units matrix.
-
-    The legacy eta files hold ``len(eta_raw)`` samples spanning ``[v_lo, v_hi]``
-    km/s; values outside the table extrapolate to its endpoints (eta -> 0 at the
-    high end).
-    """
-    v_src = np.linspace(v_lo, v_hi, len(eta_raw))
-    return np.interp(vmin_mid, v_src, eta_raw)
-
-
 def response_operator(rm: ResponseMatrix, material: str) -> np.ndarray:
     """The physical forward operator M_phys = exposure * raw matrix.
 

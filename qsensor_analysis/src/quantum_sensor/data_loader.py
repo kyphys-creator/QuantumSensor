@@ -1,14 +1,9 @@
 """Load the inputs of the analysis.
 
-Two data sources:
-
-* The new Mathematica response matrices, written by 10_response_matrix.wl as a
-  per-run folder ``response_matrix/M<mass>/<name>/`` holding ``matrix.csv``,
-  ``vmin.csv`` and ``bins.csv``. Shapes, energy bins and the v_min grid are all
-  read from these files -- nothing about the grid is hard-coded here.
-* The legacy ``data/`` folder (eta velocity distributions, observed Ratebin
-  counts, and the old exposure-weighted ``curlyRplotting`` matrices kept for
-  unit/exposure calibration).
+The Mathematica response matrices, written by 10_response_matrix.wl as a per-run
+folder ``response_matrix/M<mass>/<name>/`` holding ``matrix.csv``, ``vmin.csv``
+and ``bins.csv`` (plus ``eta_<model>.csv`` from 12_eta.wl). Shapes, energy bins
+and the v_min grid are all read from these files -- nothing is hard-coded here.
 """
 
 from __future__ import annotations
@@ -20,7 +15,6 @@ import numpy as np
 
 # quantum_sensor/ -> src/ -> qsensor_analysis/ -> QuantumSensor/
 _PKG_DIR = Path(__file__).resolve()
-LEGACY_DATA_DIR = _PKG_DIR.parents[2] / "data"
 _MATHEMATICA_OUTPUT = _PKG_DIR.parents[3] / "Mathematica" / "output"
 
 # Each detector material is computed by a different Mathematica detector pipeline
@@ -115,9 +109,9 @@ def load_natural_eta(rm: ResponseMatrix, model: str) -> np.ndarray:
     Mathematica stage ``12_eta.wl``. Because it is generated on the same v_min
     interval mid-points that label the matrix columns and in the same natural
     units as the matrix, ``M_phys @ eta`` is a real expected event count -- no
-    interpolation (``align_eta``) and no unit conversion are needed or applied.
+    interpolation and no unit conversion are needed or applied.
 
-    Only the Halo (SHM) model is currently generated; see ``12_eta.wl``.
+    Models: ``Halo``, ``Disk`` and ``Bound`` (see ``12_eta.wl``).
     """
     path = rm.path / f"eta_{model}.csv"
     if not path.exists():
@@ -136,31 +130,3 @@ def load_natural_eta(rm: ResponseMatrix, model: str) -> np.ndarray:
             f"regenerate eta_{model}.csv with 12_eta.wl after rebuilding the matrix."
         )
     return eta
-
-
-# ----------------------------------------------------------------- legacy data
-
-def load_eta(eta: str, mass: str) -> np.ndarray:
-    """Tabulated velocity distribution eta(v_min) (legacy, 800 samples).
-
-    Physical units (~cm^-1), NOT consistent with the new natural-units
-    matrices -- kept only for cross-checks. The analysis uses
-    :func:`load_natural_eta` instead.
-    """
-    return np.genfromtxt(LEGACY_DATA_DIR / "Eta_data" / f"Eta{eta}M{mass}_Ko.csv",
-                         delimiter=",")
-
-
-def load_ratebin(eta: str, material: str, q: str, mass: str) -> np.ndarray:
-    """Observed event counts per energy bin (legacy, R5 / q0 only)."""
-    return np.genfromtxt(
-        LEGACY_DATA_DIR / "Ratebin" / f"Event5Eta{eta}Mat{material}q{q}M{mass}.csv",
-        delimiter=",")
-
-
-def load_legacy_response_matrix(material: str, q: str, mass: str) -> np.ndarray:
-    """Old exposure-weighted response matrix (curlyRplotting). Kept only to
-    calibrate the exposure/unit factor against the new raw matrix."""
-    path = (LEGACY_DATA_DIR / "curlyRplotting"
-            / f"{material}_R5_q{q}M{mass}_Ko_thresholded_refined_exposure.csv")
-    return np.genfromtxt(path, delimiter=",")
