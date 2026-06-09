@@ -20,7 +20,7 @@
 (*  own kinematic threshold and then decays into a long ~6-10 decade tail. The  *)
 (*  low edge (first nonzero) is kept exactly; the high tail is cut where the    *)
 (*  row's cumulative integral reaches (1 - alpha) of its total (alpha default    *)
-(*  0.001 -> keep 99.9% of every bin), zeroing entries beyond it. The matrix is  *)
+(*  0.3 -> keep 70% of every bin), zeroing entries beyond it. The matrix is       *)
 (*  then trimmed to the populated column window: LEADING by the first row's      *)
 (*  first nonzero (lowest threshold), TRAILING by the last row's last nonzero    *)
 (*  (widest window); vmin.csv is trimmed at both ends to stay aligned.           *)
@@ -36,7 +36,7 @@
 (*                       domain if it exceeds it)                              *)
 (*    <N>      number of equal v_min intervals (matrix columns)               *)
 (*    [alpha]  per-row tail-cut tolerance; keep (1-alpha) of each bin's        *)
-(*             response (default 0.001). alpha = 0 disables the upper cut.      *)
+(*             response (default 0.3). alpha = 0 disables the upper cut.        *)
 (*                                                                            *)
 (*  e.g.  wolframscript -file 10_response_matrix.wl TiN_q0M3_R5 1 800 1000      *)
 (*        wolframscript -file 10_response_matrix.wl ALL 1 800 1000 0.0001      *)
@@ -59,8 +59,11 @@ vminLoReq  = ToExpression[commandLineArgs[[2]]];
 vminHiReq  = ToExpression[commandLineArgs[[3]]];
 nIntervals = Round[ToExpression[commandLineArgs[[4]]]];
 (* Per-row coverage tail-cut tolerance: keep (1 - alpha) of each bin's response
-   (default 0.001 -> keep 99.9%). alpha = 0 disables the upper cut. *)
-windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.001];
+   (default 0.3 -> keep 70%). The weak high-v_min tail is barely constrained by
+   the energy bins; keeping it (small alpha) lets the monotone inverse front-load
+   it into a low-v_min overshoot, so a fairly aggressive cut is the stable choice.
+   alpha = 0 disables the upper cut. *)
+windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.3];
 If[!(NumericQ[vminLoReq] && NumericQ[vminHiReq] && IntegerQ[nIntervals] && nIntervals >= 1
      && vminLoReq < vminHiReq && NumericQ[windowAlpha] && 0 <= windowAlpha < 1),
   Print["error: need numeric vminLo < vminHi, integer N >= 1, and 0 <= alpha < 1"];
