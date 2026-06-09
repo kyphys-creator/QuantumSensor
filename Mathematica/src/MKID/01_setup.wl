@@ -44,10 +44,8 @@ day = 24 * 3600 sec;
 
 (* ---- DM halo velocities (astro-ph/9710077v1, astro-ph/0611671) ---- *)
 kps = km / sec;
-v0 = 220 kps;
-vemax = 241.279 kps;
-vemin = 212.448 kps;
-ve = (vemax + vemin) / 2;
+v0 = 238 kps;
+ve = 250 kps;
 vesc = 544 kps;
 
 
