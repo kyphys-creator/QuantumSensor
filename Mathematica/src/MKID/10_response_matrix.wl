@@ -16,23 +16,30 @@
 (*  functions, each integral is computed exactly by the trapezoid rule over    *)
 (*  the function's own grid nodes inside the interval.                         *)
 (*                                                                            *)
-(*  Leading all-zero columns are trimmed: everything before the first non-zero  *)
-(*  entry of the first row is dropped from the matrix, and the same number of   *)
-(*  rows is dropped from the top of vmin.csv so the columns stay aligned.       *)
+(*  Per-row effective window: each row (energy bin) is nonzero only above its   *)
+(*  own kinematic threshold and then decays into a long ~6-10 decade tail. The  *)
+(*  low edge (first nonzero) is kept exactly; the high tail is cut where the    *)
+(*  row's cumulative integral reaches (1 - alpha) of its total (alpha default    *)
+(*  0.001 -> keep 99.9% of every bin), zeroing entries beyond it. The matrix is  *)
+(*  then trimmed to the populated column window: LEADING by the first row's      *)
+(*  first nonzero (lowest threshold), TRAILING by the last row's last nonzero    *)
+(*  (widest window); vmin.csv is trimmed at both ends to stay aligned.           *)
 (*                                                                            *)
 (*  This stage is light: it only imports the .wdx (self-contained) -- it does   *)
 (*  NOT load the 01-06 pipeline.                                               *)
 (*                                                                            *)
 (*  Usage:                                                                     *)
-(*      wolframscript -file 10_response_matrix.wl <name> <vminLo> <vminHi> <N> *)
+(*      wolframscript -file 10_response_matrix.wl <name> <vminLo> <vminHi> <N> [alpha] *)
 (*                                                                            *)
 (*    <name>   base name of a .wdx in output/MKID/response_functions/, or ALL  *)
 (*    <vminLo> <vminHi>  integration range [km/s] (clipped to the function's   *)
 (*                       domain if it exceeds it)                              *)
 (*    <N>      number of equal v_min intervals (matrix columns)               *)
+(*    [alpha]  per-row tail-cut tolerance; keep (1-alpha) of each bin's        *)
+(*             response (default 0.001). alpha = 0 disables the upper cut.      *)
 (*                                                                            *)
-(*  e.g.  wolframscript -file 10_response_matrix.wl TiN_q0M3_R5 5 800 200      *)
-(*        wolframscript -file 10_response_matrix.wl ALL 5 500 100             *)
+(*  e.g.  wolframscript -file 10_response_matrix.wl TiN_q0M3_R5 1 800 1000      *)
+(*        wolframscript -file 10_response_matrix.wl ALL 1 800 1000 0.0001      *)
 (*                                                                            *)
 (*  Output (in output/MKID/response_matrix/<mass>/<name>_v<lo>-<hi>_N<N>/):    *)
 (*    matrix.csv   pure numeric matrix (nBins x N)                             *)
@@ -44,16 +51,19 @@
 
 commandLineArgs = Rest[$ScriptCommandLine];
 If[Length[commandLineArgs] < 4,
-  Print["usage: wolframscript -file 10_response_matrix.wl <name|ALL> <vminLo> <vminHi> <N>"];
+  Print["usage: wolframscript -file 10_response_matrix.wl <name|ALL> <vminLo> <vminHi> <N> [alpha]"];
   Exit[1]];
 
 nameArg    = commandLineArgs[[1]];
 vminLoReq  = ToExpression[commandLineArgs[[2]]];
 vminHiReq  = ToExpression[commandLineArgs[[3]]];
 nIntervals = Round[ToExpression[commandLineArgs[[4]]]];
+(* Per-row coverage tail-cut tolerance: keep (1 - alpha) of each bin's response
+   (default 0.001 -> keep 99.9%). alpha = 0 disables the upper cut. *)
+windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.001];
 If[!(NumericQ[vminLoReq] && NumericQ[vminHiReq] && IntegerQ[nIntervals] && nIntervals >= 1
-     && vminLoReq < vminHiReq),
-  Print["error: need numeric vminLo < vminHi and integer N >= 1"];
+     && vminLoReq < vminHiReq && NumericQ[windowAlpha] && 0 <= windowAlpha < 1),
+  Print["error: need numeric vminLo < vminHi, integer N >= 1, and 0 <= alpha < 1"];
   Exit[1]];
 
 
@@ -118,15 +128,33 @@ buildMatrix[wdxBaseName_] := Module[
     {i, nBins}, {j, nIntervals}];
   vminRows = N /@ Transpose[{Most[edges], Rest[edges], mids}];
 
-  (* Trim leading all-zero columns: drop every column before the first non-zero
-     entry of the FIRST row (the lowest-energy bin, which crosses threshold at
-     the lowest v_min). The v_min list is trimmed from the top by the same
-     amount, so columns and v_min rows stay aligned. *)
+  (* ---- per-row effective window (zero the high-v tail) ----
+     Each row rises sharply from a kinematic threshold (its first nonzero column
+     -- the LOW edge is exact and kept as is) and then decays into a long
+     ~6-10 decade tail. Keep the tail only up to where the row's cumulative
+     integral reaches (1 - windowAlpha) of its total, zeroing everything beyond
+     ("keep (1-alpha) of every bin's response"). windowAlpha = 0 disables it. *)
+  rowHi[row_] := Module[{tot},
+    tot = Total[row];
+    If[tot <= 0, 0,
+      Min[LengthWhile[Accumulate[row] / tot, # < 1 - windowAlpha &] + 1, Length[row]]]
+  ];
+  If[windowAlpha > 0,
+    matrix = (PadRight[Take[#, rowHi[#]], nIntervals, 0.] & /@ matrix)];
+
+  (* ---- trim to the column window actually populated ----
+     LEADING: drop columns before the first nonzero of the FIRST row (lowest
+     energy bin = lowest kinematic threshold = union left edge).
+     TRAILING: drop columns after the last nonzero of the LAST row (highest
+     energy bin = widest window = union right edge), scanned from the tail.
+     v_min rows are trimmed identically so the columns stay aligned. *)
   firstCol = SelectFirst[Range[nIntervals], matrix[[1, #]] != 0 &, 1];
-  If[firstCol > 1,
-    matrix   = matrix[[All, firstCol ;;]];
-    vminRows = vminRows[[firstCol ;;]];
-    Print["  trimmed ", firstCol - 1, " leading zero column(s)"]];
+  lastCol  = SelectFirst[Range[nIntervals, 1, -1], matrix[[-1, #]] != 0 &, nIntervals];
+  If[firstCol > 1 || lastCol < nIntervals,
+    matrix   = matrix[[All, firstCol ;; lastCol]];
+    vminRows = vminRows[[firstCol ;; lastCol]];
+    Print["  window: kept cols ", firstCol, "..", lastCol, " / ", nIntervals,
+          "  (", firstCol - 1, " leading + ", nIntervals - lastCol, " trailing trimmed)"]];
 
   stem    = wdxBaseName <> "_v" <> ToString[vminLoReq] <> "-" <> ToString[vminHiReq] <>
             "_N" <> ToString[nIntervals];
