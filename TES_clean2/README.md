@@ -146,13 +146,13 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
   ├ matrix.csv (n_ebins × n_vmin)                     │                 │
   ├ vmin.csv  {lo,hi,mid}                             │                 │
   ├ bins.csv  {E_lo,E_hi}                             │                 │
-  └ eta_<model>.csv  (自然単位, vmin グリッド上)        │                 │
-        │ load_response_matrix   │ load_natural_eta    │                 │
-        ▼                        ▼                     ▼                 ▼
+  └ eta_<model>.csv  (自然単位, vmin グリッド上)         │                 │
+        │ load_response_matrix   │ load_natural_eta   │                 │
+        ▼                        ▼                    ▼                 ▼
    self.rm (ResponseMatrix)   self.eta (自然単位)                        │
-        │                        │                                       │
-        │ response_operator: m_phys = AL_EXP × matrix                    │
-        ▼                        │                                       │
+        │                        │                                      │
+        │ response_operator: m_phys = AL_EXP × matrix                   │
+        ▼                        │                                      │
    self.signal = m_phys @ eta ──►(+)◄──── background_counts(bins) = self.background
                                                │
                                                ▼
