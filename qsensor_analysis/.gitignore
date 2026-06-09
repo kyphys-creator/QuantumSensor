@@ -3,6 +3,7 @@ __pycache__/
 *.pyc
 *.egg-info/
 .ipynb_checkpoints/
-results/**/*.pdf
 results/**/*.dat
+# Track the per-run flux figures, but not the legacy/scratch PDFs under _legacy.
+results/_legacy/**/*.pdf
 !results/.gitkeep
