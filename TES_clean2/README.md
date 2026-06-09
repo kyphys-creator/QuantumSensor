@@ -249,7 +249,7 @@ attributes.
   └ eta_<model>.csv  (natural units, on vmin grid)    │                 │
         │ load_response_matrix   │ load_natural_eta   │                 │
         ▼                        ▼                    ▼                 ▼
-   self.rm (ResponseMatrix)   self.eta (natural)                       │
+   self.rm (ResponseMatrix)   self.eta (natural)                        │
         │                        │                                      │
         │ response_operator: m_phys = AL_EXP × matrix                   │
         ▼                        │                                      │
