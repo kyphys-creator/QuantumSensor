@@ -36,7 +36,8 @@ MATERIAL_GRID = {
     "TiN": [("0", 5), ("0", 9)],
 }
 MASSES = ("1", "2", "3")
-ETA = "Halo"
+# Velocity-distribution models to render (need eta_<model>.csv from 12_eta.wl).
+ETAS = ("Halo", "Disk")
 # Background scenarios to render. "none" is signal-only; add others as needed.
 BACKGROUNDS = ("none",)
 
@@ -47,23 +48,24 @@ def main(write_pdf: bool = True) -> None:
         det = DETECTOR_OF.get(material, material)
         for q, nbins in combos:
             for mass in MASSES:
-                for background in BACKGROUNDS:
-                    cfg = RunConfig(material=material, q=q, mass=mass,
-                                    nbins=nbins, eta=ETA, background=background)
-                    try:
-                        a = DarkMatterQuantumAnalysis(cfg)
-                    except FileNotFoundError as exc:
-                        print(f"skip {det} {material} q{q} M{mass} R{nbins}: {exc}")
-                        n_skip += 1
-                        continue
-                    a.optimize(solver="osqp")
-                    csv = a.save_flux()
-                    if write_pdf:
-                        fig, ax = plt.subplots(figsize=(8, 6))
-                        a.plot(save=True, ax=ax)
-                        plt.close(fig)
-                    print(f"ok   {csv.parent.relative_to(csv.parents[3])}")
-                    n_ok += 1
+                for eta in ETAS:
+                    for background in BACKGROUNDS:
+                        cfg = RunConfig(material=material, q=q, mass=mass,
+                                        nbins=nbins, eta=eta, background=background)
+                        try:
+                            a = DarkMatterQuantumAnalysis(cfg)
+                        except FileNotFoundError as exc:
+                            print(f"skip {det} {material} q{q} M{mass} R{nbins} {eta}: {exc}")
+                            n_skip += 1
+                            continue
+                        a.optimize(solver="osqp")
+                        csv = a.save_flux()
+                        if write_pdf:
+                            fig, ax = plt.subplots(figsize=(8, 6))
+                            a.plot(save=True, ax=ax)
+                            plt.close(fig)
+                        print(f"ok   {csv.parent.relative_to(csv.parents[3])}")
+                        n_ok += 1
     print(f"\n{n_ok} runs written, {n_skip} skipped.")
 
 
