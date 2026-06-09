@@ -1,4 +1,4 @@
-# quantum_sensor (TES_clean2)
+# quantum_sensor (qsensor_analysis)
 
 📖 **[English](#english) · [日本語](#日本語)**
 
@@ -8,7 +8,8 @@
 
 ## English
 
-A **response-analysis package** for a dark-matter quantum sensor (TES / Al).
+A **response-analysis package** for a dark-matter quantum sensor, covering both
+detectors: **TES / Al** and **MKID / TiN** (selected by `material`).
 Given the response matrix `M` built on the Mathematica side and the halo-model
 velocity distribution `eta(v_min)` as inputs, it runs a **self-consistent**
 forward + inverse analysis:
@@ -33,10 +34,10 @@ A single analysis is fully determined by one `RunConfig`
 
 | field | meaning | allowed values |
 |---|---|---|
-| `material` | detector material | `"Al"` (TES) |
+| `material` | detector material | `"Al"` (TES) / `"TiN"` (MKID) |
 | `q` | mediator (FDM) tag | `"0"` = heavy mediator (n=0) / `"2"` = light mediator (n=2) |
 | `mass` | DM mass tag | `"1"` = 10 MeV / `"2"` = 100 MeV / `"3"` = 1 GeV |
-| `nbins` | number of observed energy bins | `5` (0.2 eV wide) / `10` (0.1 eV wide) |
+| `nbins` | number of observed energy bins | Al (TES): `5` / `10`. TiN (MKID): `5` / `9` (threshold 0.2 eV → fine binning is R9) |
 | `eta` | halo velocity-distribution model | `"Halo"` (SHM) / `"Disk"` / `"Bound"` |
 | `background` | background scenario name | `"none"`,`"a"`,`"c"`,`"b"`,`"b2"`,`"flat"` |
 | `run` | substring to uniquely select a matrix folder (when several runs exist for one config) | optional |
@@ -58,8 +59,10 @@ There are **four kinds** of input. For each, "entity", "source" and "loading cod
   - `bins.csv` — per-row energy-bin edges `{E_low, E_high}` (eV).
 - **Source**: output of the Mathematica pipeline.
   ```
-  ../Mathematica/output/TES/response_matrix/M<mass>/<material>_q<q>M<mass>_R<nbins>_v<lo>-<hi>_N<N>/
-  e.g. Mathematica/output/TES/response_matrix/M1/Al_q0M1_R5_v1-800_N1000/
+  ../Mathematica/output/<TES|MKID>/response_matrix/M<mass>/<material>_q<q>M<mass>_R<nbins>_v<lo>-<hi>_N<N>/
+  e.g. Mathematica/output/TES/response_matrix/M1/Al_q0M1_R5_v1-800_N1000/   (Al)
+       Mathematica/output/MKID/response_matrix/M3/TiN_q0M3_R9_v1-800_N1000/ (TiN)
+  (material Al->TES, TiN->MKID; see data_loader.DETECTOR_OF)
   ```
   - Produced by Mathematica **stage 08 → stage 10**
     ([`Mathematica/src/TES/08_response_functions.wl`](../Mathematica/src/TES/08_response_functions.wl),
@@ -361,7 +364,8 @@ python examples/run_example.py
 
 ## 日本語
 
-ダークマター量子センサー（TES / Al）の **応答 (response) 解析パッケージ**。
+ダークマター量子センサーの **応答 (response) 解析パッケージ**。**TES / Al** と
+**MKID / TiN** の両検出器に対応（`material` で切り替え）。
 Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分布 `eta(v_min)` を入力に、
 
 1. **順方向 (forward)**: 観測されるエネルギービンごとのイベント数を `観測 = 露光 × M @ eta (+ 背景)` で生成し、
@@ -379,10 +383,10 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 
 | フィールド | 意味 | 取りうる値 |
 |---|---|---|
-| `material` | 検出器素材 | `"Al"`（TES） |
+| `material` | 検出器素材 | `"Al"`（TES）/ `"TiN"`（MKID） |
 | `q` | 媒介子（FDM）タグ | `"0"` = 重い媒介子 (n=0) / `"2"` = 軽い媒介子 (n=2) |
 | `mass` | DM 質量タグ | `"1"` = 10 MeV / `"2"` = 100 MeV / `"3"` = 1 GeV |
-| `nbins` | 観測エネルギービン数 | `5`（0.2 eV 幅）/ `10`（0.1 eV 幅） |
+| `nbins` | 観測エネルギービン数 | Al（TES）: `5` / `10`。TiN（MKID）: `5` / `9`（閾値 0.2 eV のため細分は R9） |
 | `eta` | ハロー速度分布モデル | `"Halo"`（SHM）/ `"Disk"` / `"Bound"` |
 | `background` | 背景シナリオ名 | `"none"`,`"a"`,`"c"`,`"b"`,`"b2"`,`"flat"` |
 | `run` | 行列フォルダを一意に選ぶための部分文字列（同一設定で複数 run があるとき） | 省略可 |
@@ -401,8 +405,10 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
   - `bins.csv` — 各行に対応するエネルギービン端 `{E_low, E_high}`（eV）。
 - **出所**: Mathematica パイプラインの出力。
   ```
-  ../Mathematica/output/TES/response_matrix/M<mass>/<material>_q<q>M<mass>_R<nbins>_v<lo>-<hi>_N<N>/
-  例: Mathematica/output/TES/response_matrix/M1/Al_q0M1_R5_v1-800_N1000/
+  ../Mathematica/output/<TES|MKID>/response_matrix/M<mass>/<material>_q<q>M<mass>_R<nbins>_v<lo>-<hi>_N<N>/
+  例: Mathematica/output/TES/response_matrix/M1/Al_q0M1_R5_v1-800_N1000/    (Al)
+      Mathematica/output/MKID/response_matrix/M3/TiN_q0M3_R9_v1-800_N1000/  (TiN)
+  （material Al→TES, TiN→MKID。data_loader.DETECTOR_OF を参照）
   ```
   - これは Mathematica の **stage 08 → stage 10** で生成される（[`Mathematica/src/TES/08_response_functions.wl`](../Mathematica/src/TES/08_response_functions.wl), [`10_response_matrix.wl`](../Mathematica/src/TES/10_response_matrix.wl)）。
     - **08**: 各エネルギービン `[E1,E2]` について応答 `CRTES[mass,n][E1,E2](v_min)` を `v_min` の関数（補間関数）として評価し `.wdx` に保存。

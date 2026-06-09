@@ -29,6 +29,8 @@ ME = 0.5109989 * MeV
 
 # ----- Length / time (01_setup.wl) ------------------------------------------
 KM = 1e5 * CM
+MIC = 1e-4 * CM                # micrometre (Mathematica: mic = \[Mu]m)
+NM = 1e-7 * CM                 # nanometre
 KPS = KM / SEC                 # km/s, the unit of the v_min grid
 YR = 365 * 24 * 3600 * SEC
 MONTH = YR / 12
@@ -40,6 +42,7 @@ RHO_DM = 0.4 * GeV / CM**3
 
 # ----- Material density (01_setup.wl) ---------------------------------------
 RHO_AL = 2.7 * GRAM / CM**3
+RHO_TIN = 5.4 * GRAM / CM**3
 
 # ----- Reference cross sections (05_parameters.wl) --------------------------
 SIGMA_E = 1e-30 * CM**2
@@ -51,6 +54,8 @@ MKID_SIG = 0.3 / 2.355
 
 # ----- Detector exposures = active mass x time (05_parameters.wl) -----------
 AL_EXP = 8200 * NG * MONTH      # Al (TES) exposure
+# TiN (MKID): 1e7 detectors of (1 um x 50 um x 22 nm) TiN, over one month.
+TIN_EXP = 1e7 * RHO_TIN * (1 * MIC) * (50 * MIC) * (22 * NM) * MONTH
 
 # Map the analysis mass tag (M1/M2/M3) to the DM mass; also stored per-file in
 # each .wdx as "dmMass", so this table is only a convenience/cross-check.

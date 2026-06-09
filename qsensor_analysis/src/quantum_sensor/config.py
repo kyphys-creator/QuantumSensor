@@ -14,10 +14,13 @@ from dataclasses import dataclass
 class RunConfig:
     """One analysis configuration.
 
-    material : detector material ("Al").
+    material : detector material -- "Al" (TES) or "TiN" (MKID). Selects which
+               Mathematica output tree the response matrix is read from
+               (see data_loader.DETECTOR_OF) and which exposure is applied.
     q        : FDM/mediator tag -- "0" heavy (n=0), "2" light (n=2).
     mass     : DM-mass tag -- "1" (10 MeV), "2" (100 MeV), "3" (1 GeV).
-    nbins    : number of observed-energy bins (5 or 10).
+    nbins    : number of observed-energy bins. Al (TES): 5 or 10. TiN (MKID):
+               5 or 9 (threshold 0.2 eV, so the fine binning is R9, not R10).
     eta      : halo velocity-distribution model ("Halo", "Disk", "Bound").
     background : background scenario name (see BACKGROUND_SCENARIOS); "none"
                  fits the signal-only counts.

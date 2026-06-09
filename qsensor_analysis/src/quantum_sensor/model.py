@@ -18,12 +18,12 @@ from __future__ import annotations
 
 import numpy as np
 
-from .constants import AL_EXP
+from .constants import AL_EXP, TIN_EXP
 from .data_loader import ResponseMatrix
 
 # Exposure factor [natural units]. Multiplying the raw v_min-integrated response
 # by the detector exposure gives expected event counts. Named/derived, not tuned.
-EXPOSURE = {"Al": AL_EXP}
+EXPOSURE = {"Al": AL_EXP, "TiN": TIN_EXP}
 
 
 def exposure_factor(material: str) -> float:

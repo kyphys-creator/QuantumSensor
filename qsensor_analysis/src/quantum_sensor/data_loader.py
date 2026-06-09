@@ -18,10 +18,25 @@ from pathlib import Path
 
 import numpy as np
 
-# quantum_sensor/ -> src/ -> TES_clean2/ -> QuantumSensor/
+# quantum_sensor/ -> src/ -> qsensor_analysis/ -> QuantumSensor/
 _PKG_DIR = Path(__file__).resolve()
 LEGACY_DATA_DIR = _PKG_DIR.parents[2] / "data"
-MATRIX_ROOT = _PKG_DIR.parents[3] / "Mathematica" / "output" / "TES" / "response_matrix"
+_MATHEMATICA_OUTPUT = _PKG_DIR.parents[3] / "Mathematica" / "output"
+
+# Each detector material is computed by a different Mathematica detector pipeline
+# and so lives under a different output/<DET>/ tree.
+DETECTOR_OF = {"Al": "TES", "TiN": "MKID"}
+
+
+def matrix_root(material: str) -> Path:
+    """Root of the response-matrix tree for ``material`` (Al->TES, TiN->MKID)."""
+    try:
+        detector = DETECTOR_OF[material]
+    except KeyError as exc:
+        raise ValueError(
+            f"unknown material {material!r}; expected one of {sorted(DETECTOR_OF)}"
+        ) from exc
+    return _MATHEMATICA_OUTPUT / detector / "response_matrix"
 
 
 @dataclass(frozen=True)
@@ -60,7 +75,7 @@ def find_matrix_dir(material: str, q: str, mass: str, nbins: int,
     e.g. ``"v1-800_N1000"``) when several exist for the same configuration.
     """
     stem = f"{material}_q{q}M{mass}_R{nbins}"
-    mass_dir = MATRIX_ROOT / f"M{mass}"
+    mass_dir = matrix_root(material) / f"M{mass}"
     matches = sorted(mass_dir.glob(f"{stem}_*"))
     if run is not None:
         matches = [m for m in matches if run in m.name]
@@ -106,10 +121,12 @@ def load_natural_eta(rm: ResponseMatrix, model: str) -> np.ndarray:
     """
     path = rm.path / f"eta_{model}.csv"
     if not path.exists():
+        # detector dir: .../output/<DET>/response_matrix/M<mass>/<name>
+        detector = rm.path.parents[2].name
         raise FileNotFoundError(
             f"natural-units eta not found: {path}\n"
             f"Generate it first with the Mathematica stage, e.g.:\n"
-            f"  wolframscript -file Mathematica/src/TES/12_eta.wl {rm.name} {model}\n"
+            f"  wolframscript -file Mathematica/src/{detector}/12_eta.wl {rm.name} {model}\n"
             f"(only the 'Halo' model is implemented)."
         )
     eta = np.atleast_1d(np.genfromtxt(path, delimiter=","))
