@@ -23,20 +23,25 @@
 (*  prefactor. CRTiN (06) carries NO rho/sigma/mass, so M @ eta does not        *)
 (*  double-count.                                                              *)
 (*                                                                            *)
-(*  Models (same \[Eta]th functional form + same DM density; only the velocity  *)
-(*  parameters differ, all from 01_setup.wl):                                   *)
-(*    Halo  standard halo (SHM):     v0, ve, vesc                               *)
-(*    Disk  pure dark disk (colder): v0DD, veDD, vescDD                         *)
+(*  Models:                                                                    *)
+(*    Halo   standard halo (SHM): \[Eta]th with v0, ve, vesc (rhoDM)            *)
+(*    Disk   pure dark disk: \[Eta]th with v0DD, veDD, vescDD (same rhoDM)      *)
+(*    Bound  Earth-bound thermal DM: a DIFFERENT, dense (rho_b) isotropic        *)
+(*           (ve=0) population; isotropic truncated Maxwellian with thermal      *)
+(*           v0 = Sqrt[2 kT/mchi] (~2.16 km/s at 1 GeV) and vesc = 11.2 km/s.    *)
+(*           Nonzero only for v_min < 11.2 km/s, so in practice only the         *)
+(*           heaviest mass (M3) whose window reaches that low has any signal.    *)
 (*                                                                            *)
 (*  Usage:                                                                     *)
 (*      wolframscript -file 12_eta.wl <name|ALL> [model]                       *)
 (*                                                                            *)
 (*    <name>   substring of a matrix folder under output/MKID/response_matrix/ *)
 (*             (e.g. TiN_q0M1_R5), or ALL for every folder found              *)
-(*    [model]  velocity-distribution model: Halo (default) or Disk             *)
+(*    [model]  velocity model: Halo (default), Disk, or Bound                  *)
 (*                                                                            *)
 (*  e.g.  wolframscript -file 12_eta.wl ALL                                    *)
 (*        wolframscript -file 12_eta.wl ALL Disk                               *)
+(*        wolframscript -file 12_eta.wl ALL Bound                              *)
 (*        wolframscript -file 12_eta.wl TiN_q0M1_R5 Halo                       *)
 (*                                                                            *)
 (*  Output (in each matched output/MKID/response_matrix/M*/<name>/ folder):    *)
@@ -74,23 +79,33 @@ extractMass[name_] := Module[{m},
   m = StringCases[name, "M" ~~ d : DigitCharacter .. :> "M" <> d];
   If[m === {}, $Failed, First[m]]];
 
-(* Velocity-distribution model -> {v0, ve, vesc}. The eta functional form
-   (03's truncated-Maxwellian \[Eta]th) and the DM density are the same for all
-   models; only the velocity parameters differ.
-     Halo = standard halo (SHM):       v0, ve, vesc from 01_setup
-     Disk = pure dark disk (colder):   v0DD, veDD, vescDD (same DM density) *)
-etaParams = Switch[modelArg,
-  "Halo", {v0, ve, vesc},
-  "Disk", {v0DD, veDD, vescDD},
-  _, $Failed];
-If[etaParams === $Failed,
-  Print["error: model must be 'Halo' or 'Disk' (got ", modelArg, ")."];
+(* Velocity-distribution models. Halo and Disk share 03's truncated-Maxwellian
+   \[Eta]th (same DM density rhoDM, only the {v0, ve, vesc} velocities differ):
+     Halo = standard halo (SHM):       v0, ve, vesc       from 01_setup
+     Disk = pure dark disk (colder):   v0DD, veDD, vescDD  (same DM density)
+
+   Bound = Earth-bound thermalized DM: a DIFFERENT, much denser population
+   (rho_b = 1e14 GeV/cm^3) that is isotropic (ve = 0). The ve -> 0 limit of
+   \[Eta]th is an isotropic truncated Maxwellian, defined directly here to avoid
+   the 1/ve in \[Eta]th. Its dispersion is thermal, v0 = Sqrt[2 kT / mchi]
+   (~2.16 km/s at 1 GeV for kT = 300 K), and vesc = 11.2 km/s. *)
+TEB    = 300 Kel;          (* Earth temperature; sets the thermal v0 below *)
+vescEB = 11.2 kps;
+v0EB[md_] := Sqrt[2 TEB / md];
+\[Eta]bound[md_][vm_] := With[{v0 = v0EB[md]},
+  If[vm >= vescEB, 0,
+    (\[Rho]b \[Sigma]e / md) (2 Pi v0^2 / KKf[v0, vescEB]) *
+      (Exp[-vm^2/v0^2] - Exp[-vescEB^2/v0^2])]];
+
+If[!MemberQ[{"Halo", "Disk", "Bound"}, modelArg],
+  Print["error: model must be 'Halo', 'Disk', or 'Bound' (got ", modelArg, ")."];
   Exit[1]];
 
-(* Natural-units speed integral at a v_min given in km/s, for the chosen model.
-   etaModel[md][vKmS] = \[Eta]th[md][vKmS kps][v0, ve, vesc] of that model. *)
-etaModel[md_][vKmS_] := \[Eta]th[md][vKmS kps][
-  etaParams[[1]], etaParams[[2]], etaParams[[3]]];
+(* Natural-units speed integral at a v_min given in km/s, for the chosen model. *)
+etaModel[md_][vKmS_] := Switch[modelArg,
+  "Halo",  \[Eta]th[md][vKmS kps][v0, ve, vesc],
+  "Disk",  \[Eta]th[md][vKmS kps][v0DD, veDD, vescDD],
+  "Bound", \[Eta]bound[md][vKmS kps]];
 
 
 (* ============================ Process one folder ============================ *)
