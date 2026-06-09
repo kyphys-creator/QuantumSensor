@@ -119,7 +119,9 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
     # (non-positive entries -- the zero tail -- are simply dropped by matplotlib).
     if analysis.config.eta == "Bound" and analysis.config.disk_fraction is None:
         ax.set_yscale("log")
-    ax.set_xlim(rm.vmin_low[0], rm.vmin_high[-1])
+    # Fixed v_min axis (the matrix generation range) so every plot is comparable,
+    # regardless of each config's narrower populated window.
+    ax.set_xlim(1.0, 800.0)
     ax.set_xlabel(r"$v_{min}$ [km/s]", fontsize=18)
     ax.set_ylabel(r"$\tilde{\eta}$  [cm$^{-1}$]", fontsize=18)
     ax.set_title(_label(analysis), fontsize=12)
