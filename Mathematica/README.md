@@ -26,8 +26,8 @@
 ```
 
 - **01–06 は `.wl`**（手書きパッケージ、ビルドスクリプト `src/build_wl.py` で TES/MKID 両方を生成）
-- **08, 10 は `.wl`**（応答関数の保存・応答行列の構築。CLI で実行）
-- **07, 09, 11 は `.nb`**（プロット・フィット等）
+- **07, 08, 09, 10, 12 は `.wl`**（プロット・応答関数の保存・応答行列の構築・η。CLI で実行。TES/MKID 両系統）
+- **10_data, 11_minimization は `.nb`**（データ・フィット等のレガシー）
 
 ---
 
@@ -140,9 +140,15 @@ cd QuantumSensor/Mathematica
 
 ---
 
-## 後段パイプライン (08, 10)
+## 後段パイプライン (07, 08, 09, 10, 12)
 
 01–06 で定義した応答関数を**保存・離散化**して、データ解析に使える行列形式に変換します。
+
+後段（07–12）は **TES と MKID で完全に並行**な `.wl` です。下記の例は TES 名（`CRTES`,
+`Al_…` タグ, `output/TES/…`）で記述しますが、MKID では `CRTiN`・`TiN_…` タグ・`output/MKID/…`
+に置き換わるだけで、CLI 引数・出力構造・物理は同一です（例: `wolframscript -file
+src/MKID/08_response_functions.wl bin5 M3 q0` → `output/MKID/response_functions/TiN_q0M3_R5.wdx`）。
+依存チェーン（07→06→…→01）も両系統で同じです。
 
 ### 08_response_functions.wl — 応答関数の保存
 
@@ -153,10 +159,11 @@ wolframscript -file 08_response_functions.wl bin5             # 5 bins, 全質�
 wolframscript -file 08_response_functions.wl bin10 M3 q2      # 10 bins, 1 GeV, light mediator
 ```
 
-- **ビン幅**: `bin5` = 0.2 eV 幅 × 5 本、`bin10` = 0.1 eV 幅 × 10 本
+- **ビン**（TES, threshold 0.1 eV）: `bin5` = 0.1–1.1 eV を 0.2 eV 幅 × 5 本、`bin10` = 0.1 eV 幅 × 10 本
+- **ビン**（MKID, threshold 0.2 eV）: `bin5` = `[0.2,0.3],[0.3,0.5],[0.5,0.7],[0.7,0.9],[0.9,1.1]`（5 本）、`bin9` = 0.2–1.1 eV を 0.1 eV 幅 × 9 本（MKID は `bin10` ではなく `bin9`）
 - **質量**: `M1`(10 MeV) / `M2`(100 MeV) / `M3`(1 GeV) / `ALL`
 - **媒介子**: `q0`(heavy, n=0) / `q2`(light, n=2)
-- **出力**: `output/TES/response_functions/<name>.wdx`
+- **出力**: `output/TES/response_functions/<name>.wdx`（MKID は `output/MKID/...`）
 
 ### 09_response_function_plot.wl — 応答関数のプロット
 
