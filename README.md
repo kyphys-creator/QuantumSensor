@@ -33,10 +33,9 @@ results are converted to physical units (e.g. `kg⁻¹ eV⁻¹`) for plotting.
 
 | Folder | Stage | Contents |
 |--------|-------|----------|
-| [`Mathematica/`](Mathematica/) | Response (Wolfram) | The `01`–`11` pipeline that builds the response kernels and matrices for TES (Al) and MKID (TiN). See **[Mathematica/README.md](Mathematica/README.md)** for the detailed per-file description. |
-| [`TES/`](TES/) | Analysis (Python) | Working/“research” neutrino-flux optimisation: `NeutrinoAnalysis` (`neutrino_analysis_refined.py`), `main_Refined.ipynb`, plus input data (`CRmat/`, `Eta_data/`, `Ratebin/`) and `results/`. |
-| [`TES_clean/`](TES_clean/) | Analysis (Python) | Refactored, installable package version of the analysis (`src/quantum_sensor/`: `constants`, `data_loader`, `analysis`, `optimizer`, `backgrounds`, `plotting`) with `pyproject.toml`. |
-| [`TES_clean10/`](TES_clean10/) | Analysis (Python) | A variant configuration of the `TES_clean` package. |
+| [`Mathematica/`](Mathematica/) | Response (Wolfram) | The `01`–`11` pipeline that builds the response kernels, response functions and matrices for TES (Al) and MKID (TiN). See **[Mathematica/README.md](Mathematica/README.md)** for the detailed per-file description. |
+| [`TES_clean2/`](TES_clean2/) | Analysis (Python) | The current analysis package (`quantum_sensor`): `DarkMatterQuantumAnalysis` runs the self-consistent forward+inverse model on the new response matrices. See **[TES_clean2/README.md](TES_clean2/README.md)**. |
+| [`Obsolete/`](Obsolete/) | Archive | Earlier Python versions (`TES`, `TES_clean`, `TES_clean10`), kept for reference. |
 
 ### The Mathematica pipeline (summary)
 
@@ -77,13 +76,13 @@ into `/usr/local/bin`.
 **Python stage** (the packaged version):
 
 ```bash
-cd TES_clean
+cd TES_clean2
 pip install -e .            # installs the `quantum_sensor` package
 jupyter notebook main_Refined.ipynb
 ```
 
-The Mathematica stage writes response matrices (e.g. `TES/CRmat/*.csv`) that the
-Python stage consumes.
+The Mathematica stage writes response matrices
+(`Mathematica/output/TES/response_matrix/`) that the Python stage consumes.
 
 ---
 
@@ -110,9 +109,8 @@ Mathematica 段の物理量はすべて**自然単位系（GeV建て）**で、�
 | フォルダ | 段階 | 内容 |
 |----------|------|------|
 | [`Mathematica/`](Mathematica/) | 応答（Wolfram） | TES(Al)・MKID(TiN) の応答核・行列を構築する `01`–`11` パイプライン。各ファイルの詳細は **[Mathematica/README.md](Mathematica/README.md)** を参照。 |
-| [`TES/`](TES/) | 解析（Python） | 作業版のニュートリノフラックス最適化: `NeutrinoAnalysis`（`neutrino_analysis_refined.py`）、`main_Refined.ipynb`、入力データ（`CRmat/`, `Eta_data/`, `Ratebin/`）と `results/`。 |
-| [`TES_clean/`](TES_clean/) | 解析（Python） | 解析をリファクタしてパッケージ化した版（`src/quantum_sensor/`: `constants`, `data_loader`, `analysis`, `optimizer`, `backgrounds`, `plotting`）。`pyproject.toml` 付き。 |
-| [`TES_clean10/`](TES_clean10/) | 解析（Python） | `TES_clean` パッケージの別構成版。 |
+| [`TES_clean2/`](TES_clean2/) | 解析（Python） | 現行の解析パッケージ（`quantum_sensor`）。`DarkMatterQuantumAnalysis` が新応答行列に対して自己整合な順方向＋逆問題を実行。詳細は **[TES_clean2/README.md](TES_clean2/README.md)**。 |
+| [`Obsolete/`](Obsolete/) | アーカイブ | 旧Python版（`TES`, `TES_clean`, `TES_clean10`）。参照用に保管。 |
 
 ### Mathematica パイプライン（要約）
 
@@ -152,9 +150,9 @@ wolframscript -file src/TES/07_dcurlyRdEprime_plot.wl
 **Python 段**（パッケージ版）:
 
 ```bash
-cd TES_clean
+cd TES_clean2
 pip install -e .            # `quantum_sensor` パッケージをインストール
 jupyter notebook main_Refined.ipynb
 ```
 
-Mathematica 段が書き出す応答行列（例: `TES/CRmat/*.csv`）を Python 段が読み込みます。
+Mathematica 段が書き出す応答行列（`Mathematica/output/TES/response_matrix/`）を Python 段が読み込みます。
