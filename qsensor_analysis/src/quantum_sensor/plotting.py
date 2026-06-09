@@ -98,6 +98,10 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
                     label=f"{round(p * 100)}% pure disk")
 
     ax.set_xscale("log")
+    # Bound eta falls many decades over a few km/s, so show it on a log y-axis
+    # (non-positive entries -- the zero tail -- are simply dropped by matplotlib).
+    if analysis.config.eta == "Bound" and analysis.config.disk_fraction is None:
+        ax.set_yscale("log")
     ax.set_xlim(rm.vmin_low[0], rm.vmin_high[-1])
     ax.set_xlabel(r"$v_{min}$ [km/s]", fontsize=18)
     ax.set_ylabel(r"$\tilde{\eta}$  [cm$^{-1}$]", fontsize=18)
