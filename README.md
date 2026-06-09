@@ -2,10 +2,10 @@
 
 **[English](#english) | [日本語](#日本語)**
 
-Dark-matter / neutrino direct-detection sensitivity studies for quantum
-sensors (TES and MKID). The project has two stages: a **Mathematica** stage
-that computes the detector *response* from material physics, and a **Python**
-stage that uses that response to optimise flux discrimination and derive
+Dark-matter direct-detection sensitivity studies for quantum sensors (TES and
+MKID). The project has two stages: a **Mathematica** stage that computes the
+detector *response* from material physics, and a **Python** stage that uses
+that response to recover the dark-matter velocity distribution and derive
 sensitivities.
 
 ---
@@ -16,15 +16,15 @@ sensitivities.
 
 Quantum sensors such as **TES** (Transition-Edge Sensors, here aluminium) and
 **MKID** (Microwave Kinetic Inductance Detectors, here TiN) can detect tiny
-energy depositions from dark-matter or neutrino scattering. This repository:
+energy depositions from dark-matter scattering. This repository:
 
 1. **Computes the detector response** — the per-energy response kernel
    `dℛ/dω'` and the response matrix — from first principles, using the
-   material's dielectric function `Im[-1/ε(ω, q)]`, the DM/neutrino kinematics,
+   material's dielectric function `Im[-1/ε(ω, q)]`, the dark-matter kinematics,
    the halo velocity distribution, and the detector energy resolution.
 2. **Optimises and analyses** — feeds that response into a Python pipeline that
-   fits / optimises the signal against background scenarios (e.g. neutrino
-   flux) and produces sensitivity results.
+   fits / optimises the signal against background scenarios and produces
+   sensitivity results.
 
 All physics quantities in the Mathematica stage are in **natural units (GeV)**;
 results are converted to physical units (e.g. `kg⁻¹ eV⁻¹`) for plotting.
@@ -91,15 +91,14 @@ The Mathematica stage writes response matrices
 ### 概要
 
 **TES**（超伝導転移端センサー、ここではアルミ）や **MKID**（マイクロ波力学
-インダクタンス検出器、ここでは TiN）といった量子センサーは、ダークマターや
-ニュートリノ散乱による微小なエネルギー付与を検出できます。本リポジトリは:
+インダクタンス検出器、ここでは TiN）といった量子センサーは、ダークマター
+散乱による微小なエネルギー付与を検出できます。本リポジトリは:
 
-1. **検出器応答を計算する** — 物質の誘電関数 `Im[-1/ε(ω, q)]`、DM/ニュートリノ
+1. **検出器応答を計算する** — 物質の誘電関数 `Im[-1/ε(ω, q)]`、ダークマター
    の運動学、ハロー速度分布、検出器のエネルギー分解能から、エネルギー応答核
    `dℛ/dω'` と応答行列を第一原理的に計算します。
-2. **最適化・解析する** — その応答を Python パイプラインに渡し、背景事象
-   （例: ニュートリノフラックス）に対して信号をフィット／最適化し、感度を
-   導出します。
+2. **最適化・解析する** — その応答を Python パイプラインに渡し、背景事象に対して
+   信号をフィット／最適化し、ダークマターの速度分布回復・感度を導出します。
 
 Mathematica 段の物理量はすべて**自然単位系（GeV建て）**で、プロット時に
 物理単位（例: `kg⁻¹ eV⁻¹`）へ変換します。
