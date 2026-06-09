@@ -18,6 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from .constants import CM
+from .data_loader import DETECTOR_OF
 
 RESULTS_DIR = Path(__file__).resolve().parents[2] / "results"
 
@@ -26,20 +27,39 @@ RESULTS_DIR = Path(__file__).resolve().parents[2] / "results"
 ETA_TO_CM_INV = CM
 
 
-def _stem(analysis) -> str:
+def _config_tag(analysis) -> str:
+    """The per-run config tag (no background -- that is a parent folder)."""
     c = analysis.config
-    return f"{c.material}_q{c.q}_M{c.mass}_R{c.nbins}_{c.eta}_bkg-{c.background}"
+    return f"{c.material}_q{c.q}_M{c.mass}_R{c.nbins}_{c.eta}"
+
+
+def _label(analysis) -> str:
+    """Full human-readable label including the detector and background."""
+    c = analysis.config
+    det = DETECTOR_OF.get(c.material, c.material)
+    return f"{det} {_config_tag(analysis)} bkg-{c.background}"
+
+
+def run_dir(analysis) -> Path:
+    """Output folder for one run: results/<DET>/bkg-<background>/<config tag>/.
+
+    Each run gets its own folder so the flux CSV and the figure live together,
+    grouped by detector (TES/MKID) and background scenario.
+    """
+    c = analysis.config
+    det = DETECTOR_OF.get(c.material, c.material)
+    return RESULTS_DIR / det / f"bkg-{c.background}" / _config_tag(analysis)
 
 
 def save_flux(analysis, out_dir: Path | None = None) -> Path:
-    """Save the recovered flux next to its v_min grid as CSV."""
+    """Save the recovered flux next to its v_min grid as ``flux.csv``."""
     if analysis.flux is None:
         raise RuntimeError("run optimize() first")
-    out_dir = out_dir or RESULTS_DIR
+    out_dir = out_dir or run_dir(analysis)
     out_dir.mkdir(parents=True, exist_ok=True)
     rm = analysis.rm
     table = np.column_stack([rm.vmin_low, rm.vmin_high, rm.vmin_mid, analysis.flux])
-    path = out_dir / f"flux_{_stem(analysis)}.csv"
+    path = out_dir / "flux.csv"
     np.savetxt(path, table, delimiter=",",
                header="vmin_low,vmin_high,vmin_mid,flux", comments="")
     return path
@@ -66,14 +86,14 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
     ax.set_xlim(rm.vmin_low[0], rm.vmin_high[-1])
     ax.set_xlabel(r"$v_{min}$ [km/s]", fontsize=18)
     ax.set_ylabel(r"$\tilde{\eta}$  [cm$^{-1}$]", fontsize=18)
-    ax.set_title(_stem(analysis).replace("_", " "), fontsize=12)
+    ax.set_title(_label(analysis), fontsize=12)
     ax.legend(fontsize=12)
     ax.grid(True, which="both", ls="--", alpha=0.4)
 
     if save:
-        out_dir = out_dir or (RESULTS_DIR / f"scenario_bkg_{analysis.config.background}")
+        out_dir = out_dir or run_dir(analysis)
         out_dir.mkdir(parents=True, exist_ok=True)
-        path = out_dir / f"flux_{_stem(analysis)}.pdf"
+        path = out_dir / "flux.pdf"
         plt.savefig(path, bbox_inches="tight")
         print(f"saved {path}")
     return ax

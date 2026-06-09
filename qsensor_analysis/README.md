@@ -232,8 +232,14 @@ the actual work to each module.
 | output | content | code that makes it |
 |---|---|---|
 | **`flux` (return value)** | the recovered flux `x(v_min)` in physical (natural) units, length `n_vmin`, on `a.vmin_mid`. Returned by `optimize()` and stored as `a.flux` | `analysis.optimize` |
-| **flux CSV** | a table `vmin_low, vmin_high, vmin_mid, flux`. `flux` stays **in natural units**. `results/flux_<material>_q<q>_M<mass>_R<nbins>_<eta>_bkg-<background>.csv` | `plotting.save_flux` (`a.save_flux()`) |
-| **comparison PDF** | a figure overlaying the input `eta(v_min)` (red) and the recovered flux (staircase). `results/scenario_bkg_<background>/flux_<stem>.pdf` (log x-axis). **Only when drawing this figure** is natural→physical `cm⁻¹` conversion applied (`× CM`, `plotting.ETA_TO_CM_INV`) | `plotting.plot_flux_comparison` (`a.plot()`) |
+| **flux CSV** | a table `vmin_low, vmin_high, vmin_mid, flux`. `flux` stays **in natural units**. `results/<DET>/bkg-<background>/<material>_q<q>_M<mass>_R<nbins>_<eta>/flux.csv` | `plotting.save_flux` (`a.save_flux()`) |
+| **comparison PDF** | a figure overlaying the input `eta(v_min)` (red) and the recovered flux (staircase). Saved next to the CSV as `…/<run>/flux.pdf` (log x-axis). **Only when drawing this figure** is natural→physical `cm⁻¹` conversion applied (`× CM`, `plotting.ETA_TO_CM_INV`) | `plotting.plot_flux_comparison` (`a.plot()`) |
+
+Each run writes one folder under `results/`, grouped by detector (`<DET>` =
+`TES`/`MKID`, from `material`) and background scenario, holding `flux.csv` (the
+canonical output, tracked in git) and `flux.pdf` (the figure, gitignored).
+`plotting.run_dir(a)` returns that folder. Regenerate every available run with
+`python examples/save_all.py`. Older outputs are kept under `results/_legacy/`.
 
 Besides these, `a.result` (solve diagnostics), `a.signal` / `a.observed`
 (forward counts) and `a.eta` (aligned input) are also available as object
@@ -498,8 +504,13 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 | 出力 | 中身 | 作るコード |
 |---|---|---|
 | **`flux`（戻り値）** | 物理単位の復元フラックス `x(v_min)`、長さ `n_vmin`。`a.vmin_mid` 上の値。`optimize()` の戻り値かつ `a.flux` | `analysis.optimize` |
-| **フラックス CSV** | `vmin_low, vmin_high, vmin_mid, flux` の表。`flux` は**自然単位のまま**。`results/flux_<material>_q<q>_M<mass>_R<nbins>_<eta>_bkg-<background>.csv` | `plotting.save_flux`（`a.save_flux()`） |
-| **比較図 PDF** | 入力 `eta(v_min)`（赤線）と復元フラックス（階段）を重ねた図。`results/scenario_bkg_<background>/flux_<stem>.pdf`（x 軸 log）。**この図を描くときだけ自然単位 → 物理単位 `cm⁻¹` に変換**（`× CM`、`plotting.ETA_TO_CM_INV`） | `plotting.plot_flux_comparison`（`a.plot()`） |
+| **フラックス CSV** | `vmin_low, vmin_high, vmin_mid, flux` の表。`flux` は**自然単位のまま**。`results/<DET>/bkg-<background>/<material>_q<q>_M<mass>_R<nbins>_<eta>/flux.csv` | `plotting.save_flux`（`a.save_flux()`） |
+| **比較図 PDF** | 入力 `eta(v_min)`（赤線）と復元フラックス（階段）を重ねた図。CSV と同じフォルダに `…/<run>/flux.pdf`（x 軸 log）。**この図を描くときだけ自然単位 → 物理単位 `cm⁻¹` に変換**（`× CM`、`plotting.ETA_TO_CM_INV`） | `plotting.plot_flux_comparison`（`a.plot()`） |
+
+各ランは `results/` 直下に 1 フォルダを作り、検出器（`<DET>` = `TES`/`MKID`、`material` から決定）と
+背景シナリオで階層化して `flux.csv`（正規の出力、git 追跡）と `flux.pdf`（図、gitignore）を置く。
+そのフォルダは `plotting.run_dir(a)` で取得できる。利用可能な全ランは `python examples/save_all.py` で
+再生成でき、旧出力は `results/_legacy/` に退避してある。
 
 これら以外に、`a.result`（求解の診断）、`a.signal` / `a.observed`（順方向カウント）、`a.eta`（整列済み入力）もオブジェクト属性として参照できる。
 
