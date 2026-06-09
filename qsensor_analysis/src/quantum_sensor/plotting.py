@@ -17,8 +17,9 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
-from .constants import CM
+from .constants import CM, DM_MASS
 from .data_loader import DETECTOR_OF
+from .eta_models import eta as eta_model
 
 RESULTS_DIR = Path(__file__).resolve().parents[2] / "results"
 
@@ -75,44 +76,46 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
     if own_fig:
         _, ax = plt.subplots(figsize=(8, 6))
 
-    # natural units -> physical cm^-1, only for display
-    eta_phys = analysis.eta * ETA_TO_CM_INV
     flux_phys = analysis.flux * ETA_TO_CM_INV
+
+    # Reference eta curves are drawn over the FULL axis (1-800 km/s), not just the
+    # narrower windowed grid, using the analytic models (eta_models) -- validated
+    # to match the windowed CSV the fit uses. Only the Best-Fit staircase stays on
+    # the populated window.
+    vg = np.logspace(0.0, np.log10(800.0), 600)        # 1..800 km/s
+    mchi = DM_MASS[analysis.config.mass]
+    halo_g = eta_model("Halo", mchi, vg) * ETA_TO_CM_INV
 
     p = analysis.config.disk_fraction
     is_bound = analysis.config.eta == "Bound" and p is None
     if p is not None:
+        disk_g = eta_model("Disk", mchi, vg) * ETA_TO_CM_INV
+        fit_g = (1.0 - p) * halo_g + p * disk_g
         eta_label = r"fit $\eta$ (mix " + f"{round(p * 100)}% disk)"
     elif is_bound:
+        bound_g = eta_model("Bound", mchi, vg) * ETA_TO_CM_INV
+        fit_g = halo_g + bound_g
         eta_label = r"fit $\eta$ (Bound + 100% SHM)"
     else:
+        fit_g = eta_model(analysis.config.eta, mchi, vg) * ETA_TO_CM_INV
         eta_label = r"input $\eta(v_{min})$"
-    ax.plot(rm.vmin_mid, eta_phys, color="red", lw=2, label=eta_label)
+
+    ax.plot(vg, fit_g, color="red", lw=2, label=eta_label)
     ax.hlines(flux_phys, rm.vmin_low, rm.vmin_high,
               color="C0", lw=1.5, label="Best-Fit")
 
-    # Show the components that make up the fit eta:
-    #   mixture -> 100% SHM (gray) and p x pure disk (green);
+    # Show the components that make up the fit eta (also over the full axis):
+    #   mixture -> 100% SHM (gray), (1-p) SHM (orange) and p x pure disk (green);
     #   Bound   -> 100% SHM (gray) and the bound population (green).
     if p is not None:
-        if analysis.eta_halo is not None:
-            ax.plot(rm.vmin_mid, analysis.eta_halo * ETA_TO_CM_INV,
-                    color="gray", lw=1.5, ls="--", label="100% SHM")
-            # the SHM component actually in the mixture, (1-p) * SHM
-            ax.plot(rm.vmin_mid, (1.0 - p) * analysis.eta_halo * ETA_TO_CM_INV,
-                    color="orange", lw=1.5, ls="-.",
-                    label=f"{round((1 - p) * 100)}% SHM")
-        if analysis.eta_disk is not None:
-            ax.plot(rm.vmin_mid, p * analysis.eta_disk * ETA_TO_CM_INV,
-                    color="green", lw=1.5, ls=":",
-                    label=f"{round(p * 100)}% pure disk")
+        ax.plot(vg, halo_g, color="gray", lw=1.5, ls="--", label="100% SHM")
+        ax.plot(vg, (1.0 - p) * halo_g, color="orange", lw=1.5, ls="-.",
+                label=f"{round((1 - p) * 100)}% SHM")
+        ax.plot(vg, p * disk_g, color="green", lw=1.5, ls=":",
+                label=f"{round(p * 100)}% pure disk")
     elif is_bound:
-        if analysis.eta_halo is not None:
-            ax.plot(rm.vmin_mid, analysis.eta_halo * ETA_TO_CM_INV,
-                    color="gray", lw=1.5, ls="--", label="100% SHM")
-        if analysis.eta_bound is not None:
-            ax.plot(rm.vmin_mid, analysis.eta_bound * ETA_TO_CM_INV,
-                    color="green", lw=1.5, ls=":", label="Bound")
+        ax.plot(vg, halo_g, color="gray", lw=1.5, ls="--", label="100% SHM")
+        ax.plot(vg, bound_g, color="green", lw=1.5, ls=":", label="Bound")
 
     ax.set_xscale("log")
     # Bound eta falls many decades over a few km/s, so show it on a log y-axis
