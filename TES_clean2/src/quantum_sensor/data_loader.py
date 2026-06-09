@@ -93,10 +93,43 @@ def load_response_matrix(material: str, q: str, mass: str, nbins: int,
     )
 
 
+def load_natural_eta(rm: ResponseMatrix, model: str) -> np.ndarray:
+    """Natural-units eta(v_min) sampled on the matrix's own v_min grid.
+
+    Read from ``eta_<model>.csv`` inside the matrix folder, produced by the
+    Mathematica stage ``12_eta.wl``. Because it is generated on the same v_min
+    interval mid-points that label the matrix columns and in the same natural
+    units as the matrix, ``M_phys @ eta`` is a real expected event count -- no
+    interpolation (``align_eta``) and no unit conversion are needed or applied.
+
+    Only the Halo (SHM) model is currently generated; see ``12_eta.wl``.
+    """
+    path = rm.path / f"eta_{model}.csv"
+    if not path.exists():
+        raise FileNotFoundError(
+            f"natural-units eta not found: {path}\n"
+            f"Generate it first with the Mathematica stage, e.g.:\n"
+            f"  wolframscript -file Mathematica/src/TES/12_eta.wl {rm.name} {model}\n"
+            f"(only the 'Halo' model is implemented)."
+        )
+    eta = np.atleast_1d(np.genfromtxt(path, delimiter=","))
+    if eta.shape[0] != rm.n_vmin:
+        raise ValueError(
+            f"eta length {eta.shape[0]} != matrix n_vmin {rm.n_vmin} for {path}; "
+            f"regenerate eta_{model}.csv with 12_eta.wl after rebuilding the matrix."
+        )
+    return eta
+
+
 # ----------------------------------------------------------------- legacy data
 
 def load_eta(eta: str, mass: str) -> np.ndarray:
-    """Tabulated velocity distribution eta(v_min) (legacy, 800 samples)."""
+    """Tabulated velocity distribution eta(v_min) (legacy, 800 samples).
+
+    Physical units (~cm^-1), NOT consistent with the new natural-units
+    matrices -- kept only for cross-checks. The analysis uses
+    :func:`load_natural_eta` instead.
+    """
     return np.genfromtxt(LEGACY_DATA_DIR / "Eta_data" / f"Eta{eta}M{mass}_Ko.csv",
                          delimiter=",")
 

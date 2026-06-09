@@ -2,8 +2,12 @@
 
 The v_min axis and the staircase step edges come straight from the response
 matrix's ``vmin.csv`` grid (via the analysis object), so there are no
-hard-coded index ranges. The recovered flux is already in the same units as
-the input eta, so no extra unit factor is applied.
+hard-coded index ranges.
+
+Units: the whole pipeline runs in natural units (eta and the recovered flux
+are natural units, dimension 1/length). Conversion to the physical unit
+cm^-1 happens ONLY here, at plot time, via ``ETA_TO_CM_INV`` -- the stored
+CSV (``save_flux``) stays in natural units.
 """
 
 from __future__ import annotations
@@ -13,7 +17,13 @@ from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 
+from .constants import CM
+
 RESULTS_DIR = Path(__file__).resolve().parents[2] / "results"
+
+# eta / flux have natural dimension 1/length, so 1 in natural units equals
+# ``CM`` cm^-1 (cm = CM in natural units). Multiply to display in cm^-1.
+ETA_TO_CM_INV = CM
 
 
 def _stem(analysis) -> str:
@@ -44,9 +54,13 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
     if own_fig:
         _, ax = plt.subplots(figsize=(8, 6))
 
-    ax.plot(rm.vmin_mid, analysis.eta, color="red", lw=2, label=r"input $\eta(v_{min})$")
-    ax.hlines(analysis.flux, rm.vmin_low, rm.vmin_high,
-              color="C0", lw=1.5, label="recovered flux")
+    # natural units -> physical cm^-1, only for display
+    eta_phys = analysis.eta * ETA_TO_CM_INV
+    flux_phys = analysis.flux * ETA_TO_CM_INV
+
+    ax.plot(rm.vmin_mid, eta_phys, color="red", lw=2, label=r"input $\eta(v_{min})$")
+    ax.hlines(flux_phys, rm.vmin_low, rm.vmin_high,
+              color="C0", lw=1.5, label="Best-Fit")
 
     ax.set_xscale("log")
     ax.set_xlim(rm.vmin_low[0], rm.vmin_high[-1])

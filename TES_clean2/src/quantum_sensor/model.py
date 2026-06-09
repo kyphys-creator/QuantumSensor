@@ -37,10 +37,14 @@ def align_eta(eta_raw: np.ndarray, vmin_mid: np.ndarray,
               v_lo: float = 1.0, v_hi: float = 800.0) -> np.ndarray:
     """Resample a tabulated eta(v_min) onto the matrix's v_min interval mid-points.
 
+    LEGACY / cross-check only. The main pipeline no longer uses this: it loads a
+    natural-units eta already sampled on the matrix grid (``load_natural_eta`` /
+    ``12_eta.wl``). This resamples the legacy *physical-units* eta files, which
+    are NOT unit-consistent with the natural-units matrix.
+
     The legacy eta files hold ``len(eta_raw)`` samples spanning ``[v_lo, v_hi]``
     km/s; values outside the table extrapolate to its endpoints (eta -> 0 at the
-    high end). The exact source grid only affects how the test flux is built,
-    not the self-consistency of the inversion.
+    high end).
     """
     v_src = np.linspace(v_lo, v_hi, len(eta_raw))
     return np.interp(vmin_mid, v_src, eta_raw)
@@ -61,37 +65,34 @@ def expected_counts(rm: ResponseMatrix, eta_aligned: np.ndarray,
 
 
 def condition(m_phys: np.ndarray, data: np.ndarray,
-              background: np.ndarray | None = None):
-    """Precondition the linear inverse so the unknown is O(1) for the solver.
+              background: np.ndarray | None = None,
+              c: float = 1.0):
+    """Recondition the linear inverse with a SINGLE common constant ``c``.
 
-    Replaces the hand-tuned ``cons1``/``cons2``: both scales are derived from
-    the data. We change variables ``x = flux_scale * u`` and divide the
-    equations by ``data_scale`` so that, in the scaled problem
-    ``M_cond @ u = data_cond - bkg_cond``, both ``M_cond`` entries and ``u``
-    are O(1).
+    The unknown is reparametrised ``x = c * u`` (column scaling only); the data
+    and background are left **untouched**. Hence the objective the optimiser
+    minimises is the *true* Neyman chi^2 -- its value, and so Delta-chi^2
+    confidence intervals, are preserved. (A data-scaling conditioner, like the
+    old ``cons2``, would multiply chi^2 by an arbitrary factor and break the
+    statistical interpretation.)
 
-    * ``data_scale``  = median positive count  (rows -> O(1))
-    * ``flux_scale``  = data_scale / median(M_phys @ 1)
-                        (the flux that a uniform unit vector would need to
-                        produce the data; sets the natural magnitude of x)
+    ``c`` is one common numerical knob (``config.CONDITION_C``), the same for
+    all masses/materials. It only shifts which minimiser OSQP lands on for the
+    underdetermined chi^2=0 face; it cancels out of the recovered flux
+    (``unscale`` undoes it), so it never changes chi^2 or the physical answer.
 
-    Returns ``(M_cond, data_cond, bkg_cond, unscale)`` where
-    ``unscale(u) = flux_scale*u`` recovers the physical flux.
+    Returns ``(M_cond, data_cond, bkg_cond, unscale)`` with
+    ``M_cond = c*m_phys``, ``data_cond = data``, ``bkg_cond = background`` and
+    ``unscale(u) = c*u``.
     """
-    positive = data[data > 0]
-    data_scale = float(np.median(positive)) if positive.size else 1.0
-    ref_counts = m_phys @ np.ones(m_phys.shape[1])
-    ref = float(np.median(ref_counts[ref_counts > 0])) if np.any(ref_counts > 0) else 1.0
-    flux_scale = data_scale / ref if ref > 0 else 1.0
-
-    m_cond = (flux_scale / data_scale) * m_phys
-    data_cond = data / data_scale
+    data_cond = np.asarray(data, dtype=float)
+    m_cond = c * m_phys
     if background is None:
         bkg_cond = np.zeros_like(data_cond)
     else:
-        bkg_cond = background / data_scale
+        bkg_cond = np.asarray(background, dtype=float)
 
     def unscale(u: np.ndarray) -> np.ndarray:
-        return flux_scale * np.asarray(u)
+        return c * np.asarray(u)
 
     return m_cond, data_cond, bkg_cond, unscale

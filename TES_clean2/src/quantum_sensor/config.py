@@ -51,3 +51,19 @@ BACKGROUND_SCENARIOS: dict[str, BackgroundModel] = {
     "b2":   BackgroundModel(A=920.0, B=10.0, C=200.0),
     "flat": BackgroundModel(A=0.0, B=10.0, C=100.0),
 }
+
+
+# --- Solver conditioning constant (single, common) --------------------------
+# Overall reparametrisation of the unknown, ``x = CONDITION_C * u`` (the DATA is
+# never scaled, so the minimised objective stays the TRUE Neyman chi^2 and its
+# value -- hence Delta-chi^2 intervals -- is preserved for statistics).
+#
+# The real conditioner is now the *per-column* scaling done inside the solver
+# (``optimizer._column_scale``, the neutrinoAnalysis method): it normalises each
+# design-matrix column to unit norm, which divides ``CONDITION_C`` out entirely.
+# So the recovered flux is independent of this constant across any practical
+# value (~1e-31 .. 1e-25); it survives only as a single, common, mass- and
+# material-independent number (no per-quantity ``cons1``/``cons2``, no per-mass
+# table). Keep it roughly O(1/||M column||) so OSQP's constraint matrix is well
+# scaled.
+CONDITION_C: float = 1e-31
