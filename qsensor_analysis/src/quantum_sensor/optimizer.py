@@ -102,7 +102,7 @@ def _column_scale(M: np.ndarray) -> np.ndarray:
     return 1.0 / cn
 
 
-def _vertex_select(qp, D: np.ndarray, mu: np.ndarray, R: float = 1000.0):
+def _vertex_select(qp, D: np.ndarray, mu: np.ndarray):
     """HiGHS-simplex vertex on the QP's optimal face (neutrinoAnalysis method).
 
     The χ² minimiser is a whole face of the monotone polytope whenever
@@ -112,11 +112,18 @@ def _vertex_select(qp, D: np.ndarray, mu: np.ndarray, R: float = 1000.0):
     ``mu = M_active @ x``, we pick a vertex of
     ``{x : M_active x = mu, x_i ≥ x_{i+1}, x ≥ eps}`` with a simplex method.
 
-    Objective: minimise ``Σ R^(i/(n-1)) · x_i`` -- a geometrically tail-weighted
-    sum. This drives the high-index (high v_min) flux to zero, so the staircase
-    tail vanishes (consistent with eta → 0 at high v_min) instead of leaving a
-    non-zero floor (which a plain ``Σ x`` would). The leading weight is 1, so the
-    head is not inflated; the result is insensitive to ``R``.
+    Objective: minimise the total flux ``Σ x_j`` -- the minimal-norm monotone
+    flux that still reproduces ``mu``. Minimising the total pushes every step
+    down to the smallest value the monotone + count constraints allow, so the
+    under-constrained ends both collapse: the high-v_min *tail* (where the small
+    response barely affects the counts) goes to zero, and the low-v_min *head*
+    is not inflated above what the counts require -- it just meets eta instead of
+    overshooting it.
+
+    (Earlier this minimised a geometric tail weight ``Σ R^(i/(n-1)) x_i``. The
+    ``R`` factor under-weighted the head (``R^0 = 1``), letting the first step
+    overshoot eta by a few percent, while adding nothing the plain total ``Σ x``
+    doesn't already give for the tail.)
 
     Solved in the column-scaled variable ``x = D ⊙ z`` (``M_s = M_active·D`` has
     unit-norm, ``c``-independent columns), so HiGHS sees a well-conditioned
@@ -126,17 +133,16 @@ def _vertex_select(qp, D: np.ndarray, mu: np.ndarray, R: float = 1000.0):
     M_s = qp['M_active'] * D[None, :]          # unit-norm columns, c-free
     mu = np.asarray(mu)
 
-    # Objective on physical x = D⊙z is Σ R^(i/(n-1)) x_i, i.e. weights
-    # (R^(i/(n-1))·D) on z. Only relative weights matter, so normalise by the max
-    # to strip the overall 1/c factor in D -> a c-independent, well-scaled LP.
-    tail_w = (R ** (np.arange(n) / max(n - 1, 1))) * D
-    tail_w = tail_w / tail_w.max()
+    # Minimise total physical flux Σ x_j. In the scaled variable z (x = D⊙z)
+    # that is Σ D_j z_j, i.e. weight D on z. Normalise by the max to strip the
+    # overall 1/c factor in D -> a c-independent, well-scaled LP.
+    weight = D / D.max()
     # ordering on physical x = D⊙z:  D_i z_i - D_{i+1} z_{i+1} >= 0
     A_ord_z = -(qp['A_ord'].toarray() * D[None, :])
     bounds = [(qp['eps'] / d if d else 0.0, None) for d in D]
 
     res = linprog(
-        tail_w, A_ub=A_ord_z, b_ub=np.zeros(n - 1),
+        weight, A_ub=A_ord_z, b_ub=np.zeros(n - 1),
         A_eq=M_s, b_eq=mu,
         bounds=bounds, method='highs-ds',
         options={'presolve': True},
