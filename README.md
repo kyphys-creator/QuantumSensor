@@ -33,15 +33,17 @@ results are converted to physical units (e.g. `kg⁻¹ eV⁻¹`) for plotting.
 
 | Folder | Stage | Contents |
 |--------|-------|----------|
-| [`Mathematica/`](Mathematica/) | Response (Wolfram) | The `01`–`11` pipeline that builds the response kernels, response functions and matrices for TES (Al) and MKID (TiN). See **[Mathematica/README.md](Mathematica/README.md)** for the detailed per-file description. |
-| [`TES_clean2/`](TES_clean2/) | Analysis (Python) | The current analysis package (`quantum_sensor`): `DarkMatterQuantumAnalysis` runs the self-consistent forward+inverse model on the new response matrices. See **[TES_clean2/README.md](TES_clean2/README.md)**. |
+| [`Mathematica/`](Mathematica/) | Response (Wolfram) | The `01`–`12` pipeline that builds the response kernels, response functions and matrices for TES (Al) and MKID (TiN). See **[Mathematica/README.md](Mathematica/README.md)** for the detailed per-file description. |
+| [`qsensor_analysis/`](qsensor_analysis/) | Analysis (Python) | The analysis package (`quantum_sensor`), material-parameterised for **both** detectors (`material="Al"`/`"TiN"`): `DarkMatterQuantumAnalysis` runs the self-consistent forward+inverse model on the response matrices. See **[qsensor_analysis/README.md](qsensor_analysis/README.md)**. |
 | [`Obsolete/`](Obsolete/) | Archive | Earlier Python versions (`TES`, `TES_clean`, `TES_clean10`), kept for reference. |
 
 ### The Mathematica pipeline (summary)
 
-The `01`–`11` files form a single dependency chain — loading one file `Get`s
+The `01`–`12` files form a single dependency chain — loading one file `Get`s
 all the earlier ones. `01`–`06` are clean hand-written `.wl` packages; the
-plotting / matrix / fit stages (`07`–`11`) are being migrated from `.nb`.
+plotting / response-function / matrix / η stages (`07`, `08`, `09`, `10`, `12`)
+are `.wl` for **both** TES and MKID. Only the legacy `10_data` / `11_minimization`
+remain as `.nb`.
 
 ```
 01 setup        units & constants (natural units, GeV)
@@ -50,11 +52,17 @@ plotting / matrix / fit stages (`07`–`11`) are being migrated from `.nb`.
 04 material     dielectric function  (Al: Mermin table / TiN: analytic Lindhard)
 05 parameters   cross sections, resolutions, exposures
 06 response     response-kernel definitions (the core)
-07 dℛ/dω' plots kernel plots → output/TES/dcurlyRdEprime/*.pdf   (✅ migrated to .wl)
-08–11           response matrix, plots, data, minimisation         (.nb)
+07 dℛ/dω' plots kernel plots → output/<DET>/dcurlyRdEprime/*.pdf
+08 response fn  binned CRTES/CRTiN saved as .wdx
+09 plots        response-function R_bin(v_min) plots
+10 matrix       v_min-integrated response matrix (matrix.csv, vmin.csv, bins.csv)
+12 eta          natural-units η(v_min) on the matrix grid (eta_<model>.csv)
+   (10_data, 11_minimization remain as legacy .nb)
 ```
 
-See **[Mathematica/README.md](Mathematica/README.md)** for what each stage prepares.
+`<DET>` = `TES` (Al) or `MKID` (TiN); the `07`–`12` stages exist in both
+`src/TES/` and `src/MKID/`. See **[Mathematica/README.md](Mathematica/README.md)**
+for what each stage prepares.
 
 ### Running it
 
@@ -76,13 +84,14 @@ into `/usr/local/bin`.
 **Python stage** (the packaged version):
 
 ```bash
-cd TES_clean2
+cd qsensor_analysis
 pip install -e .            # installs the `quantum_sensor` package
-jupyter notebook main_Refined.ipynb
+jupyter notebook main_Refined.ipynb   # TES (Al) and MKID (TiN) sections
 ```
 
 The Mathematica stage writes response matrices
-(`Mathematica/output/TES/response_matrix/`) that the Python stage consumes.
+(`Mathematica/output/TES/response_matrix/` for Al, `…/MKID/…` for TiN) that the
+Python stage consumes; `material="Al"`/`"TiN"` selects which.
 
 ---
 
@@ -107,15 +116,16 @@ Mathematica 段の物理量はすべて**自然単位系（GeV建て）**で、�
 
 | フォルダ | 段階 | 内容 |
 |----------|------|------|
-| [`Mathematica/`](Mathematica/) | 応答（Wolfram） | TES(Al)・MKID(TiN) の応答核・行列を構築する `01`–`11` パイプライン。各ファイルの詳細は **[Mathematica/README.md](Mathematica/README.md)** を参照。 |
-| [`TES_clean2/`](TES_clean2/) | 解析（Python） | 現行の解析パッケージ（`quantum_sensor`）。`DarkMatterQuantumAnalysis` が新応答行列に対して自己整合な順方向＋逆問題を実行。詳細は **[TES_clean2/README.md](TES_clean2/README.md)**。 |
+| [`Mathematica/`](Mathematica/) | 応答（Wolfram） | TES(Al)・MKID(TiN) の応答核・行列を構築する `01`–`12` パイプライン。各ファイルの詳細は **[Mathematica/README.md](Mathematica/README.md)** を参照。 |
+| [`qsensor_analysis/`](qsensor_analysis/) | 解析（Python） | 解析パッケージ（`quantum_sensor`）。`material="Al"`/`"TiN"` で**両検出器**に対応し、`DarkMatterQuantumAnalysis` が応答行列に対して自己整合な順方向＋逆問題を実行。詳細は **[qsensor_analysis/README.md](qsensor_analysis/README.md)**。 |
 | [`Obsolete/`](Obsolete/) | アーカイブ | 旧Python版（`TES`, `TES_clean`, `TES_clean10`）。参照用に保管。 |
 
 ### Mathematica パイプライン（要約）
 
-`01`–`11` は一直線の依存チェーンで、1つを `Get` すると前段がすべて読み込まれ
-ます。`01`–`06` は手書きのクリーンな `.wl` パッケージ、プロット／行列／フィット
-段（`07`–`11`）は `.nb` から移行中です。
+`01`–`12` は一直線の依存チェーンで、1つを `Get` すると前段がすべて読み込まれ
+ます。`01`–`06` は手書きのクリーンな `.wl` パッケージ。プロット／応答関数／行列／η
+段（`07`, `08`, `09`, `10`, `12`）は **TES・MKID 両系統とも `.wl`** です。レガシーの
+`10_data` / `11_minimization` のみ `.nb` のまま残しています。
 
 ```
 01 setup        単位・定数（自然単位系, GeV）
@@ -124,11 +134,16 @@ Mathematica 段の物理量はすべて**自然単位系（GeV建て）**で、�
 04 material      誘電関数（Al: Merminテーブル / TiN: 解析的Lindhard）
 05 parameters   断面積・分解能・露光量
 06 response     応答核の定義（本体）
-07 dℛ/dω' プロット 核のプロット → output/TES/dcurlyRdEprime/*.pdf   （✅ .wl 移行済み）
-08–11           応答行列・プロット・データ・最小化                  （.nb）
+07 dℛ/dω' プロット 核のプロット → output/<DET>/dcurlyRdEprime/*.pdf
+08 応答関数      ビン分けした CRTES/CRTiN を .wdx 保存
+09 プロット      応答関数 R_bin(v_min) のプロット
+10 行列         v_min 積分した応答行列（matrix.csv, vmin.csv, bins.csv）
+12 eta          行列グリッド上の自然単位 η(v_min)（eta_<model>.csv）
+   （10_data, 11_minimization はレガシー .nb のまま）
 ```
 
-各段が何を準備しているかは **[Mathematica/README.md](Mathematica/README.md)** を参照。
+`<DET>` = `TES`(Al) または `MKID`(TiN)。`07`–`12` 段は `src/TES/`・`src/MKID/`
+の両方に存在します。各段が何を準備しているかは **[Mathematica/README.md](Mathematica/README.md)** を参照。
 
 ### 実行方法
 
@@ -149,9 +164,10 @@ wolframscript -file src/TES/07_dcurlyRdEprime_plot.wl
 **Python 段**（パッケージ版）:
 
 ```bash
-cd TES_clean2
+cd qsensor_analysis
 pip install -e .            # `quantum_sensor` パッケージをインストール
-jupyter notebook main_Refined.ipynb
+jupyter notebook main_Refined.ipynb   # TES(Al)・MKID(TiN) の両セクション
 ```
 
-Mathematica 段が書き出す応答行列（`Mathematica/output/TES/response_matrix/`）を Python 段が読み込みます。
+Mathematica 段が書き出す応答行列（Al は `Mathematica/output/TES/response_matrix/`、
+TiN は `…/MKID/…`）を Python 段が読み込みます。`material="Al"`/`"TiN"` で切り替えます。
