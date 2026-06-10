@@ -29,11 +29,11 @@ from quantum_sensor.data_loader import DETECTOR_OF
 
 
 # (material, q, nbins) combinations that exist as response matrices.
-# TiN (MKID) threshold is 0.2 eV, so its fine binning is R9 (not R10), and only
-# the heavy mediator (q0) has been generated so far.
+# TiN (MKID) threshold is 0.2 eV, so its fine binning is R9 (not R10). Masses
+# without a generated matrix (e.g. MKID q2 R9 beyond M1) are skipped with a note.
 MATERIAL_GRID = {
     "Al":  [("0", 5), ("0", 10), ("2", 5), ("2", 10)],
-    "TiN": [("0", 5), ("0", 9)],
+    "TiN": [("0", 5), ("0", 9), ("2", 5), ("2", 9)],
 }
 MASSES = ("1", "2", "3")
 # Pure velocity models rendered as references (need eta_<model>.csv from 12_eta.wl).
