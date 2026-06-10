@@ -20,5 +20,6 @@ MKIDsig = 0.3 / 2.355;
 
 
 (* ---- Detector exposures (active mass times time) ---- *)
-TiNexp = 10^7 rhoTiN (1 \[Mu]m) (50 \[Mu]m) (22 nm) month;
-Alexp = (8200 ng) month;
+(* TiN (MKID): 10^7 detectors, 0.42 ng each, over one year. Design based on arXiv:2404.10785. *)
+TiNexp = 10^7 (0.42 ng) yr;
+Alexp = (8200 \[Mu]g) month;
