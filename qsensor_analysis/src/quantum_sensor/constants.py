@@ -23,6 +23,7 @@ CM = 1.0 / (1.98e-14 * GeV)
 SEC = 1.0 / (6.58e-25 * GeV)
 
 # ----- Mass scale (01_setup.wl) ---------------------------------------------
+uG = 1e-6 * GRAM
 NG = 1e-9 * GRAM
 KG = 1e3 * GRAM
 ME = 0.5109989 * MeV
@@ -53,9 +54,9 @@ TES_SIG = (0.068 / 0.8) / 2.355
 MKID_SIG = 0.3 / 2.355
 
 # ----- Detector exposures = active mass x time (05_parameters.wl) -----------
-AL_EXP = 8200 * NG * MONTH      # Al (TES) exposure
-# TiN (MKID): 1e7 detectors of (1 um x 50 um x 22 nm) TiN, over one month.
-TIN_EXP = 1e7 * RHO_TIN * (1 * MIC) * (50 * MIC) * (22 * NM) * MONTH
+AL_EXP = 8200 * uG * MONTH      # Al (TES) exposure
+# TiN (MKID): 1e7 detectors of TiN, over one year. Design based on arXiv: 2404.10785
+TIN_EXP = 1e7 * 0.42 * NG * YR  # MKID (TiN) exposure
 
 # Map the analysis mass tag (M1/M2/M3) to the DM mass; also stored per-file in
 # each .wdx as "dmMass", so this table is only a convenience/cross-check.

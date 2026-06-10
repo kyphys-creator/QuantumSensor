@@ -29,7 +29,18 @@ def _ordering_csc(n: int):
     return csc_matrix(A)
 
 
-def run_optimize(M_matrix, data, Bkg_vector, n, eps=0.0, x0=None, display=True):
+def run_optimize(M_matrix, data, Bkg_vector, n, eps=0.0, x0=None, display=True,
+                 vertex_select=True):
+    """SciPy (trust-constr) Neyman-χ² solve, with optional staircase vertex.
+
+    ``trust-constr`` is an interior-point method: it returns a *smooth ramp* on
+    the interior of the optimal face, not a vertex, so the recovered flux is not
+    piecewise-constant. When ``vertex_select`` (default) and the problem is
+    under-determined (``n > #active bins``), we keep the converged fitted values
+    ``mu = M_active @ x`` and pick a piecewise-constant *vertex* reproducing the
+    same ``mu`` -- the same tail-weighted HiGHS simplex step the OSQP backend
+    uses -- so both solvers yield the same staircase estimate (χ² unchanged).
+    """
     if x0 is None:
         x0 = np.ones(n)
 
@@ -39,7 +50,7 @@ def run_optimize(M_matrix, data, Bkg_vector, n, eps=0.0, x0=None, display=True):
     if display:
         options['verbose'] = 3
 
-    return minimize(
+    res = minimize(
         lambda x: chi_neyman(x, M_matrix, data, Bkg_vector, eps),
         x0,
         method='trust-constr',
@@ -48,6 +59,30 @@ def run_optimize(M_matrix, data, Bkg_vector, n, eps=0.0, x0=None, display=True):
         options=options,
         jac='3-point',
     )
+
+    out = _Result()
+    out.backend = 'scipy'
+    out.staircase = False
+    out.x = np.asarray(res.x)
+    out.fun = float(res.fun)
+    out.success = bool(res.success)
+    out.message = str(res.message)
+    out.nit = int(getattr(res, 'nit', 0))
+    out.solve_time = 0.0
+
+    # Vertex selection: collapse the smooth ramp to a piecewise-constant vertex
+    # reproducing the same fitted values mu (χ² unchanged), matching OSQP.
+    qp = _build_qp(M_matrix, data, Bkg_vector, n, eps)
+    if vertex_select and qp['n'] > qp['m_active']:
+        D = _column_scale(qp['M_active'])
+        mu = qp['M_active'] @ out.x
+        x_v = _vertex_select(qp, D, mu)
+        if x_v is not None:
+            out.x = x_v
+            out.staircase = True
+            out.backend = 'scipy+highs-vertex'
+            out.fun = float(0.5 * x_v @ qp['P'] @ x_v + qp['q'] @ x_v + qp['const'])
+    return out
 
 
 def _trim_bkg(Bkg_vector, m):
