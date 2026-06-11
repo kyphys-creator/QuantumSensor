@@ -141,13 +141,19 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
 
 
 def plot_flux_with_pointwise_bands(analysis, bands: list, save: bool = True,
-                                   ax=None, out_dir: Path | None = None):
+                                   ax=None, out_dir: Path | None = None,
+                                   ymax_scale: float | None = 2.5):
     """Input eta + best-fit staircase + point-wise profile confidence bands.
 
     ``bands`` is the output of :func:`quantum_sensor.statistics.pointwise_band`
     (one dict per scanned v_min index, the neutrinoAnalysis construction).
     Levels are shaded widest-first and the edges connected across indices,
     matching ``neutrinoAnalysis.plot_flux_with_bands(style='fill')``.
+
+    ``ymax_scale`` caps the y-axis at that multiple of the best-fit/eta peak,
+    so the staircase stays readable when the weakly-constrained threshold
+    points blow the upper band edge up by orders of magnitude (the band is
+    simply clipped at the top there). ``None`` restores the full autoscale.
     """
     if analysis.flux is None:
         raise RuntimeError("run optimize() first")
@@ -191,6 +197,9 @@ def plot_flux_with_pointwise_bands(analysis, bands: list, save: bool = True,
 
     ax.set_xscale("log")
     ax.set_xlim(1.0, 800.0)
+    if ymax_scale is not None:
+        peak = max(float(np.max(analysis.flux)), float(np.max(fit_g)) / ETA_TO_CM_INV)
+        ax.set_ylim(0.0, ymax_scale * peak * ETA_TO_CM_INV)
     ax.set_xlabel(r"$v_{min}$ [km/s]", fontsize=18)
     ax.set_ylabel(r"$\tilde{\eta}$  [cm$^{-1}$]", fontsize=18)
     ax.set_title(_label(analysis) + "  (profile band)", fontsize=12)

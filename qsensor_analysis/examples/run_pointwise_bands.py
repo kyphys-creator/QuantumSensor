@@ -9,7 +9,7 @@ geometric bisection -- see ``quantum_sensor.statistics.find_confidence_band``).
 Writes, next to each run's ``flux.csv``:
 
     flux_profile_band.csv    vmin_mid, best_fit, lo68, hi68, lo95, hi95
-    flux_profile_band.json   full per-index records (cutoffs, evaluations)
+    band/band_idx*.json      one full record per scanned point (cutoffs, evals)
     flux_profile_band.pdf    eta + staircase + shaded point-wise bands
 
     python examples/run_pointwise_bands.py                    # 12-config grid
@@ -18,7 +18,6 @@ Writes, next to each run's ``flux.csv``:
 
 from __future__ import annotations
 
-import json
 import sys
 import time
 
@@ -28,7 +27,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from quantum_sensor import DarkMatterQuantumAnalysis, RunConfig
-from quantum_sensor.statistics import pointwise_band
+from quantum_sensor.statistics import pointwise_band, save_pointwise_band
 from quantum_sensor.plotting import plot_flux_with_pointwise_bands, run_dir
 
 LEVELS = (0.68, 0.954)
@@ -56,10 +55,7 @@ def run_one(material, q, mass, nbins):
     np.savetxt(out / "flux_profile_band.csv", table, delimiter=",", comments="",
                header="vmin_mid,best_fit,lo68,hi68,lo95,hi95")
 
-    with open(out / "flux_profile_band.json", "w") as f:
-        json.dump([{**b, "levels": list(b["levels"]),
-                    "band": {str(k): list(v) for k, v in b["band"].items()}}
-                   for b in bands], f, indent=1)
+    save_pointwise_band(a, bands)
 
     plot_flux_with_pointwise_bands(a, bands)
     plt.close("all")
