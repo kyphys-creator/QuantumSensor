@@ -38,7 +38,7 @@ higher number `Get`s the preceding stage at its top. Loading
 ```
 
 - **01–06 are `.wl`** (hand-written packages; the build script `src/build_wl.py` generates both TES/MKID).
-- **07, 08, 09, 10, 12 are `.wl`** (plots, saving response functions, building the response matrix, η. Run from the CLI. Both TES/MKID).
+- **07, 07b, 08, 09, 09b, 10, 12 are `.wl`** (kernel/response plots and their CSV exports, saving response functions, building the response matrix, η. Run from the CLI. Both TES/MKID).
 - **10_data, 11_minimization are `.nb`** (legacy data/fit notebooks).
 
 ---
@@ -48,7 +48,7 @@ higher number `Get`s the preceding stage at its top. Loading
 #### 01_setup — units and physical constants
 - Uses **natural units** with every quantity expressed in **GeV** (`GeV = 10^9`).
   `eV`, `keV`, `cm`, `sec`, `Kel` (Kelvin), `grams`, `kg`, etc. are defined as GeV-equivalent factors.
-- **DM halo velocities**: `v0` (=220 km/s), `ve` (annual mean of Earth's velocity), `vesc` (escape velocity = 544 km/s).
+- **DM halo velocities (SHM)**: `v0` (=238 km/s), `ve` (=250 km/s), `vesc` (=544 km/s). Also a **pure dark-disk** model (`v0DD`=70, `veDD`=100, `vescDD`=694) and an **Earth-bound** thermal population (`\[Rho]b`, `v0EB`=√(2kT/mχ), `vescEB`=11.2 km/s).
 - **Physics constants / DM density**: `alpha` (fine-structure constant), `\[Rho]DM` (local DM density 0.4 GeV/cm³), `me` (electron mass).
 - Material densities `rhoAl`, `rhoTiN`.
 
@@ -84,7 +84,7 @@ Prepares the "material-side" input `Im[-1/ε(ω, q)]` of the scattering rate.
 #### 05_parameters — calculation parameters
 - **Reference cross sections** `\[Sigma]e` (electron 10⁻³⁰ cm²), `\[Sigma]N`.
 - **Energy resolutions** `TESsig`, `MKIDsig` (relative resolution, FWHM converted to a Gaussian σ).
-- **Exposures** (active mass × time) `TiNexp`, `Alexp`.
+- **Exposures** (active mass × time): `Alexp = 8200 μg·month` (TES), `TiNexp = 1e7 × 0.42 ng·yr` (MKID, design per arXiv:2404.10785).
 
 #### 06_response_defs — response kernel (the body of the pipeline)
 Assembles the parts of 01–05 and defines the functions that return the response
@@ -134,8 +134,8 @@ Helpers: `energySum` (energy-direction Riemann sum), `midpointSum` (velocity-dir
 (* Get-ing 06 chain-loads 01–05 *)
 Get["src/TES/06_response_defs.wl"];      (* or src/MKID/... *)
 
-(* e.g. velocity-integrated response at mχ=1 GeV, mediator n=1 *)
-CRintTES[1 GeV, 1][E1, E2][vmin, vmax, ns]
+(* e.g. velocity-integrated response at mχ=1 GeV, heavy mediator (n=0) *)
+CRintTES[1 GeV, 0][E1, E2][vmin, vmax, ns]
 ```
 
 ---
@@ -156,7 +156,7 @@ cd QuantumSensor/Mathematica
 
 ---
 
-### Post-pipeline (07, 08, 09, 10, 12)
+### Post-pipeline (07, 07b, 08, 09, 09b, 10, 12)
 
 These **save and discretize** the response functions defined in 01–06, turning
 them into a matrix form usable for data analysis.
@@ -167,6 +167,21 @@ just substitute `CRTiN`, `TiN_…` tags, and `output/MKID/…` — the CLI argum
 output structure, and physics are identical (e.g. `wolframscript -file
 src/MKID/08_response_functions.wl bin5 M3 q0` → `output/MKID/response_functions/TiN_q0M3_R5.wdx`).
 The dependency chain (07→06→…→01) is the same for both.
+
+#### 07_dcurlyRdEprime_plot.wl / 07b_dcurlyRdEprime_export.wl — differential kernel dℛ/dE′
+
+**07** plots the differential response kernel `dℛ/dE′(v_min)` (the summed
+left+right kinematic branches `KerRAll+KerRAlr`) for the three DM masses and two
+mediators, at the bold observed energy E′ (0.1 eV TES / 0.2 eV MKID) and the
+1 eV reference, as PDFs to `output/<DET>/dcurlyRdEprime/`.
+**07b** writes the same curves to CSV over the full v_min range, in kg⁻¹ eV⁻¹
+(`output/<DET>/dcurlyRdEprime_csv/{Al,TiN}_{heavy,light}.csv`), so the Python
+`final_figures.ipynb` can plot them.
+
+```bash
+wolframscript -file 07_dcurlyRdEprime_plot.wl       # PDFs
+wolframscript -file 07b_dcurlyRdEprime_export.wl    # CSVs (full domain)
+```
 
 #### 08_response_functions.wl — saving response functions
 
@@ -196,6 +211,19 @@ wolframscript -file 09_response_function_plot.wl M3        # only names containi
 
 - **Output**: `output/TES/response_function_plots/<name>.pdf`
 
+#### 09b_response_function_export.wl — response functions to CSV (full domain)
+
+Samples each `.wdx`'s per-bin `R_bin(v_min)` on a log-spaced grid over its full
+domain (1–800 km/s for q0, 1–2000 for q2) and writes one CSV per config
+(`output/<DET>/response_functions_csv/<name>.csv`, the [kg⁻¹] quantity
+`R_bin·kg` that 09 plots) — for the Python `final_figures.ipynb`, which needs
+the full domain the windowed matrix CSVs cannot provide.
+
+```bash
+wolframscript -file 09b_response_function_export.wl        # all .wdx
+wolframscript -file 09b_response_function_export.wl M3     # filter by substring
+```
+
 #### 10_response_matrix.wl — building the response matrix
 
 Integrates the response functions saved by 08 over v_min intervals to build a
@@ -203,20 +231,21 @@ response matrix `M[bin_i, interval_j]`. The integration measure is in natural
 units (`dv` multiplied by `kps`).
 
 ```bash
-wolframscript -file 10_response_matrix.wl Al_q0M3_R5 4 800 1000
-wolframscript -file 10_response_matrix.wl ALL 4 800 1000      # process all .wdx at once
+wolframscript -file 10_response_matrix.wl Al_q0M3_R5 1 800 1000 0.3
+wolframscript -file 10_response_matrix.wl ALL 1 800 1000 0.01     # process all .wdx at once
 ```
 
 - `<name|ALL>` — base name of a `.wdx`, or `ALL` for all of them.
 - `<vminLo> <vminHi>` — integration range [km/s] (auto-clipped to the function's domain).
 - `<N>` — number of equal v_min intervals (matrix columns).
+- `[alpha]` — per-row window tail-cut tolerance: keep each row from its kinematic threshold up to where its cumulative integral reaches `1−alpha` (default 0.5), zeroing the long tail and trimming the matrix/`vmin.csv` to the populated column window. **Currently TES q0 = 0.3, everything else 0.01.**
 
 **Output structure** (per mass → per-run subfolder):
 
 ```
 output/TES/response_matrix/
   M1/
-    Al_q0M1_R5_v4-800_N1000/
+    Al_q0M1_R5_v1-800_N1000/
       matrix.csv   # response matrix (nBins × N)
       vmin.csv     # per-column v_min interval {lo, hi, mid} [km/s]
       bins.csv     # per-row energy bin {lo, hi} [eV]
@@ -231,11 +260,14 @@ output/TES/response_matrix/
 Samples `etaSHM[dmMass][v_mid]` (`\[Eta]th` from 03, the SHM speed integral) on
 the same v_min interval mid-points that label the matrix columns (read from each
 matrix folder's `vmin.csv`), and writes `eta_<model>.csv` next to `matrix.csv` so
-the Python loader picks it up with no alignment or unit conversion. Halo (SHM)
-only.
+the Python loader picks it up with no alignment or unit conversion. Models:
+**Halo** (SHM), **Disk** (pure dark disk), **Bound** (Earth-bound thermal — an
+isotropic dense population nonzero only below `vescEB = 11.2 km/s`).
 
 ```bash
-wolframscript -file 12_eta.wl ALL                 # every matrix folder
+wolframscript -file 12_eta.wl ALL                 # every matrix folder (Halo, default)
+wolframscript -file 12_eta.wl ALL Disk            # pure dark-disk model
+wolframscript -file 12_eta.wl ALL Bound           # Earth-bound model
 wolframscript -file 12_eta.wl Al_q0M1_R5 Halo     # one folder
 ```
 
@@ -271,7 +303,7 @@ wolframscript -file 12_eta.wl Al_q0M1_R5 Halo     # one folder
 ```
 
 - **01–06 は `.wl`**（手書きパッケージ、ビルドスクリプト `src/build_wl.py` で TES/MKID 両方を生成）
-- **07, 08, 09, 10, 12 は `.wl`**（プロット・応答関数の保存・応答行列の構築・η。CLI で実行。TES/MKID 両系統）
+- **07, 07b, 08, 09, 09b, 10, 12 は `.wl`**（カーネル/応答のプロットと CSV 出力・応答関数の保存・応答行列の構築・η。CLI で実行。TES/MKID 両系統）
 - **10_data, 11_minimization は `.nb`**（データ・フィット等のレガシー）
 
 ---
@@ -281,7 +313,7 @@ wolframscript -file 12_eta.wl Al_q0M1_R5 Halo     # one folder
 #### 01_setup — 単位系と物理定数
 - **自然単位系**を採用し、すべての量を **GeV 建て**で表現します（`GeV = 10^9`）。
   `eV`, `keV`, `cm`, `sec`, `Kel`（ケルビン）, `grams`, `kg` などは GeV 換算の係数として定義。
-- **DM ハロー速度**：`v0`（=220 km/s）, `ve`（地球速度の年平均）, `vesc`（脱出速度=544 km/s）。
+- **DM ハロー速度（SHM）**：`v0`（=238 km/s）, `ve`（=250 km/s）, `vesc`（脱出速度=544 km/s）。さらに**純ダークディスク**（`v0DD`=70, `veDD`=100, `vescDD`=694）と**地球束縛**熱的成分（`\[Rho]b`, `v0EB`=√(2kT/mχ), `vescEB`=11.2 km/s）も定義。
 - **物理定数・DM 密度**：`alpha`（微細構造定数）, `\[Rho]DM`（局所 DM 密度 0.4 GeV/cm³）, `me`（電子質量）。
 - 物質密度 `rhoAl`, `rhoTiN`。
 
@@ -314,7 +346,7 @@ DM–電子散乱の**運動学**と、レート計算に必要な解析的部�
 #### 05_parameters — 計算パラメータ
 - **参照断面積** `\[Sigma]e`（電子 10⁻³⁰ cm²）, `\[Sigma]N`。
 - **エネルギー分解能** `TESsig`, `MKIDsig`（FWHM をガウス σ に換算した相対分解能）。
-- **露光量**（有効質量 × 時間）`TiNexp`, `Alexp`。
+- **露光量**（有効質量 × 時間）：`Alexp = 8200 μg·month`（TES）, `TiNexp = 1e7 × 0.42 ng·yr`（MKID, arXiv:2404.10785 準拠）。
 
 #### 06_response_defs — 応答核（パイプラインの本体）
 01–05 の部品を組み上げ、最終的に**速度積分まで済んだ応答**を返す関数群を定義します。
@@ -363,8 +395,8 @@ TES は `…Al…`、MKID は `…TiN…` という名前で**完全に並行**�
 (* 06 を Get すれば 01–05 も連鎖ロードされる *)
 Get["src/TES/06_response_defs.wl"];      (* または src/MKID/... *)
 
-(* 例：質量 mχ=1 GeV, 媒介子 n=1 での速度積分応答 *)
-CRintTES[1 GeV, 1][E1, E2][vmin, vmax, ns]
+(* 例：質量 mχ=1 GeV, 重い媒介子 (n=0) での速度積分応答 *)
+CRintTES[1 GeV, 0][E1, E2][vmin, vmax, ns]
 ```
 
 ---
@@ -385,7 +417,7 @@ cd QuantumSensor/Mathematica
 
 ---
 
-### 後段パイプライン (07, 08, 09, 10, 12)
+### 後段パイプライン (07, 07b, 08, 09, 09b, 10, 12)
 
 01–06 で定義した応答関数を**保存・離散化**して、データ解析に使える行列形式に変換します。
 
@@ -394,6 +426,16 @@ cd QuantumSensor/Mathematica
 に置き換わるだけで、CLI 引数・出力構造・物理は同一です（例: `wolframscript -file
 src/MKID/08_response_functions.wl bin5 M3 q0` → `output/MKID/response_functions/TiN_q0M3_R5.wdx`）。
 依存チェーン（07→06→…→01）も両系統で同じです。
+
+#### 07_dcurlyRdEprime_plot.wl / 07b_dcurlyRdEprime_export.wl — 微分カーネル dℛ/dE′
+
+**07** は微分応答カーネル `dℛ/dE′(v_min)`（左右分岐の和 `KerRAll+KerRAlr`）を、3 質量・2 媒介子について、太線の観測エネルギー E′（TES 0.1 eV / MKID 0.2 eV）と参照の 1 eV で PDF 出力します（`output/<DET>/dcurlyRdEprime/`）。
+**07b** は同じ曲線を全 v_min 域で kg⁻¹ eV⁻¹ の CSV に出力し（`output/<DET>/dcurlyRdEprime_csv/{Al,TiN}_{heavy,light}.csv`）、Python の `final_figures.ipynb` で描けるようにします。
+
+```bash
+wolframscript -file 07_dcurlyRdEprime_plot.wl       # PDF
+wolframscript -file 07b_dcurlyRdEprime_export.wl    # CSV（全定義域）
+```
 
 #### 08_response_functions.wl — 応答関数の保存
 
@@ -422,26 +464,36 @@ wolframscript -file 09_response_function_plot.wl M3        # 名前に "M3" を�
 
 - **出力**: `output/TES/response_function_plots/<name>.pdf`
 
+#### 09b_response_function_export.wl — 応答関数を CSV 出力（全定義域）
+
+各 `.wdx` のビンごとの `R_bin(v_min)` を全定義域（q0 は 1–800 km/s、q2 は 1–2000）で対数グリッド上にサンプリングし、設定ごとに 1 つの CSV を出力します（`output/<DET>/response_functions_csv/<name>.csv`、09 が描く [kg⁻¹] 量 `R_bin·kg`）。窓掛け行列 CSV では得られない全定義域が必要な Python の `final_figures.ipynb` 用です。
+
+```bash
+wolframscript -file 09b_response_function_export.wl        # 全 .wdx
+wolframscript -file 09b_response_function_export.wl M3     # 部分文字列でフィルタ
+```
+
 #### 10_response_matrix.wl — 応答行列の構築
 
 08 で保存した応答関数を v_min 区間上で積分し、レスポンス行列 `M[bin_i, interval_j]` を構築します。
 積分の測度は自然単位（`dv` に `kps` を乗算）で計算されます。
 
 ```bash
-wolframscript -file 10_response_matrix.wl Al_q0M3_R5 4 800 1000
-wolframscript -file 10_response_matrix.wl ALL 4 800 1000      # 全 .wdx を一括処理
+wolframscript -file 10_response_matrix.wl Al_q0M3_R5 1 800 1000 0.3
+wolframscript -file 10_response_matrix.wl ALL 1 800 1000 0.01     # 全 .wdx を一括処理
 ```
 
 - `<name|ALL>` — `.wdx` のベース名、または `ALL` で一括
 - `<vminLo> <vminHi>` — 積分範囲 [km/s]（関数の定義域に自動クリップ）
 - `<N>` — v_min の等分割数（行列の列数）
+- `[alpha]` — 行ごとのウィンドウ裾カット許容度：各行をその運動学的閾値から累積積分が `1−alpha` に達する点まで残し（既定 0.5）、長い裾を 0 にして行列・`vmin.csv` を実際に値のある列範囲にトリム。**現状 TES q0 = 0.3、それ以外は 0.01。**
 
 **出力構造**（質量別 → 実行ごとのサブフォルダ）:
 
 ```
 output/TES/response_matrix/
   M1/
-    Al_q0M1_R5_v4-800_N1000/
+    Al_q0M1_R5_v1-800_N1000/
       matrix.csv   # レスポンス行列 (nBins × N)
       vmin.csv     # 各列の v_min 区間 {下限, 上限, 中央値} [km/s]
       bins.csv     # 各行のエネルギービン {下限, 上限} [eV]
@@ -455,9 +507,11 @@ output/TES/response_matrix/
 
 `etaSHM[dmMass][v_mid]`（03 の `\[Eta]th`、SHM 速度積分）を、行列の列を規定する v_min 区間の中央値
 （各行列フォルダの `vmin.csv` から読み込み）と同じ点で評価し、`matrix.csv` の隣に `eta_<model>.csv` を
-出力します。Python ローダがアライメント・単位変換なしで読めるようにするためです。Halo（SHM）のみ対応。
+出力します。Python ローダがアライメント・単位変換なしで読めるようにするためです。モデルは **Halo**（SHM）, **Disk**（純ダークディスク）, **Bound**（地球束縛熱的 — 等方的で密な成分。`vescEB = 11.2 km/s` 未満でのみ非ゼロ）。
 
 ```bash
-wolframscript -file 12_eta.wl ALL                 # 全行列フォルダ
+wolframscript -file 12_eta.wl ALL                 # 全行列フォルダ（Halo, 既定）
+wolframscript -file 12_eta.wl ALL Disk            # 純ダークディスク
+wolframscript -file 12_eta.wl ALL Bound           # 地球束縛
 wolframscript -file 12_eta.wl Al_q0M1_R5 Halo     # 1 フォルダ
 ```
