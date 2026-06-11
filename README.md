@@ -41,9 +41,9 @@ results are converted to physical units (e.g. `kg⁻¹ eV⁻¹`) for plotting.
 
 The `01`–`12` files form a single dependency chain — loading one file `Get`s
 all the earlier ones. `01`–`06` are clean hand-written `.wl` packages; the
-plotting / response-function / matrix / η stages (`07`, `08`, `09`, `10`, `12`)
-are `.wl` for **both** TES and MKID. Only the legacy `10_data` / `11_minimization`
-remain as `.nb`.
+plotting / CSV-export / response-function / matrix / η stages (`07`, `07b`, `08`,
+`09`, `09b`, `10`, `12`) are `.wl` for **both** TES and MKID. Only the legacy
+`10_data` / `11_minimization` remain as `.nb`.
 
 ```
 01 setup        units & constants (natural units, GeV)
@@ -53,10 +53,13 @@ remain as `.nb`.
 05 parameters   cross sections, resolutions, exposures
 06 response     response-kernel definitions (the core)
 07 dℛ/dω' plots kernel plots → output/<DET>/dcurlyRdEprime/*.pdf
+07b dℛ/dω' csv  full-domain kernel curves → output/<DET>/dcurlyRdEprime_csv/*.csv
 08 response fn  binned CRTES/CRTiN saved as .wdx
 09 plots        response-function R_bin(v_min) plots
-10 matrix       v_min-integrated response matrix (matrix.csv, vmin.csv, bins.csv)
-12 eta          natural-units η(v_min) on the matrix grid (eta_<model>.csv)
+09b response csv full-domain R_bin(v_min) → output/<DET>/response_functions_csv/*.csv
+10 matrix       v_min-integrated response matrix (matrix.csv, vmin.csv, bins.csv;
+                per-row window kept up to 1−alpha, TES q0=0.3 else 0.01)
+12 eta          natural-units η(v_min) on the matrix grid: Halo / Disk / Bound
    (10_data, 11_minimization remain as legacy .nb)
 ```
 
@@ -86,12 +89,15 @@ into `/usr/local/bin`.
 ```bash
 cd qsensor_analysis
 pip install -e .            # installs the `quantum_sensor` package
-jupyter notebook main_Refined.ipynb   # TES (Al) and MKID (TiN) sections
+jupyter notebook main_Refined.ipynb    # run the analysis (TES/Al, MKID/TiN)
+jupyter notebook final_figures.ipynb   # publication figures: eta recovery, per-bin signal, response functions, dℛ/dE'
 ```
 
 The Mathematica stage writes response matrices
 (`Mathematica/output/TES/response_matrix/` for Al, `…/MKID/…` for TiN) that the
-Python stage consumes; `material="Al"`/`"TiN"` selects which.
+Python stage consumes; `material="Al"`/`"TiN"` selects which. `final_figures.ipynb`
+then builds paper-ready, colour-blind- and projector-safe figures from the
+stored results (under `qsensor_analysis/results/final/`).
 
 ---
 
@@ -123,8 +129,8 @@ Mathematica 段の物理量はすべて**自然単位系（GeV建て）**で、�
 ### Mathematica パイプライン（要約）
 
 `01`–`12` は一直線の依存チェーンで、1つを `Get` すると前段がすべて読み込まれ
-ます。`01`–`06` は手書きのクリーンな `.wl` パッケージ。プロット／応答関数／行列／η
-段（`07`, `08`, `09`, `10`, `12`）は **TES・MKID 両系統とも `.wl`** です。レガシーの
+ます。`01`–`06` は手書きのクリーンな `.wl` パッケージ。プロット／CSV出力／応答関数／行列／η
+段（`07`, `07b`, `08`, `09`, `09b`, `10`, `12`）は **TES・MKID 両系統とも `.wl`** です。レガシーの
 `10_data` / `11_minimization` のみ `.nb` のまま残しています。
 
 ```
@@ -135,10 +141,13 @@ Mathematica 段の物理量はすべて**自然単位系（GeV建て）**で、�
 05 parameters   断面積・分解能・露光量
 06 response     応答核の定義（本体）
 07 dℛ/dω' プロット 核のプロット → output/<DET>/dcurlyRdEprime/*.pdf
+07b dℛ/dω' csv  全域の核曲線 → output/<DET>/dcurlyRdEprime_csv/*.csv
 08 応答関数      ビン分けした CRTES/CRTiN を .wdx 保存
 09 プロット      応答関数 R_bin(v_min) のプロット
-10 行列         v_min 積分した応答行列（matrix.csv, vmin.csv, bins.csv）
-12 eta          行列グリッド上の自然単位 η(v_min)（eta_<model>.csv）
+09b 応答 csv    全域の R_bin(v_min) → output/<DET>/response_functions_csv/*.csv
+10 行列         v_min 積分した応答行列（matrix.csv, vmin.csv, bins.csv;
+                行ごとに 1−alpha まで残す窓, TES q0=0.3 他 0.01）
+12 eta          行列グリッド上の自然単位 η(v_min): Halo / Disk / Bound
    （10_data, 11_minimization はレガシー .nb のまま）
 ```
 
@@ -166,8 +175,11 @@ wolframscript -file src/TES/07_dcurlyRdEprime_plot.wl
 ```bash
 cd qsensor_analysis
 pip install -e .            # `quantum_sensor` パッケージをインストール
-jupyter notebook main_Refined.ipynb   # TES(Al)・MKID(TiN) の両セクション
+jupyter notebook main_Refined.ipynb    # 解析を実行（TES/Al・MKID/TiN）
+jupyter notebook final_figures.ipynb   # 論文用図: eta 回復・bin ごと signal・応答関数・dℛ/dE'
 ```
 
 Mathematica 段が書き出す応答行列（Al は `Mathematica/output/TES/response_matrix/`、
 TiN は `…/MKID/…`）を Python 段が読み込みます。`material="Al"`/`"TiN"` で切り替えます。
+`final_figures.ipynb` は保存済み結果から、色弱（CVD）・プロジェクター対応の論文用図を
+生成します（`qsensor_analysis/results/final/` 配下）。
