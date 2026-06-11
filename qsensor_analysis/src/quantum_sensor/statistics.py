@@ -243,13 +243,22 @@ def discrimination_row(analysis_null, analysis_alt, alternative: str,
 
 
 def _profile_solve(analysis, data, fix: dict | None = None):
-    """One conditioned solve; returns (true chi^2, physical x)."""
+    """One conditioned solve; returns (true chi^2, physical x).
+
+    Both the free and the fixed fits go through CLARABEL: its interior-point
+    method solves this QP in ~10 iterations where OSQP's ADMM needs ~10^4
+    (measured 27 ms vs 1.1 s at n_vmin=286, chi^2 agreement ~3e-5). Only the
+    chi^2 value matters here (Delta-chi^2), which is invariant under where on
+    the optimal face the solver lands, so no vertex selection is run.
+    """
+    from .optimizer import _build_qp, _CLARABELBackend
+
     m_cond, data_cond, bkg_cond, unscale = condition(
         analysis.m_phys, data, analysis.background, c=CONDITION_C)
     fix_cond = ({i: v / CONDITION_C for i, v in fix.items()}
                 if fix is not None else None)
-    res = run_optimize_qp(m_cond, data_cond, bkg_cond, analysis.n_vmin,
-                          fix=fix_cond, vertex_select=False)
+    qp = _build_qp(m_cond, data_cond, bkg_cond, analysis.n_vmin, 0.0)
+    res = _CLARABELBackend(eps_abs=1e-9, eps_rel=1e-9).solve(qp, fix=fix_cond)
     return float(res.fun), unscale(res.x)
 
 
