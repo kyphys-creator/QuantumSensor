@@ -308,7 +308,8 @@ matrix CSVs cannot provide it), so they are exported from Mathematica by
 | [`backgrounds.py`](src/quantum_sensor/backgrounds.py) | background counts on the matrix energy bins |
 | [`optimizer.py`](src/quantum_sensor/optimizer.py) | monotone non-negative χ²/QP solver (OSQP / CLARABEL / HiGHS vertex / trust-constr) |
 | [`analysis.py`](src/quantum_sensor/analysis.py) | `DarkMatterQuantumAnalysis(config)` — entry point / orchestrator |
-| [`plotting.py`](src/quantum_sensor/plotting.py) | eta vs recovered-flux figure + CSV export |
+| [`plotting.py`](src/quantum_sensor/plotting.py) | eta vs recovered-flux figure + CSV export; toy-band figure |
+| [`statistics.py`](src/quantum_sensor/statistics.py) | full statistics: **point-wise profile confidence bands** (`find_confidence_band` / `pointwise_band`, the kyphys-creator/neutrinoAnalysis construction: observed profile Δχ² vs an MC-calibrated cutoff, edges by bracketing + geometric bisection), model discrimination (`asimov_significance` per arXiv:1007.1727, `mc_significance` MC cross-check), and Poisson toy ensembles (`fit_toys`/`flux_band`, a quick global cross-check of the bands) |
 
 ---
 
@@ -374,6 +375,32 @@ The minimal end-to-end example is
 ```
 python examples/run_example.py
 ```
+
+**Full statistics**:
+
+```
+python examples/run_pointwise_bands.py             # point-wise profile bands (12-config grid)
+python examples/run_pointwise_bands.py Al 0 2 10   # ... or one config
+python examples/run_statistics.py --no-toys        # model-discrimination grid
+```
+
+`run_pointwise_bands.py` writes, next to each run's `flux.csv`,
+`flux_profile_band.{csv,json,pdf}` — the **point-wise profile confidence
+band** of the recovered flux (the kyphys-creator/neutrinoAnalysis
+construction: at each scanned `v_min` index, the flux step is fixed at a trial
+value, everything else is re-fitted, and the observed profile Δχ² is compared
+against the CL-quantile of the Δχ² distribution over pseudo-experiments drawn
+from the fixed-fit model; band edges by outward bracketing + geometric
+bisection with common random numbers. Pseudo-data is Poisson here, not the
+neutrino code's Gaussian, since the heaviest-mass bins hold only O(10)
+counts).
+
+`run_statistics.py` writes `results/stats/discrimination.csv` and
+per-background heatmaps — the median expected significance (Asimov Poisson
+log-likelihood ratio, arXiv:1007.1727, with a Monte-Carlo cross-check) for
+rejecting the pure-SHM Halo when the truth is a dark-disk mixture
+(`mix5`/`mix25`), pure `Disk`, or `Halo+Bound`, over every configuration and
+background scenario.
 
 > **Scope**: both detectors (TES/Al, MKID/TiN), heavy/light mediator (q0/q2),
 > all masses and binnings. `eta` is generated in natural units by
@@ -585,7 +612,8 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 | [`backgrounds.py`](src/quantum_sensor/backgrounds.py) | 行列のエネルギービン上での背景カウント |
 | [`optimizer.py`](src/quantum_sensor/optimizer.py) | 単調非負 χ²/QP ソルバ（OSQP / CLARABEL / HiGHS 頂点 / trust-constr） |
 | [`analysis.py`](src/quantum_sensor/analysis.py) | `DarkMatterQuantumAnalysis(config)` — エントリポイント・司令塔 |
-| [`plotting.py`](src/quantum_sensor/plotting.py) | eta vs 復元フラックス図 ＋ CSV 出力 |
+| [`plotting.py`](src/quantum_sensor/plotting.py) | eta vs 復元フラックス図 ＋ CSV 出力。toy バンド図 |
+| [`statistics.py`](src/quantum_sensor/statistics.py) | フル統計: **point-wise profile confidence band**（`find_confidence_band` / `pointwise_band`、kyphys-creator/neutrinoAnalysis 方式 — 観測 profile Δχ² を MC キャリブレーションしたカットオフと比較し、ブラケット＋幾何二分法で端を決める）、モデル判別（`asimov_significance`＝arXiv:1007.1727、`mc_significance`＝MC 検証）、ポアソン toy アンサンブル（`fit_toys`/`flux_band`、バンドの大域的クロスチェック用） |
 
 ---
 
@@ -626,5 +654,28 @@ a.save_flux()                       # フラックス＋v_min グリッドを CS
 ```
 python examples/run_example.py
 ```
+
+**フル統計**:
+
+```
+python examples/run_pointwise_bands.py             # point-wise profile band（12 設定グリッド）
+python examples/run_pointwise_bands.py Al 0 2 10   # …または 1 設定のみ
+python examples/run_statistics.py --no-toys        # モデル判別グリッド
+```
+
+`run_pointwise_bands.py` は各ランの `flux.csv` の隣に
+`flux_profile_band.{csv,json,pdf}` を出力する — 復元フラックスの **point-wise
+profile confidence band**（kyphys-creator/neutrinoAnalysis 方式: 走査する各
+`v_min` 点でフラックス段を試行値に固定して残りを再フィットし、観測 profile Δχ²
+を「固定フィットモデルから生成した疑似実験の Δχ² 分布の CL 分位点」と比較する。
+バンド端は外向きブラケット＋幾何二分法（共通乱数）で決定。疑似データは
+ニュートリノ版のガウス近似ではなくポアソン — 最重質量ではビンあたり O(10)
+カウントしかないため）。
+
+`run_statistics.py` は `results/stats/discrimination.csv` と背景シナリオ別
+ヒートマップを出力 — 純 SHM（Halo）を帰無仮説として、真がダークディスク混合
+（`mix5`/`mix25`）・純 `Disk`・`Halo+Bound` のときの期待判別有意度（Asimov
+ポアソン対数尤度比、arXiv:1007.1727、モンテカルロ検証付き）を全設定 × 全背景で
+計算する。
 
 > **スコープ**: 両検出器（TES/Al, MKID/TiN）、重い/軽い媒介子（q0/q2）、全質量・全ビン。`eta` は [`12_eta.wl`](../Mathematica/src/TES/12_eta.wl) が **Halo / Disk / Bound** を自然単位で生成。観測カウントは自己無撞着な順方向モデル（`露光 · M @ eta`）から生成する。

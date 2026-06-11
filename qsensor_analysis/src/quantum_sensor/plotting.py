@@ -138,3 +138,129 @@ def plot_flux_comparison(analysis, save: bool = True, ax=None, out_dir: Path | N
         plt.savefig(path, bbox_inches="tight")
         print(f"saved {path}")
     return ax
+
+
+def plot_flux_with_pointwise_bands(analysis, bands: list, save: bool = True,
+                                   ax=None, out_dir: Path | None = None):
+    """Input eta + best-fit staircase + point-wise profile confidence bands.
+
+    ``bands`` is the output of :func:`quantum_sensor.statistics.pointwise_band`
+    (one dict per scanned v_min index, the neutrinoAnalysis construction).
+    Levels are shaded widest-first and the edges connected across indices,
+    matching ``neutrinoAnalysis.plot_flux_with_bands(style='fill')``.
+    """
+    if analysis.flux is None:
+        raise RuntimeError("run optimize() first")
+    rm = analysis.rm
+    own_fig = ax is None
+    if own_fig:
+        _, ax = plt.subplots(figsize=(8, 6))
+
+    vg = np.logspace(0.0, np.log10(800.0), 600)
+    mchi = DM_MASS[analysis.config.mass]
+    p = analysis.config.disk_fraction
+    halo_g = eta_model("Halo", mchi, vg) * ETA_TO_CM_INV
+    if p is not None:
+        fit_g = (1.0 - p) * halo_g + p * eta_model("Disk", mchi, vg) * ETA_TO_CM_INV
+        eta_label = r"input $\eta$ (mix " + f"{round(p * 100)}% disk)"
+    elif analysis.config.eta == "Bound":
+        fit_g = halo_g + eta_model("Bound", mchi, vg) * ETA_TO_CM_INV
+        eta_label = r"input $\eta$ (Bound + 100% SHM)"
+    else:
+        fit_g = eta_model(analysis.config.eta, mchi, vg) * ETA_TO_CM_INV
+        eta_label = r"input $\eta(v_{min})$"
+
+    all_levels = sorted({lv for b in bands for lv in b["levels"]}, reverse=True)
+    cyc = ["C2", "C1", "C0", "C3", "C4"]
+    colors = {lv: cyc[k % len(cyc)] for k, lv in enumerate(all_levels)}
+    for lv in all_levels:                      # widest underneath
+        pts = sorted((b["vmin_mid"],) + tuple(b["band"][lv])
+                     for b in bands if lv in b["band"])
+        xs = np.array([q[0] for q in pts])
+        lo = np.array([q[1] for q in pts]) * ETA_TO_CM_INV
+        hi = np.array([q[2] for q in pts]) * ETA_TO_CM_INV
+        ok = np.isfinite(lo) & np.isfinite(hi)
+        ax.fill_between(xs[ok], lo[ok], hi[ok], color=colors[lv], alpha=0.25,
+                        zorder=2, label=f"{lv:.3f} band")
+        ax.plot(xs[ok], lo[ok], color=colors[lv], lw=1.0, zorder=3)
+        ax.plot(xs[ok], hi[ok], color=colors[lv], lw=1.0, zorder=3)
+
+    ax.hlines(analysis.flux * ETA_TO_CM_INV, rm.vmin_low, rm.vmin_high,
+              color="C0", lw=1.5, zorder=4, label="Best-Fit")
+    ax.plot(vg, fit_g, color="red", lw=2, zorder=5, label=eta_label)
+
+    ax.set_xscale("log")
+    ax.set_xlim(1.0, 800.0)
+    ax.set_xlabel(r"$v_{min}$ [km/s]", fontsize=18)
+    ax.set_ylabel(r"$\tilde{\eta}$  [cm$^{-1}$]", fontsize=18)
+    ax.set_title(_label(analysis) + "  (profile band)", fontsize=12)
+    ax.legend(fontsize=12)
+    ax.grid(True, which="both", ls="--", alpha=0.4)
+
+    if save:
+        out_dir = out_dir or run_dir(analysis)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = out_dir / "flux_profile_band.pdf"
+        plt.savefig(path, bbox_inches="tight")
+        print(f"saved {path}")
+    return ax
+
+
+def plot_flux_band(analysis, band: dict, n_toys: int,
+                   save: bool = True, ax=None, out_dir: Path | None = None):
+    """Input eta + toy-ensemble percentile bands of the recovered flux.
+
+    ``band`` is the output of :func:`quantum_sensor.statistics.flux_band`:
+    the per-``v_min`` median and symmetric percentile envelopes of the
+    staircases recovered from Poisson pseudo-experiments. Same axes, units and
+    reference-eta conventions as :func:`plot_flux_comparison`.
+    """
+    rm = analysis.rm
+    own_fig = ax is None
+    if own_fig:
+        _, ax = plt.subplots(figsize=(8, 6))
+
+    vg = np.logspace(0.0, np.log10(800.0), 600)
+    mchi = DM_MASS[analysis.config.mass]
+    p = analysis.config.disk_fraction
+    halo_g = eta_model("Halo", mchi, vg) * ETA_TO_CM_INV
+    if p is not None:
+        fit_g = (1.0 - p) * halo_g + p * eta_model("Disk", mchi, vg) * ETA_TO_CM_INV
+        eta_label = r"input $\eta$ (mix " + f"{round(p * 100)}% disk)"
+    elif analysis.config.eta == "Bound":
+        fit_g = halo_g + eta_model("Bound", mchi, vg) * ETA_TO_CM_INV
+        eta_label = r"input $\eta$ (Bound + 100% SHM)"
+    else:
+        fit_g = eta_model(analysis.config.eta, mchi, vg) * ETA_TO_CM_INV
+        eta_label = r"input $\eta(v_{min})$"
+
+    # Bands first (back to front: widest level drawn first), then the median
+    # staircase, then the reference curve on top.
+    levels = sorted((k for k in band if k != "median"), reverse=True)
+    shades = {lv: 0.18 + 0.17 * i for i, lv in enumerate(levels)}
+    for lv in levels:
+        lo, hi = band[lv]
+        ax.fill_between(rm.vmin_mid, lo * ETA_TO_CM_INV, hi * ETA_TO_CM_INV,
+                        step="mid", color="C0", alpha=shades[lv], lw=0,
+                        label=f"{lv:.0f}% of {n_toys} toys")
+    ax.hlines(band["median"] * ETA_TO_CM_INV, rm.vmin_low, rm.vmin_high,
+              color="C0", lw=1.5, label="toy median")
+    ax.plot(vg, fit_g, color="red", lw=2, label=eta_label)
+
+    ax.set_xscale("log")
+    if analysis.config.eta == "Bound" and p is None:
+        ax.set_yscale("log")
+    ax.set_xlim(1.0, 800.0)
+    ax.set_xlabel(r"$v_{min}$ [km/s]", fontsize=18)
+    ax.set_ylabel(r"$\tilde{\eta}$  [cm$^{-1}$]", fontsize=18)
+    ax.set_title(_label(analysis) + f"  ({n_toys} Poisson toys)", fontsize=12)
+    ax.legend(fontsize=12)
+    ax.grid(True, which="both", ls="--", alpha=0.4)
+
+    if save:
+        out_dir = out_dir or run_dir(analysis)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = out_dir / "flux_band.pdf"
+        plt.savefig(path, bbox_inches="tight")
+        print(f"saved {path}")
+    return ax
