@@ -440,6 +440,55 @@ def load_pointwise_band(run_directory) -> list[dict]:
     return sorted(bands, key=lambda b: b["index"])
 
 
+def band_table(bands: list[dict]):
+    """Readable pandas table of ``pointwise_band`` results: physical units
+    (cm^-1, via the same conversion the plots use) plus relative 68% errors."""
+    import pandas as pd
+    from .constants import CM
+
+    levels = bands[0]["levels"]
+    rows = []
+    for b in bands:
+        f = b["best_fit"]
+        row = {"index": b["index"], "vmin [km/s]": round(b["vmin_mid"], 1),
+               "best fit [cm^-1]": f * CM}
+        for lv in levels:
+            lo, hi = b["band"][lv]
+            label = _SIGMA_LABEL.get(round(lv, 3), f"{lv:g}")
+            row[f"lo {label} [cm^-1]"] = lo * CM
+            row[f"hi {label} [cm^-1]"] = hi * CM
+        lo, hi = b["band"][levels[0]]
+        row["-68%"] = f"-{(1 - lo / f) * 100:.0f}%" if f > 0 else "-"
+        row["+68%"] = (f"+{(hi / f - 1) * 100:.0f}%"
+                       if f > 0 and np.isfinite(hi) else "-")
+        row["evals"] = b["n_evaluations"]
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+def save_band_products(analysis, bands: list[dict]):
+    """Save all band products into the run folder: the summary CSV
+    (``flux_profile_band.csv``, natural units), the per-point JSONs under
+    ``band/`` and the figure (``flux_profile_band.pdf``)."""
+    from .plotting import plot_flux_with_pointwise_bands, run_dir
+
+    out = run_dir(analysis)
+    out.mkdir(parents=True, exist_ok=True)
+    levels = bands[0]["levels"]
+    table = np.array([[b["vmin_mid"], b["best_fit"]]
+                      + [x for lv in levels for x in b["band"][lv]]
+                      for b in bands])
+    header = "vmin_mid,best_fit," + ",".join(
+        f"lo{round(lv * 100)},hi{round(lv * 100)}" for lv in levels)
+    np.savetxt(out / "flux_profile_band.csv", table, delimiter=",",
+               comments="", header=header)
+    band_dir = save_pointwise_band(analysis, bands)
+    plot_flux_with_pointwise_bands(analysis, bands)
+    print(f"saved: flux_profile_band.csv / {len(bands)} json under "
+          f"{band_dir.name}/ / pdf  ({out})")
+    return out
+
+
 def pointwise_band(analysis, indices=None, n_indices: int = 12,
                    verbose: bool = True, **kwargs) -> list[dict]:
     """Profile band at a set of v_min indices (default: log-spaced over the

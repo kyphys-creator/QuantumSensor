@@ -5,7 +5,8 @@ from .config import RunConfig, BackgroundModel, BACKGROUND_SCENARIOS
 from .statistics import (fit_toys, flux_band, asimov_significance,
                          mc_significance, ToyEnsemble,
                          find_confidence_band, pointwise_band,
-                         save_pointwise_band, load_pointwise_band)
+                         save_pointwise_band, load_pointwise_band,
+                         band_table, save_band_products)
 
 __all__ = [
     "DarkMatterQuantumAnalysis",
@@ -21,4 +22,6 @@ __all__ = [
     "pointwise_band",
     "save_pointwise_band",
     "load_pointwise_band",
+    "band_table",
+    "save_band_products",
 ]

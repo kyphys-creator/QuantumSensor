@@ -197,7 +197,10 @@ def plot_flux_with_pointwise_bands(analysis, bands: list, save: bool = True,
 
     ax.set_xscale("log")
     ax.set_xlim(1.0, 800.0)
-    if ymax_scale is not None:
+    if analysis.config.eta == "Bound" and p is None:
+        # Bound eta falls many decades over a few km/s: log y, no zero-floor cap.
+        ax.set_yscale("log")
+    elif ymax_scale is not None:
         peak = max(float(np.max(analysis.flux)), float(np.max(fit_g)) / ETA_TO_CM_INV)
         ax.set_ylim(0.0, ymax_scale * peak * ETA_TO_CM_INV)
     ax.set_xlabel(r"$v_{min}$ [km/s]", fontsize=18)

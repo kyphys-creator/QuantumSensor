@@ -27,8 +27,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 from quantum_sensor import DarkMatterQuantumAnalysis, RunConfig
-from quantum_sensor.statistics import pointwise_band, save_pointwise_band
-from quantum_sensor.plotting import plot_flux_with_pointwise_bands, run_dir
+from quantum_sensor.statistics import pointwise_band, save_band_products
 
 LEVELS = (0.68, 0.954)
 N_INDICES = 12
@@ -45,19 +44,7 @@ def run_one(material, q, mass, nbins):
     print(f"{material} q{q} M{mass} R{nbins}: "
           f"{len(bands)} indices in {time.time() - t0:.0f}s")
 
-    out = run_dir(a)
-    out.mkdir(parents=True, exist_ok=True)
-
-    table = np.array([[b["vmin_mid"], b["best_fit"],
-                       b["band"][LEVELS[0]][0], b["band"][LEVELS[0]][1],
-                       b["band"][LEVELS[1]][0], b["band"][LEVELS[1]][1]]
-                      for b in bands])
-    np.savetxt(out / "flux_profile_band.csv", table, delimiter=",", comments="",
-               header="vmin_mid,best_fit,lo68,hi68,lo95,hi95")
-
-    save_pointwise_band(a, bands)
-
-    plot_flux_with_pointwise_bands(a, bands)
+    save_band_products(a, bands)
     plt.close("all")
 
 
