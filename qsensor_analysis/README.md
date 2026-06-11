@@ -39,6 +39,7 @@ A single analysis is fully determined by one `RunConfig`
 | `mass` | DM mass tag | `"1"` = 10 MeV / `"2"` = 100 MeV / `"3"` = 1 GeV |
 | `nbins` | number of observed energy bins | Al (TES): `5` / `10`. TiN (MKID): `5` / `9` (threshold 0.2 eV → fine binning is R9) |
 | `eta` | halo velocity-distribution model | `"Halo"` (SHM) / `"Disk"` / `"Bound"` |
+| `disk_fraction` | dark-disk mixing fraction `p` for the best-fit `(1−p)·Halo + p·Disk` | optional float (e.g. `0.05`, `0.25`); `None` = pure `eta` |
 | `background` | background scenario name | `"none"`,`"a"`,`"c"`,`"b"`,`"b2"`,`"flat"` |
 | `run` | substring to uniquely select a matrix folder (when several runs exist for one config) | optional |
 
@@ -72,10 +73,12 @@ There are **four kinds** of input. For each, "entity", "source" and "loading cod
       and saves it to `.wdx`.
     - **10**: reads that `.wdx`, splits `v_min` into N equal intervals over
       `[lo,hi]`, and **integrates exactly** (trapezoid) over each interval →
-      `M[i,j]`, multiplying by `kps` to convert km/s to natural units. Leading
-      all-zero columns (before the lowest energy bin crosses threshold) are
-      trimmed, and `vmin.csv` is trimmed from the top by the same amount so the
-      columns stay aligned.
+      `M[i,j]`, multiplying by `kps` to convert km/s to natural units.
+      **Per-row effective window**: each row is kept from its kinematic
+      threshold up to where its cumulative integral reaches `1−alpha` of the
+      total (the long tail beyond is zeroed); the matrix is then trimmed to the
+      populated column window and `vmin.csv` is trimmed identically. `alpha` is
+      stage 10's 5th CLI arg — currently **TES q0 = 0.3, everything else 0.01**.
   - **Important**: shapes, energy bins and the `v_min` grid are all read from
     these files. **Nothing is hard-coded on the Python side.**
 - **Loading code**: [`data_loader.py`](src/quantum_sensor/data_loader.py),
@@ -105,9 +108,9 @@ There are **four kinds** of input. For each, "entity", "source" and "loading cod
     `vmin.csv` and evaluates `\[Eta]th[dmMass][v_mid·kps][v0,ve,vesc]` at its
     `v_mid`, writing `eta_<model>.csv` (params from `01_setup.wl`, `σe` from
     `05_parameters.wl`, `\[Eta]th` from `03_functions_response.wl`).
-  - **Scope**: currently **Halo (SHM) only**. The `.wl` pipeline has
-    `\[Eta]th ≡ \[Eta]td` and no `Bound` definition; the Disk/Bound legacy CSVs
-    come from an older pipeline and are not regenerated here.
+  - **Scope**: **Halo / Disk / Bound** (see `12_eta.wl`), written as
+    `eta_<model>.csv` in each matrix folder. The best-fit can also use a
+    `(1−p)·Halo + p·Disk` **mixture** via `RunConfig.disk_fraction`.
 - **Loading code**: [`data_loader.py`](src/quantum_sensor/data_loader.py),
   `load_natural_eta(rm, model)`. If the length does not match `n_vmin` or the
   file is missing, it raises an explicit error prompting the command above.
@@ -116,8 +119,9 @@ There are **four kinds** of input. For each, "entity", "source" and "loading cod
 
 - **Entity**: natural-unit (GeV-based) physical constants (unit conversions,
   `alpha`, DM density `RHO_DM`, Al density, reference cross sections, energy
-  resolution, the **Al exposure `AL_EXP = 8200 ng·month`**, the mass-tag → DM
-  mass map `DM_MASS`, etc.).
+  resolution, the **detector exposures `AL_EXP = 8200 μg·month` (TES) and
+  `TIN_EXP = 1e7 × 0.42 ng·yr` (MKID, design per arXiv:2404.10785)**, the
+  mass-tag → DM mass map `DM_MASS`, etc.).
 - **Source**: [`constants.py`](src/quantum_sensor/constants.py). The **single
   source of truth on the Python side**; every value is copied verbatim from
   Mathematica [`01_setup.wl`](../Mathematica/src/TES/01_setup.wl) /
@@ -149,7 +153,7 @@ the actual work to each module.
 |---|---|---|
 | `self.rm` | load the response matrix and its grids | `data_loader.load_response_matrix` |
 | `self.eta` | read the **natural-unit `eta`** from the matrix folder's `eta_<model>.csv`. Already on the matrix `v_min` grid, so no interpolation/unit conversion | `data_loader.load_natural_eta` |
-| `self.m_phys` | **physical forward operator** `M_phys = AL_EXP × matrix` (apply exposure to reach the expected-count scale; natural units) | `model.response_operator` (exposure via `model.exposure_factor` → `constants.AL_EXP`) |
+| `self.m_phys` | **physical forward operator** `M_phys = exposure(material) × matrix` (apply the detector exposure — `AL_EXP` for Al, `TIN_EXP` for TiN — to reach the expected-count scale; natural units) | `model.response_operator` (exposure via `model.EXPOSURE[material]`) |
 | `self.signal` | signal counts `signal = M_phys @ eta` (the **true expected event number** per energy bin; unit-consistent since both `M_phys` and `eta` are natural units) | `analysis.py` (`m_phys @ eta`) |
 | `self.background` | integrate the background scenario over each bin using `bins.csv` edges. Integrate `A·exp(-E/B)+C` over the interval and multiply by `AMP_SCALE = (eV/keV)·365` (same "/keV/day" origin as the old code). `none`/`a` are zero | `backgrounds.background_counts` (→ `_integrate`) |
 | `self.observed` | **observed counts** `observed = signal + background` (the target the inverse must reproduce) | `analysis.py` |
@@ -174,7 +178,7 @@ the actual work to each module.
      (`c≈1e-31…1e-25`) — completely replacing the old `cons1`/`cons2` and the
      per-mass table; no hand tuning.
 
-2. **Solving the inverse (two stages: column-normalised QP → tail-weighted
+2. **Solving the inverse (two stages: column-normalised QP → minimal-total-flux
    vertex selection)** — `optimizer.run_optimize_qp` if `solver ∈
    {"osqp","qp","clarabel"}` or `fix` is given, otherwise `trust-constr`
    (`optimizer.run_optimize`).
@@ -187,15 +191,21 @@ the actual work to each module.
        1. **Solve the QP in the column-scaled variable `x = D⊙z` with OSQP** →
           a smooth interior solution (ramp) and the fitted values `μ = M·x`.
        2. `vertex_select=True` (default) → **pick a vertex (staircase flux)
-          reproducing the same `μ` with a HiGHS simplex** (`_vertex_select`).
-          The objective is **minimising `Σ R^(i/(n-1))·xᵢ` (geometric
-          tail-weighting, `R=1000`)**, driving high `v_min` (high energy) to 0
-          (consistent with `eta→0`). χ² is unchanged because `μ` is fixed.
+          reproducing the same `μ` with a HiGHS simplex** (`_vertex_select`),
+          minimising the **total flux `Σ xᵢ`** (the minimal monotone flux that
+          still reproduces `μ`). χ² is unchanged because `μ` is fixed.
+   - **Exact-fit fast path** (stage 0): the self-consistent forward model
+     `y = M·eta` is always reproducible by a monotone non-negative flux, so the
+     vertex LP is solved **directly at `μ = y`**, bypassing the QP — this is what
+     makes the dense, steeply-falling `Bound` η converge (where OSQP reports
+     "dual infeasible"). The `solver="scipy"` (trust-constr) path also runs the
+     same vertex selection afterwards, so **both backends return the same
+     staircase** rather than scipy's smooth ramp.
 3. **Recover physical units** — `self.flux = unscale(res.x)`. `self.result`
    holds the solve metadata (`fun`=true χ², `backend`, `nit`, `staircase`, …).
 
 > **The method follows kyphys-creator/neutrinoAnalysis**: ① a column-normalised
-> QP fixes `μ=M·x` → ② a tail-weighted simplex picks a staircase vertex. Since
+> QP fixes `μ=M·x` → ② a minimal-total-flux simplex picks a staircase vertex. Since
 > the χ² minimum is under-determined (χ²=0 is a face), the key point is to pick
 > the **physically meaningful vertex (piecewise-constant flux)** rather than
 > OSQP's interior solution (a smooth ramp).
@@ -205,12 +215,11 @@ the actual work to each module.
 > result in the practical range (no per-mass tuning). **Because the data is not
 > scaled, the true χ² is preserved**, ready for later Δχ² statistical-error work.
 >
-> **Tail behaviour**: the tail-weighted objective drives high `v_min` to 0. For
-> 10 MeV/M1, where the response is degenerate at high `v_min`, the band where
-> `eta` is still nonzero (~120–565 km/s) is also cut to 0 and the low-v side is
-> over-estimated (rms/eta₀≈0.28). M2/M3 follow `eta` down to its shoulder and
-> drop to 0 in the tail. To keep the tail, swap in a different vertex objective
-> (e.g. minimise the top step `x₀`).
+> **Effective range**: the recovered flux only lives on the per-row window kept
+> by stage 10 (the `1−alpha` cumulative cut), so the staircase covers the
+> response-constrained band rather than the full 1–800 km/s axis. Within that
+> window the self-consistent fit reproduces `eta` at χ²≈0; the figures draw the
+> reference `eta` over the full axis and overlay the windowed best-fit on top.
 
 ---
 
@@ -232,6 +241,27 @@ Besides these, `a.result` (solve diagnostics), `a.signal` / `a.observed`
 (forward counts) and `a.eta` (aligned input) are also available as object
 attributes.
 
+#### 3.5 Publication figures — `final_figures.ipynb`
+
+A separate notebook builds the paper "final figures" **from the stored
+results** (it re-reads `flux.csv`; `signal` and the kernel curves are cheap
+forward-model quantities). All use the Physical Review house style
+(`physrev.mplstyle`, serif/Computer-Modern) with **colour-blind- and
+projector-safe** palettes, and normalize each linear panel by the peak order of
+magnitude (shown in the axis label as `[10ⁿ …]`).
+
+| figure | function | shows | output (under `results/`) |
+|---|---|---|---|
+| η recovery | `final_figure` | TES (red, lw 5) vs MKID (blue, lw 2) best-fit staircase vs input η; each detector's v_min window as a `\|--\|` bar | `final/<scenario>/<heavy\|light>/<binning>/M<mass>.pdf` |
+| per-bin signal | `signal_figure` | expected counts ⟨N_event⟩ per E′ bin; detector = colour, DM mass = line style, Poisson error bars | `final/signal/<scenario>/<heavy\|light>/<binning>.pdf` |
+| response function | `response_figure` | all bins' `R_bin(v_min)` over the full domain; cividis (truncated) + cycled line styles | `final/response/<detector>/<heavy\|light>/R<nbins>/M<mass>.pdf` |
+| differential kernel | `dcurlyR_figure` | `dℛ/dE′(v_min)`; DM mass = colour (Wong), E′ = line style | `final/dcurlyR/<detector>/<heavy\|light>.pdf` |
+
+The response and kernel curves need the **full v_min domain** (the windowed
+matrix CSVs cannot provide it), so they are exported from Mathematica by
+`09b_response_function_export.wl` → `output/<DET>/response_functions_csv/` and
+`07b_dcurlyRdEprime_export.wl` → `output/<DET>/dcurlyRdEprime_csv/`.
+
 ---
 
 ### 4. End-to-end data flow
@@ -247,7 +277,7 @@ attributes.
         ▼                        ▼                    ▼                 ▼
    self.rm (ResponseMatrix)   self.eta (natural)                        │
         │                        │                                      │
-        │ response_operator: m_phys = AL_EXP × matrix                   │
+        │ response_operator: m_phys = exposure(material) × matrix       │
         ▼                        │                                      │
    self.signal = m_phys @ eta ──►(+)◄──── background_counts(bins) = self.background
                                                │
@@ -259,7 +289,7 @@ attributes.
                                                │
                                                ▼
                         run_optimize_qp: true Neyman χ² min (monotone, non-neg)
-                          ① column-normalised QP(OSQP) → μ=M·x  ② tail-weighted simplex vertex → staircase
+                          ① column-normalised QP(OSQP) → μ=M·x  ② minimal-total-flux simplex vertex → staircase
                                                │ unscale
                                                ▼
                                   self.flux  ──►  save_flux (CSV) / plot (PDF)
@@ -273,7 +303,7 @@ attributes.
 |---|---|
 | [`config.py`](src/quantum_sensor/config.py) | `RunConfig`, `BackgroundModel`, `BACKGROUND_SCENARIOS` (the single home of run params and background numbers) |
 | [`constants.py`](src/quantum_sensor/constants.py) | physical constants (single source of truth, copied from Mathematica 01/05) |
-| [`data_loader.py`](src/quantum_sensor/data_loader.py) | load the response matrix + natural-unit eta (`eta_<model>.csv`), `ResponseMatrix`. Also keeps legacy eta/ratebin |
+| [`data_loader.py`](src/quantum_sensor/data_loader.py) | load the response matrix + natural-unit eta (`eta_<model>.csv`), `ResponseMatrix`; `matrix_root`/`DETECTOR_OF` map material → detector tree |
 | [`model.py`](src/quantum_sensor/model.py) | forward operator `m_phys` (exposure × matrix) and the conditioning reparametrisation |
 | [`backgrounds.py`](src/quantum_sensor/backgrounds.py) | background counts on the matrix energy bins |
 | [`optimizer.py`](src/quantum_sensor/optimizer.py) | monotone non-negative χ²/QP solver (OSQP / CLARABEL / HiGHS vertex / trust-constr) |
@@ -299,8 +329,10 @@ attributes.
   the data is not scaled, the true Neyman χ² is preserved**, ready for later
   Δχ² statistical-error work.
 - **The solve is two-stage** (`optimizer._OSQPBackend`): a column-normalised QP
-  fixes `μ=M·x` → a tail-weighted simplex picks a staircase vertex. χ² is
-  unchanged by vertex selection because `μ` is fixed.
+  fixes `μ=M·x` → a **minimal-total-flux** simplex picks a staircase vertex (or,
+  on the self-consistent forward model, an exact-fit vertex straight at `μ=y`).
+  χ² is unchanged by vertex selection because `μ` is fixed. `solver="scipy"`
+  runs the same vertex step, so it too returns a staircase.
 - **Units are consistently natural units.** `M_phys`, `AL_EXP` and `eta` are all
   natural units, so `signal = M_phys @ eta` is a true expected event count and
   comparable with the background counts. `eta` is generated by Mathematica
@@ -379,6 +411,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 | `mass` | DM 質量タグ | `"1"` = 10 MeV / `"2"` = 100 MeV / `"3"` = 1 GeV |
 | `nbins` | 観測エネルギービン数 | Al（TES）: `5` / `10`。TiN（MKID）: `5` / `9`（閾値 0.2 eV のため細分は R9） |
 | `eta` | ハロー速度分布モデル | `"Halo"`（SHM）/ `"Disk"` / `"Bound"` |
+| `disk_fraction` | best-fit 用ダークディスク混合率 `p`（`(1−p)·Halo + p·Disk`） | 省略可の float（例 `0.05`, `0.25`）。`None` は純 `eta` |
 | `background` | 背景シナリオ名 | `"none"`,`"a"`,`"c"`,`"b"`,`"b2"`,`"flat"` |
 | `run` | 行列フォルダを一意に選ぶための部分文字列（同一設定で複数 run があるとき） | 省略可 |
 
@@ -403,7 +436,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
   ```
   - これは Mathematica の **stage 08 → stage 10** で生成される（[`Mathematica/src/TES/08_response_functions.wl`](../Mathematica/src/TES/08_response_functions.wl), [`10_response_matrix.wl`](../Mathematica/src/TES/10_response_matrix.wl)）。
     - **08**: 各エネルギービン `[E1,E2]` について応答 `CRTES[mass,n][E1,E2](v_min)` を `v_min` の関数（補間関数）として評価し `.wdx` に保存。
-    - **10**: その `.wdx` を読み込み、`v_min` を `[lo,hi]` で N 等分し、各区間で応答を台形則で**厳密積分** → `M[i,j]`。`km/s` を自然単位に直すため `kps` を掛ける。先頭の全ゼロ列（最低エネルギービンが閾値を越える前の列）は削られ、`vmin.csv` も同じ数だけ頭が削られて列と整合する。
+    - **10**: その `.wdx` を読み込み、`v_min` を `[lo,hi]` で N 等分し、各区間で応答を台形則で**厳密積分** → `M[i,j]`。`km/s` を自然単位に直すため `kps` を掛ける。**行ごとの実効ウィンドウ**: 各行はその運動学的閾値から、累積積分が全体の `1−alpha` に達する点までを残し（それ以降の長い裾は 0）、行列を実際に値のある列範囲にトリム、`vmin.csv` も同様にトリムして整合させる。`alpha` は stage 10 の第5引数で、現状 **TES q0 = 0.3、それ以外は 0.01**。
   - **重要**: 形・エネルギービン・`v_min` グリッドはすべてこれらのファイルから読む。**Python 側にハードコードは一切ない**。
 - **読み込むコード**: [`data_loader.py`](src/quantum_sensor/data_loader.py) の `find_matrix_dir()` → `load_response_matrix()`。結果は `ResponseMatrix` データクラス（`matrix`, `vmin_low/high/mid`, `ebin_low/high`, `name`, `path`）。
 
@@ -425,7 +458,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 
 #### 1-C. 物理定数
 
-- **実体**: 自然単位（GeV 基準）の物理定数群（単位換算、`alpha`、DM 密度 `RHO_DM`、Al 密度、参照断面積、エネルギー分解能、そして **Al 露光 `AL_EXP = 8200 ng·month`**、質量タグ→DM 質量 `DM_MASS` など）。
+- **実体**: 自然単位（GeV 基準）の物理定数群（単位換算、`alpha`、DM 密度 `RHO_DM`、Al/TiN 密度、参照断面積、エネルギー分解能、そして **検出器露光 `AL_EXP = 8200 μg·month`（TES）/ `TIN_EXP = 1e7 × 0.42 ng·yr`（MKID, arXiv:2404.10785 準拠）**、質量タグ→DM 質量 `DM_MASS` など）。
 - **出所**: [`constants.py`](src/quantum_sensor/constants.py)。**Python 側の唯一の真実の源**で、各値は Mathematica の [`01_setup.wl`](../Mathematica/src/TES/01_setup.wl) / [`05_parameters.wl`](../Mathematica/src/TES/05_parameters.wl) から一字一句写してあり、コメントに出所が書いてある。手調整値（マジックナンバー）は無い。
 
 #### 1-D. 背景シナリオのパラメータ
@@ -446,7 +479,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 |---|---|---|
 | `self.rm` | 応答行列とグリッドを読み込む | `data_loader.load_response_matrix` |
 | `self.eta` | **自然単位の `eta`** を行列フォルダの `eta_<model>.csv` から読む。行列の `v_min` グリッド上で生成済みなので補間・単位換算は無し | `data_loader.load_natural_eta` |
-| `self.m_phys` | **物理順方向演算子** `M_phys = AL_EXP × matrix`（露光を掛けて期待カウントスケールにする。自然単位） | `model.response_operator`（露光は `model.exposure_factor` 経由で `constants.AL_EXP`） |
+| `self.m_phys` | **物理順方向演算子** `M_phys = exposure(material) × matrix`（検出器露光 — Al は `AL_EXP`、TiN は `TIN_EXP` — を掛けて期待カウントスケールにする。自然単位） | `model.response_operator`（露光は `model.EXPOSURE[material]`） |
 | `self.signal` | 信号カウント `signal = M_phys @ eta`（エネルギービンごとの**真の期待イベント数**。`M_phys` も `eta` も自然単位なので単位整合） | `analysis.py`（`m_phys @ eta`） |
 | `self.background` | 背景シナリオを `bins.csv` のエネルギー端で各ビンに積分。`A·exp(-E/B)+C` を区間積分し、単位係数 `AMP_SCALE = (eV/keV)·365` を掛ける（旧コードと同じ「/keV/day」由来）。`none`/`a` はゼロ | `backgrounds.background_counts`（→ `_integrate`） |
 | `self.observed` | **観測カウント** `observed = signal + background`（逆問題が再現すべきターゲット） | `analysis.py` |
@@ -460,20 +493,21 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
    - **単一の共通定数 `c`（`config.CONDITION_C`）**: 未知数を `x = c·u` と置き換える全体スケール。`data_cond = data`（そのまま）、`unscale(u) = c·u`。
    - **列正規化（本命のコンディショナ）**: ソルバ内で各列を単位ノルムに正規化する（`optimizer._column_scale`、`D_j = 1/‖M列j‖`）。**`c` は列ノルムで割り消される**ので、復元フラックスは実用域（`c≈1e-31〜1e-25`）で `c` に依存しない（旧 `cons1`/`cons2`・質量別表を完全に置換、手調整不要）。
 
-2. **逆問題の求解（2段階: 列正規化 QP → 裾重み付き頂点選択）** — `solver ∈ {"osqp","qp","clarabel"}` または `fix` 指定なら `optimizer.run_optimize_qp`、それ以外は `trust-constr`（`optimizer.run_optimize`）。
+2. **逆問題の求解（2段階: 列正規化 QP → 総流束最小頂点選択）** — `solver ∈ {"osqp","qp","clarabel"}` または `fix` 指定なら `optimizer.run_optimize_qp`、それ以外は `trust-constr`（`optimizer.run_optimize`）。
    - χ²（Neyman）`Σ (data − Bkg − M·x)² / data`（`data>0` のビンのみ）を **QP** として組む（`optimizer._build_qp`）。制約: **単調非増加** `x[i] ≥ x[i+1]`＋**非負** `x ≥ 0`。
    - **ルーティング**（`run_optimize_qp`）:
      - `fix` 指定あり → CLARABEL（固定パラメータ解、`_CLARABELBackend`）
      - 自由解（既定）→ `_OSQPBackend`:
        1. **QP を列正規化変数 `x = D⊙z` で OSQP 求解** → 滑らかな内部解（ランプ）と当てはめ値 `μ = M·x` を得る。
-       2. `vertex_select=True`（既定）→ **同じ `μ` を再現する頂点（階段状フラックス）を HiGHS シンプレックスで選ぶ**（`_vertex_select`）。目的は **`Σ R^(i/(n-1))·xᵢ` の最小化（幾何的な裾重み、`R=1000`）**で、高 `v_min`（高エネルギー側）を 0 に駆動（`eta→0` と整合）。χ² は `μ` 不変なので変わらない。
+       2. `vertex_select=True`（既定）→ **同じ `μ` を再現する頂点（階段状フラックス）を HiGHS シンプレックスで選ぶ**（`_vertex_select`）。目的は **総流束 `Σ xᵢ` の最小化**（`μ` を再現する最小の単調フラックス）。χ² は `μ` 不変なので変わらない。
+   - **厳密フィットの高速路**（stage 0）: 自己無撞着な順方向モデル `y = M·eta` は常に単調非負フラックスで再現可能なので、頂点 LP を **`μ = y` で直接解き** QP を回避する。これにより密で急峻な `Bound` η も収束する（OSQP は "dual infeasible" を出す）。`solver="scipy"`（trust-constr）経路もこの後に同じ頂点選択を行うため、**両バックエンドとも同じ階段解**を返す（scipy の滑らかなランプではない）。
 3. **物理単位へ復元** — `self.flux = unscale(res.x)`。`self.result` に求解メタ（`fun`=真の χ², `backend`, `nit`, `staircase` 等）を保持。
 
-> **方式は kyphys-creator/neutrinoAnalysis に準拠**: ①列正規化 QP で `μ=M·x` を確定 → ②裾重み付きシンプレックスで階段頂点を選ぶ。χ² 最小は劣決定（χ²=0 が面）なので、OSQP の内部解（滑らかなランプ）ではなく**物理的に意味のある頂点（区分定数フラックス）**を選ぶのが要点。
+> **方式は kyphys-creator/neutrinoAnalysis に準拠**: ①列正規化 QP で `μ=M·x` を確定 → ②総流束最小シンプレックスで階段頂点を選ぶ。χ² 最小は劣決定（χ²=0 が面）なので、OSQP の内部解（滑らかなランプ）ではなく**物理的に意味のある頂点（区分定数フラックス）**を選ぶのが要点。
 >
 > **コンディショニングは列正規化が本命**で、単一定数 `CONDITION_C` は列ノルムで割り消されるため実用域で結果に効かない（質量別の手調整は不要）。**データを掛けないので真の χ² が保存**され、将来の Δχ² 統計誤差解析にそのまま使える。
 >
-> **裾の挙動**: 裾重み目的は高 `v_min` を 0 に落とす。応答が高 `v_min` で縮退する 10 MeV/M1 では `eta` が残る帯（~120–565 km/s）も 0 に切られ低速側が過大評価される（rms/eta₀≈0.28）。M2/M3 は `eta` の肩まで追従して裾で 0 に落ちる。裾を残したい場合は別の頂点目的（例: 最上段 `x₀` 最小）に差し替え可能。
+> **実効レンジ**: 復元フラックスは stage 10 が残した行ごとのウィンドウ（`1−alpha` 累積カット）上にのみ存在するので、階段は 1–800 km/s 全域ではなく応答が拘束する帯をカバーする。その窓内では自己無撞着フィットが χ²≈0 で `eta` を再現する。図は参照 `eta` を全域で描き、その上に窓内の best-fit を重ねる。
 
 ---
 
@@ -492,6 +526,19 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 
 これら以外に、`a.result`（求解の診断）、`a.signal` / `a.observed`（順方向カウント）、`a.eta`（整列済み入力）もオブジェクト属性として参照できる。
 
+#### 3.5 論文用 figure — `final_figures.ipynb`
+
+別のノートブックが**保存済みの結果から**論文用の "final figures" を作る（`flux.csv` を再読込。`signal` とカーネル曲線は軽い順方向モデル量）。すべて Physical Review スタイル（`physrev.mplstyle`、serif/Computer-Modern）と**色弱（CVD）・プロジェクター対応**パレットを用い、各 linear パネルはピークのオーダーで規格化（軸ラベルに `[10ⁿ …]` を表示）。
+
+| figure | 関数 | 内容 | 出力（`results/` 下） |
+|---|---|---|---|
+| η 復元 | `final_figure` | TES（赤, lw5）vs MKID（青, lw2）の best-fit 階段 vs 入力 η。各検出器の v_min 窓を `\|--\|` バーで表示 | `final/<scenario>/<heavy\|light>/<binning>/M<mass>.pdf` |
+| bin ごと signal | `signal_figure` | E′ ビンごとの期待カウント ⟨N_event⟩。検出器=色、DM 質量=線種、Poisson エラーバー | `final/signal/<scenario>/<heavy\|light>/<binning>.pdf` |
+| 応答関数 | `response_figure` | 全ビンの `R_bin(v_min)` を全定義域で。cividis（切詰）＋線種循環 | `final/response/<detector>/<heavy\|light>/R<nbins>/M<mass>.pdf` |
+| 微分カーネル | `dcurlyR_figure` | `dℛ/dE′(v_min)`。DM 質量=色（Wong）、E′=線種 | `final/dcurlyR/<detector>/<heavy\|light>.pdf` |
+
+応答関数と微分カーネルは**全 v_min 定義域**が必要で（窓掛け行列 CSV では得られない）、Mathematica の `09b_response_function_export.wl` → `output/<DET>/response_functions_csv/`、`07b_dcurlyRdEprime_export.wl` → `output/<DET>/dcurlyRdEprime_csv/` で出力する。
+
 ---
 
 ### 4. データフロー全体図
@@ -507,7 +554,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
         ▼                        ▼                    ▼                 ▼
    self.rm (ResponseMatrix)   self.eta (自然単位)                        │
         │                        │                                      │
-        │ response_operator: m_phys = AL_EXP × matrix                   │
+        │ response_operator: m_phys = exposure(material) × matrix       │
         ▼                        │                                      │
    self.signal = m_phys @ eta ──►(+)◄──── background_counts(bins) = self.background
                                                │
@@ -519,7 +566,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
                                                │
                                                ▼
                         run_optimize_qp: 真の Neyman χ² 最小 (単調非増加・非負)
-                          ①列正規化 QP(OSQP) → μ=M·x  ②裾重み付きシンプレックス頂点 → 階段解
+                          ①列正規化 QP(OSQP) → μ=M·x  ②総流束最小シンプレックス頂点 → 階段解
                                                │ unscale
                                                ▼
                                   self.flux  ──►  save_flux (CSV) / plot (PDF)
@@ -533,7 +580,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 |---|---|
 | [`config.py`](src/quantum_sensor/config.py) | `RunConfig`, `BackgroundModel`, `BACKGROUND_SCENARIOS`（実行パラメータと背景数値の唯一の置き場） |
 | [`constants.py`](src/quantum_sensor/constants.py) | 物理定数（Mathematica 01/05 から写した単一の真実の源） |
-| [`data_loader.py`](src/quantum_sensor/data_loader.py) | 応答行列＋自然単位 eta（`eta_<model>.csv`）の読み込み、`ResponseMatrix`。レガシー eta/ratebin も保持 |
+| [`data_loader.py`](src/quantum_sensor/data_loader.py) | 応答行列＋自然単位 eta（`eta_<model>.csv`）の読み込み、`ResponseMatrix`。`matrix_root`/`DETECTOR_OF` で素材→検出器ツリーを対応付け |
 | [`model.py`](src/quantum_sensor/model.py) | 順方向演算子 `m_phys`（露光 × 行列）とコンディショニングの再パラメータ化 |
 | [`backgrounds.py`](src/quantum_sensor/backgrounds.py) | 行列のエネルギービン上での背景カウント |
 | [`optimizer.py`](src/quantum_sensor/optimizer.py) | 単調非負 χ²/QP ソルバ（OSQP / CLARABEL / HiGHS 頂点 / trust-constr） |
@@ -548,7 +595,7 @@ Mathematica 側で作った応答行列 `M` と、ハローモデルの速度分
 - 物理定数は [`constants.py`](src/quantum_sensor/constants.py) に一度だけ（Mathematica 由来）。
 - 露光スケール `K`(=`AL_EXP`) は**導出値**。復元フラックスの**形・値は `K` にもコンディショニングにも依存しない**（`unscale` で打ち消される）。
 - **コンディショニングは列正規化（`optimizer._column_scale`、neutrinoAnalysis 方式）が本命**。各列を単位ノルム化するため、単一定数 `config.CONDITION_C` は割り消され実用域で結果に効かない（旧 `cons1`/`cons2`・質量別表を統合・実質不要化）。**データを掛けないので真の Neyman χ² が保存**され、後の Δχ² 統計誤差解析がそのまま成立する。
-- **求解は2段階**（`optimizer._OSQPBackend`）: 列正規化 QP で `μ=M·x` を確定 → 裾重み付きシンプレックスで階段頂点を選択。χ² は `μ` 不変なので頂点選択で変わらない。
+- **求解は2段階**（`optimizer._OSQPBackend`）: 列正規化 QP で `μ=M·x` を確定 → **総流束最小**シンプレックスで階段頂点を選択（自己無撞着な順方向モデルでは `μ=y` での厳密フィット頂点を直接）。χ² は `μ` 不変なので頂点選択で変わらない。`solver="scipy"` も同じ頂点選択を行うので階段解を返す。
 - **単位系は一貫して自然単位系**。`M_phys`・`AL_EXP`・`eta` がすべて自然単位なので `signal = M_phys @ eta` は真の期待イベント数になり、背景カウントとも整合的に比較できる。`eta` は Mathematica（[`12_eta.wl`](../Mathematica/src/TES/12_eta.wl)）で行列と同じグリッド・同じ単位で生成し、Python は補間も単位換算もせずそのまま使う（単一の真実の源）。
 - **物理単位への変換は描画時のみ**。内部・保存 CSV は自然単位を保ち、`plot()` で図を描くときだけ `eta`/`flux`（次元 1/length）を `× CM`（`plotting.ETA_TO_CM_INV`）で `cm⁻¹` に直して表示する。
 
