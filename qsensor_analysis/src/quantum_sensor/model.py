@@ -53,11 +53,11 @@ def condition(m_phys: np.ndarray, data: np.ndarray,
 
     Formerly this also applied an overall ``x = c * u`` reparametrisation (the
     ``config.CONDITION_C`` constant) to bring the ~1e-31 unknown up to O(1) for
-    the solver. With ``constants.GeV`` raised so the natural-unit eta is already
-    O(1e2), that reparametrisation is unnecessary and has been removed; column
-    scaling inside the solver (:func:`optimizer._column_scale`) is the remaining,
-    scale-adaptive conditioner. The matrix and data pass through untouched, so
-    the minimised objective is the true Neyman chi^2.
+    the solver, and the solver additionally column-scaled the design matrix.
+    With ``constants.GeV`` raised so the natural-unit eta is already O(1e2),
+    both conditioning band-aids are unnecessary and have been removed; the
+    solver now works on the matrix and data directly. The matrix and data pass
+    through untouched, so the minimised objective is the true Neyman chi^2.
 
     Returns ``(m_phys, data_cond, bkg_cond)``.
     """

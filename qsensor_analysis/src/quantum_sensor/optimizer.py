@@ -74,9 +74,8 @@ def run_optimize(M_matrix, data, Bkg_vector, n, eps=0.0, x0=None, display=True,
     # reproducing the same fitted values mu (χ² unchanged), matching OSQP.
     qp = _build_qp(M_matrix, data, Bkg_vector, n, eps)
     if vertex_select and qp['n'] > qp['m_active']:
-        D = _column_scale(qp['M_active'])
         mu = qp['M_active'] @ out.x
-        x_v = _vertex_select(qp, D, mu)
+        x_v = _vertex_select(qp, mu)
         if x_v is not None:
             out.x = x_v
             out.staircase = True
@@ -121,21 +120,7 @@ class _Result:
     __slots__ = ('x', 'fun', 'success', 'message', 'nit', 'solve_time', 'backend', 'staircase')
 
 
-def _column_scale(M: np.ndarray) -> np.ndarray:
-    """Per-column reciprocal norm ``D_j = 1/‖M[:,j]‖`` (unit-norm columns).
-
-    Deterministic conditioning (the key trick in kyphys-creator/neutrinoAnalysis):
-    the design-matrix columns otherwise span many orders of magnitude, and
-    OSQP/CLARABEL terminate early at a wrong point while reporting success.
-    Reparametrising ``x = D ⊙ y`` makes every column O(1). ``D`` is
-    data-independent, so it can be reused across pseudo-data (Monte Carlo).
-    """
-    cn = np.sqrt((M * M).sum(axis=0))
-    cn[cn == 0] = 1.0
-    return 1.0 / cn
-
-
-def _vertex_select(qp, D: np.ndarray, mu: np.ndarray):
+def _vertex_select(qp, mu: np.ndarray):
     """HiGHS-simplex vertex on the QP's optimal face (neutrinoAnalysis method).
 
     The χ² minimiser is a whole face of the monotone polytope whenever
@@ -153,55 +138,41 @@ def _vertex_select(qp, D: np.ndarray, mu: np.ndarray):
     sandbox/vertex_weight_test: error never worse than uniform, last-step e.g.
     Al M3 R5 0.77→0.99, M2 R10 0.92→0.99).
 
-    (Earlier weights: the plain total ``Σ x_j`` -- weight ``D/D.max()`` on z --
-    shaved the last step; a geometric ``Σ R^(i/(n-1)) x_i`` over-weighted the
-    tail. The column-norm weight is the natural choice and removes both.)
-
-    Solved in the column-scaled variable ``x = D ⊙ z`` (``M_s = M_active·D`` has
-    unit-norm, ``c``-independent columns), so HiGHS sees a well-conditioned
-    system and the picked vertex does not depend on the conditioning constant.
+    Solved directly in physical ``x`` -- no column-scaling reparametrisation.
+    With the raised-GeV unit base (``constants.GeV``) the columns are O(1), so
+    HiGHS is well-conditioned without it. (This is identical to the earlier
+    column-scaled formulation, where ``weight = ones`` on ``z = x/D`` was the
+    same Σ ||M[:,j]|| x_j since ``D_j = 1/||M[:,j]||``.)
     """
     n = qp['n']
-    M_s = qp['M_active'] * D[None, :]          # unit-norm columns, c-free
-    mu = np.asarray(mu)
-
-    # Minimise the column-norm-weighted flux Σ ||M[:,j]|| x_j. With x = D⊙z and
-    # D_j = 1/||M[:,j]||, this is exactly Σ z_j -- a uniform objective in the
-    # column-scaled variable. Weighting flux by its column's response strength
-    # stops the vertex from shaving the lowest-response high-v_min step, so eta
-    # is recovered to the window edge (the old plain Σ x_j, weight D/D.max(),
-    # shaved it).
-    weight = np.ones(n)
-    # ordering on physical x = D⊙z:  D_i z_i - D_{i+1} z_{i+1} >= 0
-    A_ord_z = -(qp['A_ord'].toarray() * D[None, :])
-    bounds = [(qp['eps'] / d if d else 0.0, None) for d in D]
-
+    M = qp['M_active']
+    weight = np.sqrt((M * M).sum(axis=0))      # ||M[:,j]||, column-norm weight
+    # ordering x_i - x_{i+1} >= 0  ->  -A_ord x <= 0
     res = linprog(
-        weight, A_ub=A_ord_z, b_ub=np.zeros(n - 1),
-        A_eq=M_s, b_eq=mu,
-        bounds=bounds, method='highs-ds',
+        weight, A_ub=-qp['A_ord'].toarray(), b_ub=np.zeros(n - 1),
+        A_eq=M, b_eq=np.asarray(mu),
+        bounds=[(qp['eps'], None)] * n, method='highs-ds',
         options={'presolve': True},
     )
     if not res.success:
         return None
-    return D * np.asarray(res.x)
+    return np.asarray(res.x)
 
 
 class _OSQPBackend:
-    """Column-scaled OSQP QP + simplex vertex selection (neutrinoAnalysis method).
+    """OSQP QP + simplex vertex selection (neutrinoAnalysis method).
 
     Two stages, mirroring kyphys-creator/neutrinoAnalysis:
 
-      1. solve the Neyman-χ² QP with OSQP in the *column-scaled* variable
-         ``x = D ⊙ y`` (``D`` from :func:`_column_scale`) -> a smooth interior
-         solution and the fitted values ``mu = M_active @ x``;
+      1. solve the Neyman-χ² QP with OSQP directly in physical ``x`` -> a smooth
+         interior solution and the fitted values ``mu = M_active @ x``;
       2. if ``vertex_select`` (default), replace that ramp with a
          piecewise-constant *vertex* reproducing the same ``mu`` via a
-         tail-weighted HiGHS simplex LP (:func:`_vertex_select`). χ² is
+         column-norm-weighted HiGHS simplex LP (:func:`_vertex_select`). χ² is
          unchanged because ``mu`` (hence the residual) is identical.
 
-    Column scaling makes the result independent of the conditioning constant
-    ``c`` and removes the need for any per-mass tuning.
+    No column scaling: with the raised-GeV unit base the design-matrix columns
+    are O(1), so the QP is well-conditioned in physical units directly.
     """
 
     def __init__(self, vertex_select=True, eps_abs=1e-10, eps_rel=1e-10,
@@ -213,43 +184,39 @@ class _OSQPBackend:
         self.polish = polish
         self.verbose = verbose
 
-    def _osqp_interior(self, qp, D):
-        """Solve the χ² QP in the column-scaled variable z (x = D ⊙ z).
+    def _osqp_interior(self, qp):
+        """Solve the χ² QP directly in physical ``x`` (no column scaling).
 
-        Build the QP from the unit-norm matrix ``M_s = M_active·D`` directly so
-        the conditioning constant ``c`` cancels exactly (no ``c²``-scaled
-        intermediate), giving a well-scaled, ``c``-independent problem.
+        With the raised-GeV unit base the design-matrix columns are O(1), so
+        OSQP is well-conditioned without the unit-norm reparametrisation.
         """
         import osqp
-        from scipy.sparse import diags as sp_diags
 
         n = qp['n']
-        M_s = qp['M_active'] * D[None, :]         # unit-norm columns, c-free
+        M = qp['M_active']
         inv_d = qp['inv_d']
         yv = qp['y_active']
 
-        P_z = 2.0 * (M_s.T * inv_d) @ M_s
-        q_z = -2.0 * M_s.T @ (yv * inv_d)
-        p_scale = max(np.abs(P_z).max(), 1e-300)
+        P_x = 2.0 * (M.T * inv_d) @ M
+        q_x = -2.0 * M.T @ (yv * inv_d)
+        p_scale = max(np.abs(P_x).max(), 1e-300)
 
-        # Constraints in z: ordering A_ord·(D⊙z) ≥ 0 and x = D⊙z ≥ eps.
-        Dm = sp_diags(D)
-        A = sp_vstack([qp['A_ord'] @ Dm, Dm], format='csc')
+        # Constraints in x: ordering A_ord·x ≥ 0 and x ≥ eps.
+        A = sp_vstack([qp['A_ord'], qp['I']], format='csc')
         l = np.concatenate([np.zeros(n - 1), np.full(n, qp['eps'])])
         u = np.full(2 * n - 1, np.inf)
 
         solver = osqp.OSQP()
-        solver.setup(csc_matrix(P_z / p_scale), q_z / p_scale, A, l, u,
+        solver.setup(csc_matrix(P_x / p_scale), q_x / p_scale, A, l, u,
                      eps_abs=self.eps_abs, eps_rel=self.eps_rel,
                      max_iter=self.max_iter, polish=self.polish,
                      verbose=self.verbose)
         res = solver.solve()
         if res.x is None or not np.all(np.isfinite(res.x)):
             raise RuntimeError(f"OSQP did not return usable x: {res.info.status}")
-        return D * np.asarray(res.x), res        # x in m_cond space, info
+        return np.asarray(res.x), res
 
     def solve(self, qp):
-        D = _column_scale(qp['M_active'])
         out = _Result()
 
         # Stage 0: exact-fit vertex. The chi^2 = 0 minimiser exists whenever the
@@ -263,7 +230,7 @@ class _OSQPBackend:
         # is the default fast/robust route, not a special case.
         if self.vertex_select and qp['n'] > qp['m_active']:
             y = qp['y_active']
-            x_exact = _vertex_select(qp, D, y)
+            x_exact = _vertex_select(qp, y)
             if x_exact is not None and np.allclose(qp['M_active'] @ x_exact, y,
                                                    rtol=1e-6, atol=0):
                 out.backend = 'highs-vertex-exact'
@@ -280,7 +247,7 @@ class _OSQPBackend:
         # Stage 1 (fallback): QP interior solution (smooth ramp) + fitted mu.
         # Needed when no exact monotone fit exists (e.g. Poisson pseudo-data),
         # so the chi^2 minimum is > 0 and mu must come from the QP.
-        x_int, res = self._osqp_interior(qp, D)
+        x_int, res = self._osqp_interior(qp)
 
         out.backend = 'osqp'
         out.staircase = False
@@ -293,7 +260,7 @@ class _OSQPBackend:
         # Stage 2: vertex selection on mu = M_active @ x_interior.
         if self.vertex_select and qp['n'] > qp['m_active']:
             mu = qp['M_active'] @ x_int
-            x_v = _vertex_select(qp, D, mu)
+            x_v = _vertex_select(qp, mu)
             if x_v is not None:
                 out.x = x_v
                 out.staircase = True
