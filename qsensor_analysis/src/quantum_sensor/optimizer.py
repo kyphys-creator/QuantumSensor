@@ -147,18 +147,17 @@ def _vertex_select(qp, D: np.ndarray, mu: np.ndarray):
     ``mu = M_active @ x``, we pick a vertex of
     ``{x : M_active x = mu, x_i ≥ x_{i+1}, x ≥ eps}`` with a simplex method.
 
-    Objective: minimise the total flux ``Σ x_j`` -- the minimal-norm monotone
-    flux that still reproduces ``mu``. Minimising the total pushes every step
-    down to the smallest value the monotone + count constraints allow, so the
-    under-constrained ends both collapse: the high-v_min *tail* (where the small
-    response barely affects the counts) goes to zero, and the low-v_min *head*
-    is not inflated above what the counts require -- it just meets eta instead of
-    overshooting it.
+    Objective: minimise the column-norm-weighted flux ``Σ ||M[:,j]|| x_j`` --
+    each unit of flux costs its column's response strength, so the vertex does
+    NOT shave the lowest-response high-v_min step (it cannot lower the counts
+    with it). This recovers eta to the window edge, where the plain total
+    ``Σ x_j`` shaves the last step (validated TES/MKID × M1/M2/M3 in
+    sandbox/vertex_weight_test: error never worse than uniform, last-step e.g.
+    Al M3 R5 0.77→0.99, M2 R10 0.92→0.99).
 
-    (Earlier this minimised a geometric tail weight ``Σ R^(i/(n-1)) x_i``. The
-    ``R`` factor under-weighted the head (``R^0 = 1``), letting the first step
-    overshoot eta by a few percent, while adding nothing the plain total ``Σ x``
-    doesn't already give for the tail.)
+    (Earlier weights: the plain total ``Σ x_j`` -- weight ``D/D.max()`` on z --
+    shaved the last step; a geometric ``Σ R^(i/(n-1)) x_i`` over-weighted the
+    tail. The column-norm weight is the natural choice and removes both.)
 
     Solved in the column-scaled variable ``x = D ⊙ z`` (``M_s = M_active·D`` has
     unit-norm, ``c``-independent columns), so HiGHS sees a well-conditioned
@@ -168,10 +167,13 @@ def _vertex_select(qp, D: np.ndarray, mu: np.ndarray):
     M_s = qp['M_active'] * D[None, :]          # unit-norm columns, c-free
     mu = np.asarray(mu)
 
-    # Minimise total physical flux Σ x_j. In the scaled variable z (x = D⊙z)
-    # that is Σ D_j z_j, i.e. weight D on z. Normalise by the max to strip the
-    # overall 1/c factor in D -> a c-independent, well-scaled LP.
-    weight = D / D.max()
+    # Minimise the column-norm-weighted flux Σ ||M[:,j]|| x_j. With x = D⊙z and
+    # D_j = 1/||M[:,j]||, this is exactly Σ z_j -- a uniform objective in the
+    # column-scaled variable. Weighting flux by its column's response strength
+    # stops the vertex from shaving the lowest-response high-v_min step, so eta
+    # is recovered to the window edge (the old plain Σ x_j, weight D/D.max(),
+    # shaved it).
+    weight = np.ones(n)
     # ordering on physical x = D⊙z:  D_i z_i - D_{i+1} z_{i+1} >= 0
     A_ord_z = -(qp['A_ord'].toarray() * D[None, :])
     bounds = [(qp['eps'] / d if d else 0.0, None) for d in D]
