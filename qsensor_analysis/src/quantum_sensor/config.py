@@ -63,12 +63,9 @@ BACKGROUND_SCENARIOS: dict[str, BackgroundModel] = {
 }
 
 
-# --- Solver conditioning constant (single, common) --------------------------
-# Overall reparametrisation of the unknown, ``x = CONDITION_C * u``. It exists
-# only to bring the unknown to O(1) for the solver. With the unit base raised
-# (``constants.GeV = 1e42``) the natural-unit eta is already O(1e2), so the
-# reparametrisation is the identity: CONDITION_C = 1. (At the old GeV=1e9,
-# eta ~ 1e-31 forced CONDITION_C ~ 1e-30; the constant is scale-specific, which
-# is why it moves with GeV.) This will be removed entirely once column scaling
-# is dropped (B4); kept as 1.0 here so the change is a pure no-op.
-CONDITION_C: float = 1.0
+# --- Solver conditioning --------------------------------------------------
+# There is no overall reparametrisation constant any more. It used to be
+# ``CONDITION_C`` (``x = CONDITION_C * u``), needed only because the old GeV=1e9
+# unit base put the unknown at ~1e-31. With ``constants.GeV`` raised so the
+# natural-unit eta is O(1e2), the solver works on the matrix and data directly;
+# column scaling inside the optimiser is the only (scale-adaptive) conditioner.

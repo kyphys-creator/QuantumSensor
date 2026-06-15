@@ -23,7 +23,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from .config import RunConfig, CONDITION_C
+from .config import RunConfig
 from .data_loader import load_response_matrix, load_natural_eta
 from .model import response_operator, condition
 from .backgrounds import background_counts
@@ -89,7 +89,7 @@ class DarkMatterQuantumAnalysis:
 
     # -- inversion -----------------------------------------------------------
     def optimize(self, solver: str = "osqp", x0=None, display: bool = False,
-                 fix=None, vertex_select: bool = True, c=None):
+                 fix=None, vertex_select: bool = True):
         """Recover the monotone non-negative flux from the observed counts.
 
         Two-stage solve (kyphys-creator/neutrinoAnalysis method):
@@ -99,33 +99,30 @@ class DarkMatterQuantumAnalysis:
            ``mu = M @ x``;
         2. ``vertex_select=True`` (default) replaces that ramp with a
            piecewise-constant *vertex* reproducing the same ``mu`` via a
-           tail-weighted simplex LP (the physically meaningful estimate).
+           column-norm-weighted simplex LP (the physically meaningful estimate).
 
-        The data is never scaled, so ``self.result.fun`` is the true Neyman
-        chi^2 (Delta-chi^2 intervals stay valid). Column scaling makes the
-        result independent of the conditioning constant ``c``
-        (``config.CONDITION_C`` when ``None``); no per-mass tuning is needed.
+        The matrix and data pass through untouched, so ``self.result.fun`` is
+        the true Neyman chi^2 (Delta-chi^2 intervals stay valid). The unknown is
+        O(1e2) in the raised-GeV unit base, so no reparametrisation is needed;
+        column scaling inside the solver is the only conditioner.
 
         The high-v tail is only weakly constrained by a handful of energy bins
         (nbins=10 helps only marginally).
         """
-        if c is None:
-            c = CONDITION_C
-
-        m_cond, data_cond, bkg_cond, unscale = condition(
-            self.m_phys, self.observed, self.background, c=c)
+        m_phys, data_cond, bkg_cond = condition(
+            self.m_phys, self.observed, self.background)
 
         if solver in ("osqp", "qp", "clarabel") or fix is not None:
             res = run_optimize_qp(
-                m_cond, data_cond, bkg_cond, self.n_vmin,
+                m_phys, data_cond, bkg_cond, self.n_vmin,
                 eps=0.0, fix=fix, vertex_select=vertex_select, verbose=display)
         else:
             res = run_optimize(
-                m_cond, data_cond, bkg_cond, self.n_vmin,
+                m_phys, data_cond, bkg_cond, self.n_vmin,
                 eps=0.0, x0=x0, display=display)
 
         self.result = res
-        self.flux = unscale(res.x)        # back to physical units
+        self.flux = res.x                 # already physical (no reparametrisation)
         return self.flux
 
     # -- output (matplotlib imported lazily so it stays an optional dep) ------

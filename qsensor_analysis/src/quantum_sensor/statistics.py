@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 import numpy as np
 from scipy.stats import norm
 
-from .config import RunConfig, CONDITION_C
+from .config import RunConfig
 from .model import condition
 from .optimizer import run_optimize_qp
 
@@ -77,11 +77,11 @@ def fit_toys(analysis, n_toys: int = 300, seed: int = 0,
     chi2 = np.full(n_toys, np.nan)
     n_failed = 0
     for i, data in enumerate(draws):
-        m_cond, data_cond, bkg_cond, unscale = condition(
-            analysis.m_phys, data, analysis.background, c=CONDITION_C)
+        m_phys, data_cond, bkg_cond = condition(
+            analysis.m_phys, data, analysis.background)
         try:
-            res = run_optimize_qp(m_cond, data_cond, bkg_cond, n_vmin)
-            fluxes[i] = unscale(res.x)
+            res = run_optimize_qp(m_phys, data_cond, bkg_cond, n_vmin)
+            fluxes[i] = res.x
             chi2[i] = res.fun
         except Exception:
             n_failed += 1
@@ -253,13 +253,11 @@ def _profile_solve(analysis, data, fix: dict | None = None):
     """
     from .optimizer import _build_qp, _CLARABELBackend
 
-    m_cond, data_cond, bkg_cond, unscale = condition(
-        analysis.m_phys, data, analysis.background, c=CONDITION_C)
-    fix_cond = ({i: v / CONDITION_C for i, v in fix.items()}
-                if fix is not None else None)
-    qp = _build_qp(m_cond, data_cond, bkg_cond, analysis.n_vmin, 0.0)
-    res = _CLARABELBackend(eps_abs=1e-9, eps_rel=1e-9).solve(qp, fix=fix_cond)
-    return float(res.fun), unscale(res.x)
+    m_phys, data_cond, bkg_cond = condition(
+        analysis.m_phys, data, analysis.background)
+    qp = _build_qp(m_phys, data_cond, bkg_cond, analysis.n_vmin, 0.0)
+    res = _CLARABELBackend(eps_abs=1e-9, eps_rel=1e-9).solve(qp, fix=fix)
+    return float(res.fun), res.x
 
 
 def _band_eval(analysis, index: int, v: float, levels, n_pseudo: int,

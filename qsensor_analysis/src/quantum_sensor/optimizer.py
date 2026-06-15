@@ -125,12 +125,10 @@ def _column_scale(M: np.ndarray) -> np.ndarray:
     """Per-column reciprocal norm ``D_j = 1/‖M[:,j]‖`` (unit-norm columns).
 
     Deterministic conditioning (the key trick in kyphys-creator/neutrinoAnalysis):
-    the optimal flux and the design-matrix columns otherwise span many orders of
-    magnitude, and OSQP/CLARABEL terminate early at a wrong point while reporting
-    success. Reparametrising ``x = D ⊙ y`` makes every column O(1). Because ``D``
-    divides out the overall conditioning constant ``c`` (``config.CONDITION_C``)
-    too, the recovered flux is independent of ``c`` -- no per-mass tuning. ``D``
-    is data-independent, so it can be reused across pseudo-data (Monte Carlo).
+    the design-matrix columns otherwise span many orders of magnitude, and
+    OSQP/CLARABEL terminate early at a wrong point while reporting success.
+    Reparametrising ``x = D ⊙ y`` makes every column O(1). ``D`` is
+    data-independent, so it can be reused across pseudo-data (Monte Carlo).
     """
     cn = np.sqrt((M * M).sum(axis=0))
     cn[cn == 0] = 1.0

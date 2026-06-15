@@ -48,34 +48,22 @@ def expected_counts(rm: ResponseMatrix, eta_aligned: np.ndarray,
 
 
 def condition(m_phys: np.ndarray, data: np.ndarray,
-              background: np.ndarray | None = None,
-              c: float = 1.0):
-    """Recondition the linear inverse with a SINGLE common constant ``c``.
+              background: np.ndarray | None = None):
+    """Prepare the solver arrays: float data and a zero-filled background.
 
-    The unknown is reparametrised ``x = c * u`` (column scaling only); the data
-    and background are left **untouched**. Hence the objective the optimiser
-    minimises is the *true* Neyman chi^2 -- its value, and so Delta-chi^2
-    confidence intervals, are preserved. (A data-scaling conditioner, like the
-    old ``cons2``, would multiply chi^2 by an arbitrary factor and break the
-    statistical interpretation.)
+    Formerly this also applied an overall ``x = c * u`` reparametrisation (the
+    ``config.CONDITION_C`` constant) to bring the ~1e-31 unknown up to O(1) for
+    the solver. With ``constants.GeV`` raised so the natural-unit eta is already
+    O(1e2), that reparametrisation is unnecessary and has been removed; column
+    scaling inside the solver (:func:`optimizer._column_scale`) is the remaining,
+    scale-adaptive conditioner. The matrix and data pass through untouched, so
+    the minimised objective is the true Neyman chi^2.
 
-    ``c`` is one common numerical knob (``config.CONDITION_C``), the same for
-    all masses/materials. It only shifts which minimiser OSQP lands on for the
-    underdetermined chi^2=0 face; it cancels out of the recovered flux
-    (``unscale`` undoes it), so it never changes chi^2 or the physical answer.
-
-    Returns ``(M_cond, data_cond, bkg_cond, unscale)`` with
-    ``M_cond = c*m_phys``, ``data_cond = data``, ``bkg_cond = background`` and
-    ``unscale(u) = c*u``.
+    Returns ``(m_phys, data_cond, bkg_cond)``.
     """
     data_cond = np.asarray(data, dtype=float)
-    m_cond = c * m_phys
     if background is None:
         bkg_cond = np.zeros_like(data_cond)
     else:
         bkg_cond = np.asarray(background, dtype=float)
-
-    def unscale(u: np.ndarray) -> np.ndarray:
-        return c * np.asarray(u)
-
-    return m_cond, data_cond, bkg_cond, unscale
+    return m_phys, data_cond, bkg_cond
