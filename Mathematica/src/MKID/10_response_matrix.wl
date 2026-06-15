@@ -16,14 +16,13 @@
 (*  functions, each integral is computed exactly by the trapezoid rule over    *)
 (*  the function's own grid nodes inside the interval.                         *)
 (*                                                                            *)
-(*  Per-row effective window: each row (energy bin) is nonzero only above its   *)
-(*  own kinematic threshold and then decays into a long ~6-10 decade tail. The  *)
-(*  low edge (first nonzero) is kept exactly; the high tail is cut where the    *)
-(*  row's cumulative integral reaches (1 - alpha) of its total (alpha default    *)
-(*  0.5 -> keep 50% of every bin), zeroing entries beyond it. The matrix is       *)
-(*  then trimmed to the populated column window: LEADING by the first row's      *)
-(*  first nonzero (lowest threshold), TRAILING by the last row's last nonzero    *)
-(*  (widest window); vmin.csv is trimmed at both ends to stay aligned.           *)
+(*  Per-row central window (two-sided, highest-density): each row peaks near    *)
+(*  its kinematic edge and decays into a long tail. Keep only the highest-       *)
+(*  density contiguous region around the peak covering a fraction `alpha` of     *)
+(*  the row's area, zeroing BOTH the low-v_min rise and the high-v_min tail.     *)
+(*  This localises the response so the monotone inverse recovers eta to the      *)
+(*  window edge. The matrix is then trimmed to the union of the per-row windows; *)
+(*  vmin.csv is trimmed identically so the columns stay aligned.                 *)
 (*                                                                            *)
 (*  This stage is light: it only imports the .wdx (self-contained) -- it does   *)
 (*  NOT load the 01-06 pipeline.                                               *)
@@ -35,8 +34,8 @@
 (*    <vminLo> <vminHi>  integration range [km/s] (clipped to the function's   *)
 (*                       domain if it exceeds it)                              *)
 (*    <N>      number of equal v_min intervals (matrix columns)               *)
-(*    [alpha]  per-row tail-cut tolerance; keep (1-alpha) of each bin's        *)
-(*             response (default 0.5). alpha = 0 disables the upper cut.        *)
+(*    [alpha]  central area fraction kept per row around its peak (two-sided;  *)
+(*             default 0.5 = keep 50%). alpha = 0 disables the cut (full row).  *)
 (*                                                                            *)
 (*  e.g.  wolframscript -file 10_response_matrix.wl TiN_q0M3_R5 1 800 1000      *)
 (*        wolframscript -file 10_response_matrix.wl ALL 1 800 1000 0.0001      *)
@@ -58,11 +57,11 @@ nameArg    = commandLineArgs[[1]];
 vminLoReq  = ToExpression[commandLineArgs[[2]]];
 vminHiReq  = ToExpression[commandLineArgs[[3]]];
 nIntervals = Round[ToExpression[commandLineArgs[[4]]]];
-(* Per-row coverage tail-cut tolerance: keep (1 - alpha) of each bin's response
-   (default 0.5 -> keep 50%). The weak high-v_min tail is barely constrained by
-   the energy bins; keeping it (small alpha) lets the monotone inverse front-load
-   it into a low-v_min overshoot, so a fairly aggressive cut is the stable choice.
-   alpha = 0 disables the upper cut. *)
+(* Central two-sided area cut: keep the highest-density region around each
+   bin's peak covering fraction `alpha` of its area, zeroing both the low-v_min
+   rise and the high-v_min tail (default 0.5 -> keep 50%). Localising the
+   response this way lets the monotone inverse recover eta to the window edge
+   (validated in sandbox/vertex_weight_test). alpha = 0 disables the cut. *)
 windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.5];
 If[!(NumericQ[vminLoReq] && NumericQ[vminHiReq] && IntegerQ[nIntervals] && nIntervals >= 1
      && vminLoReq < vminHiReq && NumericQ[windowAlpha] && 0 <= windowAlpha < 1),
@@ -131,28 +130,34 @@ buildMatrix[wdxBaseName_] := Module[
     {i, nBins}, {j, nIntervals}];
   vminRows = N /@ Transpose[{Most[edges], Rest[edges], mids}];
 
-  (* ---- per-row effective window (zero the high-v tail) ----
-     Each row rises sharply from a kinematic threshold (its first nonzero column
-     -- the LOW edge is exact and kept as is) and then decays into a long
-     ~6-10 decade tail. Keep the tail only up to where the row's cumulative
-     integral reaches (1 - windowAlpha) of its total, zeroing everything beyond
-     ("keep (1-alpha) of every bin's response"). windowAlpha = 0 disables it. *)
-  rowHi[row_] := Module[{tot},
-    tot = Total[row];
-    If[tot <= 0, 0,
-      Min[LengthWhile[Accumulate[row] / tot, # < 1 - windowAlpha &] + 1, Length[row]]]
+  (* ---- per-row central window (two-sided, highest-density) ----
+     Each matrix row M[i,j] is the response integrated over interval j, so every
+     cell is an area element. Grow a window outward from the row's peak cell,
+     each step annexing the larger neighbouring cell, until the kept area reaches
+     windowAlpha of the row's total; zero everything outside (both the low-v_min
+     rise and the high-v_min tail). windowAlpha = 0 keeps the full row. *)
+  centralWindow[row_] := Module[{total, n, pk, lo, hi, acc, lv, rv},
+    total = Total[row];
+    If[total <= 0, Return[{1, 0}]];
+    n = Length[row];
+    pk = First@Ordering[row, -1];
+    lo = pk; hi = pk; acc = row[[pk]];
+    While[acc < windowAlpha total,
+      lv = If[lo - 1 >= 1, row[[lo - 1]], -Infinity];
+      rv = If[hi + 1 <= n, row[[hi + 1]], -Infinity];
+      If[lv === -Infinity && rv === -Infinity, Break[]];
+      If[lv >= rv, lo--; acc += row[[lo]], hi++; acc += row[[hi]]]];
+    {lo, hi}
   ];
   If[windowAlpha > 0,
-    matrix = (PadRight[Take[#, rowHi[#]], nIntervals, 0.] & /@ matrix)];
+    matrix = (Module[{w = centralWindow[#]},
+       Table[If[w[[1]] <= j <= w[[2]], #[[j]], 0.], {j, nIntervals}]] & /@ matrix)];
 
-  (* ---- trim to the column window actually populated ----
-     LEADING: drop columns before the first nonzero of the FIRST row (lowest
-     energy bin = lowest kinematic threshold = union left edge).
-     TRAILING: drop columns after the last nonzero of the LAST row (highest
-     energy bin = widest window = union right edge), scanned from the tail.
-     v_min rows are trimmed identically so the columns stay aligned. *)
-  firstCol = SelectFirst[Range[nIntervals], matrix[[1, #]] != 0 &, 1];
-  lastCol  = SelectFirst[Range[nIntervals, 1, -1], matrix[[-1, #]] != 0 &, nIntervals];
+  (* ---- trim to the union of the per-row windows ----
+     Keep columns where ANY row is nonzero; drop the all-zero margins. v_min
+     rows are trimmed identically so the columns stay aligned. *)
+  firstCol = SelectFirst[Range[nIntervals], Total[Abs[matrix[[All, #]]]] != 0 &, 1];
+  lastCol  = SelectFirst[Range[nIntervals, 1, -1], Total[Abs[matrix[[All, #]]]] != 0 &, nIntervals];
   If[firstCol > 1 || lastCol < nIntervals,
     matrix   = matrix[[All, firstCol ;; lastCol]];
     vminRows = vminRows[[firstCol ;; lastCol]];
