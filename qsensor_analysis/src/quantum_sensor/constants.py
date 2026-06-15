@@ -12,12 +12,14 @@ named quantities instead of using bare literals.
 from __future__ import annotations
 
 # ----- Energy base (01_setup.wl: "Energy base") -----------------------------
-GeV = 1e9
-# The Mathematica outputs (matrix.csv, eta_*.csv) were all computed at this
-# GeV. Quantities loaded from them are rescaled from GEV_NATIVE to the active
-# ``GeV`` by their energy-dimension in data_loader (matrix ~ GeV^-1, eta ~
-# GeV^+1), so the Python unit system may differ from Mathematica's without
-# re-running it. With GeV == GEV_NATIVE the rescaling is the identity.
+# Active Python unit base. The Mathematica outputs were computed at
+# GEV_NATIVE = 1e9; raising ``GeV`` rescales the loaded quantities (data_loader)
+# so the natural-unit numbers the solver sees are O(1)-O(1e2) instead of ~1e-31,
+# which removes the need for the conditioning band-aids (CONDITION_C, column
+# scaling). Physics is invariant: a global unit change is a similarity
+# transform (verified in sandbox/full_pipeline_unit_test). GEV_NATIVE must stay
+# 1e9 to match the Mathematica CSVs.
+GeV = 1e42
 GEV_NATIVE = 1e9
 eV = 1e-9 * GeV
 keV = 1e-6 * GeV
