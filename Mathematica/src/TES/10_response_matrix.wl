@@ -35,7 +35,7 @@
 (*                       domain if it exceeds it)                              *)
 (*    <N>      number of equal v_min intervals (matrix columns)               *)
 (*    [alpha]  central area fraction kept per row around its peak (two-sided;  *)
-(*             default 0.5 = keep 50%). alpha = 0 disables the cut (full row).  *)
+(*             default 0.3 = keep 30%). alpha = 0 disables the cut (full row).  *)
 (*                                                                            *)
 (*  e.g.  wolframscript -file 10_response_matrix.wl Al_q0M3_R5 1 800 1000       *)
 (*        wolframscript -file 10_response_matrix.wl ALL 1 800 1000 0.0001      *)
@@ -59,10 +59,10 @@ vminHiReq  = ToExpression[commandLineArgs[[3]]];
 nIntervals = Round[ToExpression[commandLineArgs[[4]]]];
 (* Central two-sided area cut: keep the highest-density region around each
    bin's peak covering fraction `alpha` of its area, zeroing both the low-v_min
-   rise and the high-v_min tail (default 0.5 -> keep 50%). Localising the
+   rise and the high-v_min tail (default 0.3 -> keep 30%). Localising the
    response this way lets the monotone inverse recover eta to the window edge
    (validated in sandbox/vertex_weight_test). alpha = 0 disables the cut. *)
-windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.5];
+windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.3];
 If[!(NumericQ[vminLoReq] && NumericQ[vminHiReq] && IntegerQ[nIntervals] && nIntervals >= 1
      && vminLoReq < vminHiReq && NumericQ[windowAlpha] && 0 <= windowAlpha < 1),
   Print["error: need numeric vminLo < vminHi, integer N >= 1, and 0 <= alpha < 1"];
