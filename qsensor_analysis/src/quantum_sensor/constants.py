@@ -13,6 +13,12 @@ from __future__ import annotations
 
 # ----- Energy base (01_setup.wl: "Energy base") -----------------------------
 GeV = 1e9
+# The Mathematica outputs (matrix.csv, eta_*.csv) were all computed at this
+# GeV. Quantities loaded from them are rescaled from GEV_NATIVE to the active
+# ``GeV`` by their energy-dimension in data_loader (matrix ~ GeV^-1, eta ~
+# GeV^+1), so the Python unit system may differ from Mathematica's without
+# re-running it. With GeV == GEV_NATIVE the rescaling is the identity.
+GEV_NATIVE = 1e9
 eV = 1e-9 * GeV
 keV = 1e-6 * GeV
 MeV = 1e-3 * GeV

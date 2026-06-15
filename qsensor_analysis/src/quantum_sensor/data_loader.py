@@ -13,6 +13,8 @@ from pathlib import Path
 
 import numpy as np
 
+from .constants import GeV, GEV_NATIVE
+
 # quantum_sensor/ -> src/ -> qsensor_analysis/ -> QuantumSensor/
 _PKG_DIR = Path(__file__).resolve()
 _MATHEMATICA_OUTPUT = _PKG_DIR.parents[3] / "Mathematica" / "output"
@@ -92,6 +94,10 @@ def load_response_matrix(material: str, q: str, mass: str, nbins: int,
     """Load a new Mathematica response matrix with its v_min and energy grids."""
     folder = find_matrix_dir(material, q, mass, nbins, run=run)
     matrix = np.atleast_2d(np.genfromtxt(folder / "matrix.csv", delimiter=","))
+    # Rescale from the Mathematica unit (GEV_NATIVE) to the active GeV. The
+    # matrix is the v_min-integrated response (energy-dimension -1), so it
+    # scales as GeV^-1. Identity when GeV == GEV_NATIVE.
+    matrix = matrix * (GEV_NATIVE / GeV)
     vmin = np.atleast_2d(np.genfromtxt(folder / "vmin.csv", delimiter=","))
     ebins = np.atleast_2d(np.genfromtxt(folder / "bins.csv", delimiter=","))
     return ResponseMatrix(
@@ -129,4 +135,8 @@ def load_natural_eta(rm: ResponseMatrix, model: str) -> np.ndarray:
             f"eta length {eta.shape[0]} != matrix n_vmin {rm.n_vmin} for {path}; "
             f"regenerate eta_{model}.csv with 12_eta.wl after rebuilding the matrix."
         )
-    return eta
+    # Rescale from the Mathematica unit (GEV_NATIVE) to the active GeV. eta
+    # carries the rhoDM*sigmae/mchi prefactor (energy-dimension +1), so it
+    # scales as GeV^+1. Identity when GeV == GEV_NATIVE. Keeps eta consistent
+    # with the GeV^-1 matrix so that matrix @ eta (the rate) stays invariant.
+    return eta * (GeV / GEV_NATIVE)
