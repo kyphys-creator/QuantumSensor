@@ -487,17 +487,52 @@ def save_band_products(analysis, bands: list[dict]):
     return out
 
 
-def pointwise_band(analysis, indices=None, n_indices: int = 12,
+def _step_centres(flux, tol=1e-3):
+    """Index at the centre of each constant-flux plateau of the staircase.
+
+    The recovered flux is a piecewise-constant staircase with one level per
+    energy bin; sampling many v_min columns within a plateau and profiling each
+    independently over-resolves it (a 5-level function scanned at 30 points)
+    and makes the connected band look jagged. One point per plateau matches the
+    estimator's granularity and gives a clean step band."""
+    f = np.asarray(flux, float)
+    pos = np.flatnonzero(f > 0)
+    if pos.size == 0:
+        return [len(f) // 2]
+    lo, hi = pos[0], pos[-1]
+    changes = lo + 1 + np.flatnonzero(np.abs(np.diff(f[lo:hi + 1])) > tol * f.max())
+    edges = np.concatenate([[lo], changes, [hi + 1]])
+    return [(edges[k] + edges[k + 1] - 1) // 2 for k in range(len(edges) - 1)]
+
+
+def pointwise_band(analysis, indices=None, at_steps: bool = True,
+                   n_indices: int = 12, skip_last: int = 1,
                    verbose: bool = True, **kwargs) -> list[dict]:
-    """Profile band at a set of v_min indices (default: log-spaced over the
-    populated window). Returns one ``find_confidence_band`` dict per index."""
+    """Profile band at a set of v_min indices. Returns one
+    ``find_confidence_band`` dict per index.
+
+    Point placement (when ``indices`` is None):
+    - ``at_steps=True`` (default): one point at the centre of each staircase
+      plateau (see :func:`_step_centres`). The recovered flux has only one
+      level per energy bin, so this matches the estimator's granularity and
+      avoids the jagged band that log-spaced over-sampling of the few-level
+      staircase produces.
+    - ``at_steps=False``: ``n_indices`` log-spaced points over the window.
+
+    ``skip_last`` drops that many points off the high-v_min end (default 1):
+    the window-edge step is weakly constrained and usually collapses, so its
+    band is degenerate and not informative."""
     if analysis.flux is None:
         raise RuntimeError("run optimize() first")
     if indices is None:
-        pos = np.flatnonzero(analysis.flux > 0)
-        lo, hi = (0, analysis.n_vmin - 1) if pos.size == 0 else (pos[0], pos[-1])
-        grid = np.unique(np.geomspace(lo + 1, hi + 1, n_indices).astype(int) - 1)
-        indices = grid.tolist()
+        if at_steps:
+            idx = _step_centres(analysis.flux)
+        else:
+            pos = np.flatnonzero(analysis.flux > 0)
+            lo, hi = (0, analysis.n_vmin - 1) if pos.size == 0 else (pos[0], pos[-1])
+            idx = (np.unique(np.geomspace(lo + 1, hi + 1, n_indices).astype(int) - 1)
+                   ).tolist()
+        indices = idx[:-skip_last] if skip_last and len(idx) > skip_last else idx
     out = []
     for k, idx in enumerate(indices, 1):
         b = find_confidence_band(analysis, idx, **kwargs)
