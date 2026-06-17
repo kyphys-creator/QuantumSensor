@@ -16,13 +16,13 @@
 (*  functions, each integral is computed exactly by the trapezoid rule over    *)
 (*  the function's own grid nodes inside the interval.                         *)
 (*                                                                            *)
-(*  Per-row central window (two-sided, highest-density): each row peaks near    *)
-(*  its kinematic edge and decays into a long tail. Keep only the highest-       *)
-(*  density contiguous region around the peak covering a fraction `alpha` of     *)
-(*  the row's area, zeroing BOTH the low-v_min rise and the high-v_min tail.     *)
-(*  This localises the response so the monotone inverse recovers eta to the      *)
-(*  window edge. The matrix is then trimmed to the union of the per-row windows; *)
-(*  vmin.csv is trimmed identically so the columns stay aligned.                 *)
+(*  Per-bin high-v_min cut, from a central window computed on the SMOOTH         *)
+(*  response R(v_min) BEFORE integration: grow a window around the peak until it *)
+(*  covers a fraction `alpha` of the response's area, then cut ONLY at its upper *)
+(*  edge b -- keep [threshold, b] and remove only the decaying high-v_min tail   *)
+(*  (the low rise is kept; R is zero below threshold anyway). The cut point is a *)
+(*  property of the response, not of the v_min binning, so it is found on a fine *)
+(*  grid. The matrix is then trimmed to the union of the per-bin windows.        *)
 (*                                                                            *)
 (*  This stage is light: it only imports the .wdx (self-contained) -- it does   *)
 (*  NOT load the 01-06 pipeline.                                               *)
@@ -63,9 +63,14 @@ nIntervals = Round[ToExpression[commandLineArgs[[4]]]];
    response this way lets the monotone inverse recover eta to the window edge
    (validated in sandbox/vertex_weight_test). alpha = 0 disables the cut. *)
 windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.3];
+(* Optional low-v_min floor [km/s]: also cut the response below this value
+   (default 0 = keep down to the kinematic threshold). Used e.g. for MKID 1 GeV
+   (10 km/s) to drop the weakly-constrained very-low-v columns. *)
+vLowFloor = If[Length[commandLineArgs] >= 6, ToExpression[commandLineArgs[[6]]], 0.];
 If[!(NumericQ[vminLoReq] && NumericQ[vminHiReq] && IntegerQ[nIntervals] && nIntervals >= 1
-     && vminLoReq < vminHiReq && NumericQ[windowAlpha] && 0 <= windowAlpha < 1),
-  Print["error: need numeric vminLo < vminHi, integer N >= 1, and 0 <= alpha < 1"];
+     && vminLoReq < vminHiReq && NumericQ[windowAlpha] && 0 <= windowAlpha < 1
+     && NumericQ[vLowFloor] && vLowFloor >= 0),
+  Print["error: need numeric vminLo < vminHi, integer N >= 1, 0 <= alpha < 1, vLowFloor >= 0"];
   Exit[1]];
 
 
@@ -123,35 +128,44 @@ buildMatrix[wdxBaseName_] := Module[
   edges = Subdivide[vminLo, vminHi, nIntervals];          (* N+1 edges *)
   mids  = (Most[edges] + Rest[edges]) / 2;                 (* N midpoints *)
 
-  (* M[i, j] = integral of bin-i response over interval j.
-     The interpolation grid is in km/s; multiply by kps to convert dv to natural units. *)
+  (* ---- per-bin central window on the SMOOTH response (before integration) ----
+     The highest-density window {a,b} covering fraction windowAlpha of a
+     response's area is a property of the smooth response function R(v_min), NOT
+     of the v_min binning, so it is found here on a fine grid (independent of the
+     matrix's N): grow outward from the peak, annexing the larger neighbour,
+     until the kept area reaches windowAlpha of the total. windowAlpha = 0 keeps
+     the full domain. *)
+  nFine  = 4000;
+  fineV  = Subdivide[vminLo, vminHi, nFine];
+  fineDv = (vminHi - vminLo) / nFine;
+  windowEdges[f_] := Module[{rs, total, m, pk, lo, hi, acc, lv, rv},
+    rs = f /@ fineV;
+    total = Total[rs] fineDv;
+    If[total <= 0, Return[{vminHi, vminLo}]];            (* empty -> a > b *)
+    m = Length[fineV];
+    pk = First@Ordering[rs, -1];
+    lo = pk; hi = pk; acc = rs[[pk]] fineDv;
+    While[acc < windowAlpha total,
+      lv = If[lo - 1 >= 1, rs[[lo - 1]], -Infinity];
+      rv = If[hi + 1 <= m, rs[[hi + 1]], -Infinity];
+      If[lv === -Infinity && rv === -Infinity, Break[]];
+      If[lv >= rv, lo--; acc += rs[[lo]] fineDv, hi++; acc += rs[[hi]] fineDv]];
+    {fineV[[lo]], fineV[[hi]]}
+  ];
+  winEdges = If[windowAlpha > 0, windowEdges /@ fns,
+                ConstantArray[{vminLo, vminHi}, nBins]];
+
+  (* M[i, j] = integral of bin-i response over interval j, with ONLY the high-
+     v_min side cut at the window's upper edge b = winEdges[[i,2]]. The low side
+     is kept down to the kinematic threshold (R is zero below it), i.e. keep
+     [threshold, b] and remove only the decaying high-v_min tail. This avoids the
+     low-edge spike a two-sided cut can introduce. kps converts dv to natural. *)
   matrix   = kps Table[
-    integrateIF[fns[[i]], edges[[j]], edges[[j + 1]]],
+    Module[{loE = Max[edges[[j]], vLowFloor],
+            hiE = Min[winEdges[[i, 2]], edges[[j + 1]]]},
+      If[hiE > loE, integrateIF[fns[[i]], loE, hiE], 0.]],
     {i, nBins}, {j, nIntervals}];
   vminRows = N /@ Transpose[{Most[edges], Rest[edges], mids}];
-
-  (* ---- per-row central window (two-sided, highest-density) ----
-     Each matrix row M[i,j] is the response integrated over interval j, so every
-     cell is an area element. Grow a window outward from the row's peak cell,
-     each step annexing the larger neighbouring cell, until the kept area reaches
-     windowAlpha of the row's total; zero everything outside (both the low-v_min
-     rise and the high-v_min tail). windowAlpha = 0 keeps the full row. *)
-  centralWindow[row_] := Module[{total, n, pk, lo, hi, acc, lv, rv},
-    total = Total[row];
-    If[total <= 0, Return[{1, 0}]];
-    n = Length[row];
-    pk = First@Ordering[row, -1];
-    lo = pk; hi = pk; acc = row[[pk]];
-    While[acc < windowAlpha total,
-      lv = If[lo - 1 >= 1, row[[lo - 1]], -Infinity];
-      rv = If[hi + 1 <= n, row[[hi + 1]], -Infinity];
-      If[lv === -Infinity && rv === -Infinity, Break[]];
-      If[lv >= rv, lo--; acc += row[[lo]], hi++; acc += row[[hi]]]];
-    {lo, hi}
-  ];
-  If[windowAlpha > 0,
-    matrix = (Module[{w = centralWindow[#]},
-       Table[If[w[[1]] <= j <= w[[2]], #[[j]], 0.], {j, nIntervals}]] & /@ matrix)];
 
   (* ---- trim to the union of the per-row windows ----
      Keep columns where ANY row is nonzero; drop the all-zero margins. v_min
