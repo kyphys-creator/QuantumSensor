@@ -92,14 +92,15 @@ class DarkMatterQuantumAnalysis:
                  fix=None, vertex_select: bool = True):
         """Recover the monotone non-negative flux from the observed counts.
 
-        Two-stage solve (kyphys-creator/neutrinoAnalysis method):
+        Two-stage solve:
 
-        1. minimise the Neyman chi^2 as a QP with OSQP, in the column-scaled
-           variable ``x = D ⊙ y`` -- a smooth interior solution + fitted values
-           ``mu = M @ x``;
+        1. minimise the Neyman chi^2 as a QP with OSQP in physical ``x`` -- a
+           smooth interior solution + fitted values ``mu = M @ x``;
         2. ``vertex_select=True`` (default) replaces that ramp with a
-           piecewise-constant *vertex* reproducing the same ``mu`` via a
-           column-norm-weighted simplex LP (the physically meaningful estimate).
+           piecewise-constant *staircase* reproducing the same ``mu`` via
+           method C (min-curvature solution -> DP segments -> level refit): the
+           weight-free staircase that tracks eta to the window edge instead of
+           collapsing it (see :func:`optimizer._vertex_select`).
 
         The matrix and data pass through untouched, so ``self.result.fun`` is
         the true Neyman chi^2 (Delta-chi^2 intervals stay valid). The unknown is

@@ -60,8 +60,8 @@ def fit_toys(analysis, n_toys: int = 300, seed: int = 0,
 
     Each toy draws ``observed ~ Poisson(signal + background)`` and solves the
     same conditioned QP as :meth:`DarkMatterQuantumAnalysis.optimize` (OSQP
-    interior + HiGHS vertex). The exact-fit fast path does not apply to noisy
-    data, so every toy exercises the genuine chi^2 > 0 route.
+    interior + method-C staircase). The exact-fit fast path does not apply to
+    noisy data, so every toy exercises the genuine chi^2 > 0 route.
 
     Bins drawn at 0 are dropped by the Neyman mask inside the solver (they
     carry no Neyman weight); with the count levels of this analysis that is

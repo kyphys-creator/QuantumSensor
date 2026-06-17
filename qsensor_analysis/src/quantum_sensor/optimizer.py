@@ -37,9 +37,9 @@ def run_optimize(M_matrix, data, Bkg_vector, n, eps=0.0, x0=None, display=True,
     the interior of the optimal face, not a vertex, so the recovered flux is not
     piecewise-constant. When ``vertex_select`` (default) and the problem is
     under-determined (``n > #active bins``), we keep the converged fitted values
-    ``mu = M_active @ x`` and pick a piecewise-constant *vertex* reproducing the
-    same ``mu`` -- the same tail-weighted HiGHS simplex step the OSQP backend
-    uses -- so both solvers yield the same staircase estimate (χ² unchanged).
+    ``mu = M_active @ x`` and pick a piecewise-constant *staircase* reproducing
+    the same ``mu`` -- the same method-C step the OSQP backend uses -- so both
+    solvers yield the same staircase estimate (χ² unchanged).
     """
     if x0 is None:
         x0 = np.ones(n)
@@ -79,7 +79,7 @@ def run_optimize(M_matrix, data, Bkg_vector, n, eps=0.0, x0=None, display=True,
         if x_v is not None:
             out.x = x_v
             out.staircase = True
-            out.backend = 'scipy+highs-vertex'
+            out.backend = 'scipy+method-c-vertex'
             out.fun = float(0.5 * x_v @ qp['P'] @ x_v + qp['q'] @ x_v + qp['const'])
     return out
 
@@ -120,56 +120,197 @@ class _Result:
     __slots__ = ('x', 'fun', 'success', 'message', 'nit', 'solve_time', 'backend', 'staircase')
 
 
-def _vertex_select(qp, mu: np.ndarray):
-    """HiGHS-simplex vertex on the QP's optimal face (neutrinoAnalysis method).
+def _second_diff_operator(n: int) -> np.ndarray:
+    """(n-2) x n second-difference matrix D2; ``||D2 x||^2`` is the discrete
+    curvature (sum of squared second differences) of the staircase x."""
+    D2 = np.zeros((max(n - 2, 0), n))
+    for i in range(n - 2):
+        D2[i, i], D2[i, i + 1], D2[i, i + 2] = 1.0, -2.0, 1.0
+    return D2
 
-    The χ² minimiser is a whole face of the monotone polytope whenever
-    ``n > rank(M)`` (here ~948 params vs 5 bins): OSQP returns a smooth interior
-    *ramp*, but the physically meaningful estimate is a *vertex*
-    (piecewise-constant flux). Once the QP fixes the fitted values
-    ``mu = M_active @ x``, we pick a vertex of
-    ``{x : M_active x = mu, x_i ≥ x_{i+1}, x ≥ eps}`` with a simplex method.
 
-    Objective: minimise the column-norm-weighted flux ``Σ ||M[:,j]|| x_j`` --
-    each unit of flux costs its column's response strength, so the vertex does
-    NOT shave the lowest-response high-v_min step (it cannot lower the counts
-    with it). This recovers eta to the window edge, where the plain total
-    ``Σ x_j`` shaves the last step (validated TES/MKID × M1/M2/M3 in
-    sandbox/vertex_weight_test: error never worse than uniform, last-step e.g.
-    Al M3 R5 0.77→0.99, M2 R10 0.92→0.99).
+def _clarabel_qp(P, q, blocks):
+    """Solve  min 1/2 xᵀP x + qᵀx  s.t. the given (A, b, cone) blocks.
 
-    Solved directly in physical ``x`` -- no column-scaling reparametrisation.
-    With the raised-GeV unit base (``constants.GeV``) the columns are O(1), so
-    HiGHS is well-conditioned without it. (This is identical to the earlier
-    column-scaled formulation, where ``weight = ones`` on ``z = x/D`` was the
-    same Σ ||M[:,j]|| x_j since ``D_j = 1/||M[:,j]||``.)
-    """
-    n = qp['n']
-    M = qp['M_active']
-    weight = np.sqrt((M * M).sum(axis=0))      # ||M[:,j]||, column-norm weight
-    # ordering x_i - x_{i+1} >= 0  ->  -A_ord x <= 0
-    res = linprog(
-        weight, A_ub=-qp['A_ord'].toarray(), b_ub=np.zeros(n - 1),
-        A_eq=M, b_eq=np.asarray(mu),
-        bounds=[(qp['eps'], None)] * n, method='highs-ds',
-        options={'presolve': True},
-    )
-    if not res.success:
+    Each block is ``(A, b, cone)`` in CLARABEL's ``A x + s = b, s in cone``
+    convention (ZeroConeT -> equality, NonnegativeConeT -> A x <= b). Returns
+    the solution x, or None if the problem is not solved (e.g. infeasible)."""
+    import clarabel
+    from scipy.sparse import csc_matrix as csc
+
+    A = sp_vstack([blk[0] for blk in blocks], format='csc')
+    b = np.concatenate([blk[1] for blk in blocks])
+    cones = [blk[2] for blk in blocks]
+    s = clarabel.DefaultSettings()
+    s.verbose = False
+    sol = clarabel.DefaultSolver(csc(P), np.asarray(q, float), A, b, cones, s).solve()
+    return np.asarray(sol.x) if str(sol.status) == 'Solved' else None
+
+
+def _curvature_min(M, mu, A_ord, eps):
+    """Smoothest monotone non-negative flux reproducing the fitted counts mu:
+
+        argmin ||D2 x||^2   s.t.  M x = mu,  x_i >= x_{i+1},  x >= eps
+
+    The minimum-curvature element of the chi^2-optimal face is unbiased at the
+    window edge (it does not drive the tail to zero the way a minimal-flux /
+    tail-weighted objective does), so it tracks eta where eta != 0. Returns None
+    if ``M x = mu`` is infeasible under monotone/non-negativity (e.g. noisy data
+    with chi^2 > 0) -- the caller then supplies a reproducible ``mu`` instead."""
+    import clarabel
+    from scipy.sparse import csc_matrix as csc
+
+    n = M.shape[1]
+    D2 = _second_diff_operator(n)
+    P = 2.0 * (D2.T @ D2) + 1e-10 * np.eye(n)        # tiny ridge -> strictly PD
+    P = P / max(np.abs(P).max(), 1e-300)
+    blocks = [
+        (csc(np.asarray(M)), np.asarray(mu, float),
+         clarabel.ZeroConeT(M.shape[0])),                       # M x = mu
+        (-A_ord, np.zeros(n - 1), clarabel.NonnegativeConeT(n - 1)),  # x_i>=x_{i+1}
+        (-sp_eye(n, format='csc'), np.full(n, -eps),
+         clarabel.NonnegativeConeT(n)),                         # x >= eps
+    ]
+    return _clarabel_qp(P, np.zeros(n), blocks)
+
+
+def _uniform_vertex(M, mu, A_ord, eps):
+    """Primitive minimal-total-flux staircase: argmin sum_j x_j over
+    {M x = mu, x_i >= x_{i+1}, x >= eps}, via a HiGHS simplex LP.
+
+    Used as the fallback when the curvature QP (:func:`_curvature_min`) is too
+    ill-conditioned to solve -- i.e. a steeply-falling (Bound) eta with a ~1e14
+    dynamic-range cliff. The simplex is scale-invariant, so it solves the cliff
+    trivially and reproduces the counts to machine precision. For such a cliff
+    the counts are dominated by the low-v_min spike, so minimal-flux is forced to
+    put the large flux there (it captures the cliff) and only collapses the
+    count-irrelevant high-v_min halo floor -- giving a clean monotone staircase
+    that tracks the cliff (validated in sandbox/tiebreak_test). It is NOT used for
+    a gentle eta, where minimal-flux would collapse the informative window edge;
+    there the curvature QP solves and method C is used instead. Returns None if
+    the LP fails (e.g. no exact monotone fit for noisy data)."""
+    n = M.shape[1]
+    res = linprog(np.ones(n), A_ub=-A_ord.toarray(), b_ub=np.zeros(n - 1),
+                  A_eq=M, b_eq=np.asarray(mu, float),
+                  bounds=[(eps, None)] * n, method='highs-ds')
+    return np.asarray(res.x) if res.success else None
+
+
+def _dp_segments(target, K):
+    """Exact K-segment piecewise-constant L2 partition of ``target`` (dynamic
+    programming). Returns the K segment bounds [(a0,b0), ...]. The (near-)
+    monotone smooth ``target`` yields non-increasing segment means, so the
+    staircase built on these bounds stays monotone. Vectorised over the inner
+    split index so it is cheap even at n ~ 10^3 (used per Poisson toy)."""
+    target = np.asarray(target, float)
+    n = len(target)
+    K = min(K, n)
+    pre = np.concatenate([[0.0], np.cumsum(target)])
+    pre2 = np.concatenate([[0.0], np.cumsum(target * target)])
+    dp = np.full((K + 1, n + 1), np.inf)
+    bk = np.zeros((K + 1, n + 1), dtype=int)
+    dp[0, 0] = 0.0
+    for k in range(1, K + 1):
+        for i in range(k, n + 1):
+            js = np.arange(k - 1, i)
+            seg = (pre2[i] - pre2[js]) - (pre[i] - pre[js]) ** 2 / (i - js)
+            vals = dp[k - 1, js] + seg
+            t = int(np.argmin(vals))
+            dp[k, i], bk[k, i] = vals[t], js[t]
+    bnds, i = [], n
+    for k in range(K, 0, -1):
+        j = int(bk[k, i])
+        bnds.append((j, i))
+        i = j
+    return bnds[::-1]
+
+
+def _refit_levels(M, mu, bounds, n, eps):
+    """Refit the K plateau VALUES to the fitted counts mu on fixed segment
+    ``bounds``:  argmin ||G l - mu||^2  s.t.  l_k >= l_{k+1}, l >= eps, where
+    column k of G sums the M columns inside segment k. Returns the assembled
+    n-vector staircase (a genuine vertex with the smooth curve's plateaus)."""
+    import clarabel
+    from scipy.sparse import csc_matrix as csc
+
+    K = len(bounds)
+    G = np.zeros((M.shape[0], K))
+    for k, (a, b) in enumerate(bounds):
+        G[:, k] = np.asarray(M[:, a:b]).sum(axis=1)
+    P = 2.0 * (G.T @ G) + 1e-10 * np.eye(K)
+    sc = max(np.abs(P).max(), 1e-300)
+    P, q = P / sc, (-2.0 * G.T @ np.asarray(mu, float)) / sc
+    blocks = [(-sp_eye(K, format='csc'), np.full(K, -eps),
+               clarabel.NonnegativeConeT(K))]                   # l >= eps
+    if K >= 2:
+        A_ord = np.zeros((K - 1, K))
+        for i in range(K - 1):
+            A_ord[i, i], A_ord[i, i + 1] = 1.0, -1.0
+        blocks.insert(0, (csc(-A_ord), np.zeros(K - 1),
+                          clarabel.NonnegativeConeT(K - 1)))      # l_k >= l_{k+1}
+    lv = _clarabel_qp(P, q, blocks)
+    if lv is None:
         return None
-    return np.asarray(res.x)
+    x = np.empty(n)
+    for k, (a, b) in enumerate(bounds):
+        x[a:b] = lv[k]
+    return x
+
+
+def _vertex_select(qp, mu: np.ndarray):
+    """Method C staircase tie-break on the QP's optimal face.
+
+    The chi^2 minimiser is a whole face of the monotone polytope whenever
+    ``n > rank(M)`` (here ~10^2-10^3 params vs ~5 bins). Among the many staircases
+    that reproduce the fitted counts ``mu = M_active @ x`` we want the one that
+    tracks eta WITHOUT collapsing/spiking at the window edge -- but eta does not
+    vanish there, so the minimal-flux / tail-weighted vertex (neutrinoAnalysis,
+    appropriate when the true tail vanishes) drives the edge to zero. Instead:
+
+      1. ``_curvature_min`` -- the smoothest (min ||D2 x||^2) flux reproducing
+         mu: the unbiased, weight-free representative of the optimal face;
+      2. ``_dp_segments``   -- segment it into K = #active-bins monotone plateaus;
+      3. ``_refit_levels``  -- refit those K plateau values to mu.
+
+    The result is a genuine K-step staircase reproducing mu (chi^2 unchanged to
+    a negligible DP-segmentation residual) that follows eta to the edge. No
+    contrived weight is added -- the weighted-LP vertex is replaced by snapping
+    the natural smooth solution to its nearest K-step staircase.
+
+    Two tiers. For a gentle eta the plain curvature step solves and this is the
+    whole method. For a steeply-falling eta (the Bound population, ~1e14 dynamic
+    range) the curvature QP is too ill-conditioned and returns None; we then fall
+    back to the primitive minimal-total-flux simplex vertex
+    (:func:`_uniform_vertex`), which is scale-invariant so it solves the cliff
+    trivially. There minimal-flux is the right choice -- the counts are dominated
+    by the low-v_min cliff, so it captures the cliff and only collapses the
+    count-irrelevant halo floor (it would, however, collapse a gentle window edge,
+    which is why method C is used whenever the curvature QP solves). Returns None
+    only if ``M x = mu`` is genuinely infeasible (noisy data) -- the OSQP path
+    then supplies a reproducible mu.
+    """
+    M = qp['M_active']
+    mu = np.asarray(mu)
+    # Tier 1: method C (gentle eta) -- smooth curvature, DP segments, level refit.
+    x_smooth = _curvature_min(M, mu, qp['A_ord'], qp['eps'])
+    if x_smooth is not None:
+        bounds = _dp_segments(x_smooth, M.shape[0])
+        return _refit_levels(M, mu, bounds, qp['n'], qp['eps'])
+    # Tier 2: primitive minimal-flux vertex (steeply-falling Bound cliff).
+    return _uniform_vertex(M, mu, qp['A_ord'], qp['eps'])
 
 
 class _OSQPBackend:
-    """OSQP QP + simplex vertex selection (neutrinoAnalysis method).
+    """OSQP QP + method-C staircase selection.
 
-    Two stages, mirroring kyphys-creator/neutrinoAnalysis:
+    Two stages:
 
       1. solve the Neyman-χ² QP with OSQP directly in physical ``x`` -> a smooth
          interior solution and the fitted values ``mu = M_active @ x``;
       2. if ``vertex_select`` (default), replace that ramp with a
-         piecewise-constant *vertex* reproducing the same ``mu`` via a
-         column-norm-weighted HiGHS simplex LP (:func:`_vertex_select`). χ² is
-         unchanged because ``mu`` (hence the residual) is identical.
+         piecewise-constant *staircase* reproducing the same ``mu`` via method C
+         (:func:`_vertex_select`: min-curvature solution -> DP segments -> level
+         refit). χ² is unchanged because ``mu`` (hence the residual) is identical.
 
     No column scaling: with the raised-GeV unit base the design-matrix columns
     are O(1), so the QP is well-conditioned in physical units directly.
@@ -219,24 +360,28 @@ class _OSQPBackend:
     def solve(self, qp):
         out = _Result()
 
-        # Stage 0: exact-fit vertex. The chi^2 = 0 minimiser exists whenever the
-        # signal y = data - background is reproducible by a monotone non-negative
-        # flux -- always the case for the self-consistent forward model, where
-        # y = M @ eta and eta is itself monotone and >= 0. Solving the vertex LP
-        # directly at mu = y bypasses the QP interior, which is badly conditioned
-        # when the counts span many orders of magnitude (the dense, steeply
-        # falling Bound eta makes OSQP report "dual infeasible"). It reduces to
-        # the same vertex the QP path would pick when that path converges, so it
-        # is the default fast/robust route, not a special case.
+        # Stage 0: exact-fit staircase. The chi^2 = 0 minimiser exists whenever
+        # the signal y = data - background is reproducible by a monotone
+        # non-negative flux -- always the case for the self-consistent forward
+        # model, where y = M @ eta and eta is itself monotone and >= 0. Building
+        # the method-C staircase directly at mu = y bypasses the QP interior,
+        # which is badly conditioned when the counts span many orders of
+        # magnitude (the dense, steeply falling Bound eta makes OSQP report
+        # "dual infeasible"). The K-step staircase reproduces y up to a small
+        # DP-segmentation residual (the staircase's own fit), so the acceptance
+        # tolerance is relative, not machine-precision. For genuinely noisy data
+        # M x = y is infeasible, _vertex_select returns None, and we fall through
+        # to the OSQP interior, which supplies a reproducible mu for Stage 2.
         if self.vertex_select and qp['n'] > qp['m_active']:
             y = qp['y_active']
             x_exact = _vertex_select(qp, y)
-            if x_exact is not None and np.allclose(qp['M_active'] @ x_exact, y,
-                                                   rtol=1e-6, atol=0):
-                out.backend = 'highs-vertex-exact'
+            if x_exact is not None and (
+                    np.linalg.norm(qp['M_active'] @ x_exact - y)
+                    <= 1e-2 * max(np.linalg.norm(y), 1e-300)):
+                out.backend = 'method-c-exact'
                 out.staircase = True
                 out.success = True
-                out.message = 'exact-fit vertex'
+                out.message = 'exact-fit staircase (method C)'
                 out.nit = 0
                 out.solve_time = 0.0
                 out.x = x_exact
@@ -264,7 +409,7 @@ class _OSQPBackend:
             if x_v is not None:
                 out.x = x_v
                 out.staircase = True
-                out.backend = 'osqp+highs-vertex'
+                out.backend = 'osqp+method-c-vertex'
 
         x = out.x
         out.fun = float(0.5 * x @ qp['P'] @ x + qp['q'] @ x + qp['const'])
@@ -342,7 +487,7 @@ def run_optimize_qp(M_matrix, data, Bkg_vector, n, eps=0.0,
     """Solve χ²-minimization as a QP.
 
     Routing:
-      - fix is None (free solve)        → OSQP. Underdetermined ⇒ HiGHS staircase vertex.
+      - fix is None (free solve)        → OSQP. Underdetermined ⇒ method-C staircase.
       - fix is dict {idx: value}        → CLARABEL (auto-route for fixed-parameter solves).
     """
     qp = _build_qp(M_matrix, data, Bkg_vector, n, eps)

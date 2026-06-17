@@ -13,6 +13,7 @@ dependencies = [
     "matplotlib",
     "numba",
     "osqp",
+    "clarabel",
 ]
 
 [tool.setuptools.packages.find]

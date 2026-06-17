@@ -8,14 +8,13 @@ config it writes <config>_cut.pdf into output/<DET>/response_function_plots/,
 in the style of sandbox/central_area_cut_test/response_cut.pdf: one panel per
 energy bin, original (grey) overlaid with the kept [floor, b] response (red).
 
-Cut definition (peak-value cut, outermost crossings):
-  * window [a, b]      : a is the first v_min (scanning up from the low end)
-    where R(v_min) >= `frac` of the peak value, b is the last (scanning down
-    from the high end); default frac = 0.20. Only the outer sub-frac tails are
-    cut -- an interior dip below the threshold (the valley of a double-peaked
-    response) is kept, so neither peak is removed. Found on a 4000-interval fine
-    grid over [vminLo, vminHi].
-  * kept response      : original on [a, b], zero elsewhere.
+Cut definition (high-v_min peak-value cut):
+  * window [vminLo, b] : b is the OUTERMOST high-v_min where R(v_min) >= `frac`
+    of the peak value (default frac = 0.20). ONLY the high-v_min tail below
+    `frac` of the peak is cut; the low rise is kept (R ~ 0 below the kinematic
+    threshold anyway). An interior dip is kept, so a double-peaked high side is
+    not split. Found on a 4000-interval fine grid over [vminLo, vminHi].
+  * kept response      : original on [vminLo, b], zero above b.
 
 Usage:  python _make_cut_overlays.py [frac]   (default frac = 0.20)
 """
@@ -46,16 +45,15 @@ def mass_tag(name: str) -> str:
 
 
 def peak_window(v_fine, r_fine, frac):
-    """Peak-value window [a, b] = the OUTERMOST crossings of frac * peak:
-    a is the first v_min (scanning up from the low end) where R >= frac * peak,
-    b is the last (scanning down from the high end). Only the outer sub-frac
-    tails are cut; an interior dip below the threshold (e.g. the valley of a
-    double-peaked response) is kept, so neither peak is removed."""
+    """High-v_min cut window [vminLo, b]: b is the OUTERMOST high-v_min where
+    R >= frac * peak. Only the high-v_min tail below frac * peak is cut; the low
+    rise is kept (low edge = vminLo). An interior dip is kept, so a double-peaked
+    high side is not split."""
     if r_fine.max() <= 0:
         return v_fine[0], v_fine[0]      # empty response
     thr = frac * r_fine.max()
     idx = np.nonzero(r_fine >= thr)[0]
-    return v_fine[idx[0]], v_fine[idx[-1]]
+    return v_fine[0], v_fine[idx[-1]]
 
 
 def process(csv_path: Path, out_dir: Path, frac: float):
@@ -104,7 +102,7 @@ def process(csv_path: Path, out_dir: Path, frac: float):
 
     fig.suptitle(
         f"{name} ({mt}): response functions, original vs cut "
-        f"(both-side cut at {int(round(frac*100))}% of peak value)",
+        f"(high-v cut at {int(round(frac*100))}% of peak value, low side kept)",
         fontsize=13)
     fig.tight_layout()
     out = out_dir / f"{name}_cut.pdf"
