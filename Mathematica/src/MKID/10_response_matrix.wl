@@ -28,20 +28,21 @@
 (*  NOT load the 01-06 pipeline.                                               *)
 (*                                                                            *)
 (*  Usage:                                                                     *)
-(*      wolframscript -file 10_response_matrix.wl <name> <vminLo> <vminHi> <N> [alpha] *)
+(*  wolframscript -file 10_response_matrix.wl <name> <vminLo> <vminHi> <N> [alpha] [vLowFloor] *)
 (*                                                                            *)
 (*    <name>   base name of a .wdx in output/MKID/response_functions/, or ALL  *)
 (*    <vminLo> <vminHi>  integration range [km/s] (clipped to the function's   *)
 (*                       domain if it exceeds it)                              *)
 (*    <N>      number of equal v_min intervals (matrix columns)               *)
 (*    [alpha]  central area fraction whose UPPER edge sets the high-v_min cut   *)
-(*             (default 0.3). alpha = 0 disables the cut.                       *)
-(*    [vLowFloor]  also cut below this v_min [km/s] (default 0 = keep down to    *)
-(*             the threshold). MKID 1 GeV (M3): use 14 -- removes the low-v_min   *)
-(*             over/undershoot. Other masses keep 0.                            *)
+(*             (default 0.5). alpha = 0 disables the cut.                       *)
+(*    [vLowFloor]  low-v_min cut [km/s]. Default (omitted) = the analytic        *)
+(*             kinematic threshold sqrt(2 omega_thr / m_chi) of each config      *)
+(*             (omega_thr = lowest bin edge, m_chi from the mass tag). A numeric  *)
+(*             value overrides it for all configs.                              *)
 (*                                                                            *)
-(*  e.g.  wolframscript -file 10_response_matrix.wl TiN_q0M3_R5 1 800 1000 0.3 14 *)
-(*        wolframscript -file 10_response_matrix.wl ALL 1 800 1000 0.3          *)
+(*  e.g.  wolframscript -file 10_response_matrix.wl ALL 1 800 1000 0.3          *)
+(*        wolframscript -file 10_response_matrix.wl TiN_q0M3_R5 1 800 1000 0.3 14 *)
 (*                                                                            *)
 (*  Output (in output/MKID/response_matrix/<mass>/<name>_v<lo>-<hi>_N<N>/):    *)
 (*    matrix.csv   pure numeric matrix (nBins x N)                             *)
@@ -62,17 +63,18 @@ vminHiReq  = ToExpression[commandLineArgs[[3]]];
 nIntervals = Round[ToExpression[commandLineArgs[[4]]]];
 (* Central two-sided area cut: keep the highest-density region around each
    bin's peak covering fraction `alpha` of its area, zeroing both the low-v_min
-   rise and the high-v_min tail (default 0.3 -> keep 30%). Localising the
+   rise and the high-v_min tail (default 0.5 -> keep 50%). Localising the
    response this way lets the monotone inverse recover eta to the window edge
    (validated in sandbox/vertex_weight_test). alpha = 0 disables the cut. *)
-windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.3];
-(* Optional low-v_min floor [km/s]: also cut the response below this value
-   (default 0 = keep down to the kinematic threshold). Used e.g. for MKID 1 GeV
-   (10 km/s) to drop the weakly-constrained very-low-v columns. *)
-vLowFloor = If[Length[commandLineArgs] >= 6, ToExpression[commandLineArgs[[6]]], 0.];
+windowAlpha = If[Length[commandLineArgs] >= 5, ToExpression[commandLineArgs[[5]]], 0.5];
+(* Low-v_min floor [km/s]. Default (no 6th arg) = Automatic: each config is cut
+   at its analytic kinematic threshold v_min = sqrt(2 omega_thr / m_chi), with
+   omega_thr the lowest energy bin's lower edge and m_chi the DM mass (computed
+   per config in buildMatrix). A numeric 6th arg overrides it for all configs. *)
+vLowFloorCLI = If[Length[commandLineArgs] >= 6, ToExpression[commandLineArgs[[6]]], Automatic];
 If[!(NumericQ[vminLoReq] && NumericQ[vminHiReq] && IntegerQ[nIntervals] && nIntervals >= 1
      && vminLoReq < vminHiReq && NumericQ[windowAlpha] && 0 <= windowAlpha < 1
-     && NumericQ[vLowFloor] && vLowFloor >= 0),
+     && (vLowFloorCLI === Automatic || (NumericQ[vLowFloorCLI] && vLowFloorCLI >= 0))),
   Print["error: need numeric vminLo < vminHi, integer N >= 1, 0 <= alpha < 1, vLowFloor >= 0"];
   Exit[1]];
 
@@ -110,7 +112,8 @@ extractMass[name_] := Module[{m},
 
 buildMatrix[wdxBaseName_] := Module[
   {wdxPath, data, responses, labels, fns, nBins, domLo, domHi,
-   vminLo, vminHi, edges, mids, matrix, vminRows, firstCol, stem, massTag, outDir},
+   vminLo, vminHi, edges, mids, matrix, vminRows, firstCol, stem, massTag, outDir,
+   omegaThr, dmMassNat, vThr, floor},
 
   wdxPath = FileNameJoin[{functionDir, wdxBaseName <> ".wdx"}];
   If[!FileExistsQ[wdxPath], Print["skip (not found): ", wdxBaseName <> ".wdx"]; Return[]];
@@ -120,6 +123,15 @@ buildMatrix[wdxBaseName_] := Module[
   labels    = Keys[responses];
   fns       = Values[responses];
   nBins     = Length[fns];
+
+  (* Low-v_min floor: analytic kinematic threshold v_min = sqrt(2 omega_thr/m_chi)
+     unless the CLI overrides it. omega_thr = lowest bin's lower edge [eV], m_chi
+     from the mass tag. The response is ~0 below this; the cut removes the
+     resolution-smeared sub-threshold tail. *)
+  omegaThr  = Min[First /@ (ToExpression /@ StringCases[#, NumberString] & /@ labels)] eV;
+  dmMassNat = Switch[extractMass[wdxBaseName], "M1", 10 MeV, "M2", 100 MeV, "M3", 1000 MeV, _, $Failed];
+  vThr      = If[NumericQ[dmMassNat] && omegaThr > 0, Sqrt[2 omegaThr/dmMassNat]/kps, 0.];
+  floor     = If[vLowFloorCLI === Automatic, vThr, vLowFloorCLI];
 
   (* clip the requested range to the interpolation domain *)
   {domLo, domHi} = First[fns]["Domain"][[1]];
@@ -164,7 +176,7 @@ buildMatrix[wdxBaseName_] := Module[
      [threshold, b] and remove only the decaying high-v_min tail. This avoids the
      low-edge spike a two-sided cut can introduce. kps converts dv to natural. *)
   matrix   = kps Table[
-    Module[{loE = Max[edges[[j]], vLowFloor],
+    Module[{loE = Max[edges[[j]], floor],
             hiE = Min[winEdges[[i, 2]], edges[[j + 1]]]},
       If[hiE > loE, integrateIF[fns[[i]], loE, hiE], 0.]],
     {i, nBins}, {j, nIntervals}];
