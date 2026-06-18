@@ -174,23 +174,25 @@ def _curvature_min(M, mu, A_ord, eps):
     return _clarabel_qp(P, np.zeros(n), blocks)
 
 
-def _uniform_vertex(M, mu, A_ord, eps):
-    """Primitive minimal-total-flux staircase: argmin sum_j x_j over
-    {M x = mu, x_i >= x_{i+1}, x >= eps}, via a HiGHS simplex LP.
+def _colnorm_vertex(M, mu, A_ord, eps):
+    """Column-norm-weighted minimal-flux staircase: argmin sum_j ||M[:,j]|| x_j
+    over {M x = mu, x_i >= x_{i+1}, x >= eps}, via a HiGHS simplex LP.
 
     Used as the fallback when the curvature QP (:func:`_curvature_min`) is too
     ill-conditioned to solve -- i.e. a steeply-falling (Bound) eta with a ~1e14
     dynamic-range cliff. The simplex is scale-invariant, so it solves the cliff
     trivially and reproduces the counts to machine precision. For such a cliff
-    the counts are dominated by the low-v_min spike, so minimal-flux is forced to
-    put the large flux there (it captures the cliff) and only collapses the
-    count-irrelevant high-v_min halo floor -- giving a clean monotone staircase
-    that tracks the cliff (validated in sandbox/tiebreak_test). It is NOT used for
-    a gentle eta, where minimal-flux would collapse the informative window edge;
-    there the curvature QP solves and method C is used instead. Returns None if
-    the LP fails (e.g. no exact monotone fit for noisy data)."""
+    the counts are dominated by the low-v_min spike, so the weighted minimal-flux
+    is forced to put the large flux there (it captures the cliff) and only
+    collapses the count-irrelevant high-v_min halo floor -- a clean monotone
+    staircase that tracks the cliff (validated in sandbox/tiebreak_test; for the
+    cliff this is identical to the plain uniform Sum x_j vertex). It is NOT used
+    for a gentle eta, where minimal-flux would collapse the informative window
+    edge; there the curvature QP solves and method C is used instead. Returns
+    None if the LP fails (e.g. no exact monotone fit for noisy data)."""
     n = M.shape[1]
-    res = linprog(np.ones(n), A_ub=-A_ord.toarray(), b_ub=np.zeros(n - 1),
+    weight = np.sqrt((M * M).sum(axis=0))               # ||M[:,j]||
+    res = linprog(weight, A_ub=-A_ord.toarray(), b_ub=np.zeros(n - 1),
                   A_eq=M, b_eq=np.asarray(mu, float),
                   bounds=[(eps, None)] * n, method='highs-ds')
     return np.asarray(res.x) if res.success else None
@@ -280,8 +282,8 @@ def _vertex_select(qp, mu: np.ndarray):
     Two tiers. For a gentle eta the plain curvature step solves and this is the
     whole method. For a steeply-falling eta (the Bound population, ~1e14 dynamic
     range) the curvature QP is too ill-conditioned and returns None; we then fall
-    back to the primitive minimal-total-flux simplex vertex
-    (:func:`_uniform_vertex`), which is scale-invariant so it solves the cliff
+    back to the column-norm-weighted minimal-flux simplex vertex
+    (:func:`_colnorm_vertex`), which is scale-invariant so it solves the cliff
     trivially. There minimal-flux is the right choice -- the counts are dominated
     by the low-v_min cliff, so it captures the cliff and only collapses the
     count-irrelevant halo floor (it would, however, collapse a gentle window edge,
@@ -296,8 +298,8 @@ def _vertex_select(qp, mu: np.ndarray):
     if x_smooth is not None:
         bounds = _dp_segments(x_smooth, M.shape[0])
         return _refit_levels(M, mu, bounds, qp['n'], qp['eps'])
-    # Tier 2: primitive minimal-flux vertex (steeply-falling Bound cliff).
-    return _uniform_vertex(M, mu, qp['A_ord'], qp['eps'])
+    # Tier 2: column-norm-weighted minimal-flux vertex (steeply-falling Bound cliff).
+    return _colnorm_vertex(M, mu, qp['A_ord'], qp['eps'])
 
 
 class _OSQPBackend:
