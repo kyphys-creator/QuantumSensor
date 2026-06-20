@@ -13,3 +13,6 @@ __pycache__/
 
 # Mathematica
 *.nb~
+
+# Private paper draft — NEVER commit / upload to GitHub
+quantum_sensing_sub_eV_halo_independent.pdf
